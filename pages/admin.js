@@ -24,6 +24,7 @@ export default function Admin() {
   const [showForm, setShowForm] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [message, setMessage] = useState({ type: '', text: '' })
+  const [lastUpdatedId, setLastUpdatedId] = useState(null)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -40,26 +41,52 @@ export default function Admin() {
   })
 
   useEffect(() => {
+    console.log('🔍 Admin: Component mounted, loading recipes...')
     loadRecipes()
   }, [])
 
   const loadRecipes = async () => {
     setLoading(true)
     try {
+      console.log('🔍 Admin: Loading recipes...')
+      console.log('🔍 Admin: Supabase client available:', !!supabase)
+      console.log('🔍 Admin: Environment variables:', {
+        url: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing',
+        key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Set' : 'Missing'
+      })
+      
       if (supabase) {
+        console.log('🔍 Admin: Querying Supabase meals table...')
         const { data, error } = await supabase
           .from('meals')
           .select('*')
           .order('created_at', { ascending: false })
+          .limit(1000) // Force fresh data
         
-        if (error) throw error
-        setRecipes(data || [])
+        console.log('🔍 Admin: Supabase response:', { data, error })
+        
+        if (error) {
+          console.error('❌ Admin: Supabase error:', error)
+          throw error
+        }
+        
+        console.log(`✅ Admin: Found ${data?.length || 0} recipes from Supabase`)
+        console.log('🔍 Admin: Setting recipes state:', data)
+        
+        // Force a complete state refresh
+        setRecipes([]) // Clear first
+        setTimeout(() => {
+          setRecipes(data || []) // Then set new data
+          console.log('🔄 Admin: Recipes state updated with fresh data')
+        }, 100)
+        
       } else {
+        console.log('⚠️ Admin: No Supabase client, using fallback data')
         // Fallback to local data
         setRecipes(fallbackMeals)
       }
     } catch (error) {
-      console.error('Error loading recipes:', error)
+      console.error('❌ Admin: Error loading recipes:', error)
       setMessage({ type: 'error', text: 'Failed to load recipes' })
     } finally {
       setLoading(false)
@@ -136,33 +163,49 @@ export default function Admin() {
 
     setLoading(true)
     try {
+      console.log('🔍 Admin: Saving recipe...')
+      console.log('🔍 Admin: Form data:', formData)
+      console.log('🔍 Admin: Supabase client available:', !!supabase)
+      
       const recipeData = {
         ...formData,
         ingredients: formData.ingredients.filter(i => i.trim()),
         instructions: formData.instructions.filter(i => i.trim())
       }
 
+      console.log('🔍 Admin: Processed recipe data:', recipeData)
+
       if (editingRecipe) {
         // Update existing recipe
+        console.log('🔍 Admin: Updating existing recipe with ID:', editingRecipe.id)
         if (supabase) {
-          const { error } = await supabase
+          const { data, error } = await supabase
             .from('meals')
             .update(recipeData)
             .eq('id', editingRecipe.id)
           
+          console.log('🔍 Admin: Update response:', { data, error })
           if (error) throw error
         } else {
           // Update local data
           setRecipes(prev => prev.map(r => r.id === editingRecipe.id ? { ...r, ...recipeData } : r))
         }
         setMessage({ type: 'success', text: 'Recipe updated successfully!' })
+        setLastUpdatedId(editingRecipe.id) // Track which recipe was updated
+        
+        // Clear the highlight after 3 seconds
+        setTimeout(() => {
+          setLastUpdatedId(null)
+        }, 3000)
       } else {
         // Create new recipe
+        console.log('🔍 Admin: Creating new recipe...')
         if (supabase) {
-          const { error } = await supabase
+          const { data, error } = await supabase
             .from('meals')
             .insert([recipeData])
           
+          console.log('🔍 Admin: Insert response:', { data, error })
           if (error) throw error
         } else {
           // Add to local data
@@ -175,11 +218,32 @@ export default function Admin() {
         setMessage({ type: 'success', text: 'Recipe created successfully!' })
       }
 
+      // Clear the form and editing state
       resetForm()
       setShowForm(false)
-      loadRecipes()
+      
+      // Force reload recipes from database
+      console.log('🔄 Admin: Reloading recipes after save...')
+      await loadRecipes()
+      
+      // Double-check the specific recipe was updated
+      if (editingRecipe && supabase) {
+        console.log('🔍 Admin: Verifying update for recipe ID:', editingRecipe.id)
+        const { data: verifyData, error: verifyError } = await supabase
+          .from('meals')
+          .select('*')
+          .eq('id', editingRecipe.id)
+          .single()
+        
+        if (verifyError) {
+          console.error('❌ Admin: Verification failed:', verifyError)
+        } else {
+          console.log('✅ Admin: Verified updated recipe:', verifyData)
+        }
+      }
+      
     } catch (error) {
-      console.error('Error saving recipe:', error)
+      console.error('❌ Admin: Error saving recipe:', error)
       setMessage({ type: 'error', text: 'Failed to save recipe' })
     } finally {
       setLoading(false)
@@ -246,6 +310,14 @@ export default function Admin() {
             <h1 className="text-3xl font-bold text-gradient">MomFoodie Admin</h1>
           </div>
           <p className="text-gray-600">Manage your recipe database</p>
+          <div className="mt-4">
+            <a 
+              href="/test-supabase-admin" 
+              className="text-sm text-blue-600 hover:text-blue-700 underline"
+            >
+              🔧 Test Supabase Connection
+            </a>
+          </div>
         </div>
 
         {/* Message */}
@@ -283,6 +355,16 @@ export default function Admin() {
           >
             <Plus className="w-5 h-5" />
             Add New Recipe
+          </button>
+          <button
+            onClick={() => {
+              console.log('🔄 Admin: Manual refresh triggered')
+              loadRecipes()
+            }}
+            className="btn-secondary flex items-center gap-2 px-6 py-2"
+          >
+            <Clock className="w-5 h-5" />
+            Refresh
           </button>
         </div>
 
@@ -487,10 +569,22 @@ export default function Admin() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredRecipes.map((recipe) => (
-                <div key={recipe.id} className="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors">
+                <div 
+                  key={recipe.id} 
+                  className={`border rounded-lg p-4 transition-all duration-300 ${
+                    recipe.id === lastUpdatedId 
+                      ? 'border-green-500 bg-green-50 shadow-lg' 
+                      : 'border-gray-200 hover:border-primary-300'
+                  }`}
+                >
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="font-semibold text-gray-800">{recipe.name}</h3>
                     <div className="flex items-center gap-1">
+                      {recipe.id === lastUpdatedId && (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                          Updated
+                        </span>
+                      )}
                       <button
                         onClick={() => editRecipe(recipe)}
                         className="p-1 text-blue-600 hover:bg-blue-50 rounded"
