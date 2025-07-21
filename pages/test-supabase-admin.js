@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import Link from 'next/link'
 
 export default function TestSupabaseAdmin() {
   const [status, setStatus] = useState('')
@@ -99,7 +100,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_actual_supabase_anon_key`}
                 <li>Go to <a href="https://supabase.com/dashboard" target="_blank" className="text-blue-600">Supabase Dashboard</a></li>
                 <li>Select your project</li>
                 <li>Go to Settings → API</li>
-                <li>Copy "Project URL" and "anon public" key</li>
+                <li>Copy &quot;Project URL&quot; and &quot;anon public&quot; key</li>
                 <li>Paste them in your .env.local file</li>
               </ol>
             </div>
@@ -114,9 +115,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_actual_supabase_anon_key`}
         </div>
 
         <div className="text-center mt-8">
-          <a href="/admin" className="btn-secondary">
+          <Link href="/admin" className="btn-secondary">
             ← Back to Admin
-          </a>
+          </Link>
         </div>
       </div>
     </div>

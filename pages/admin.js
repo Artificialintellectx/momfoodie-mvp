@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { fallbackMeals, mealTypes, cookingTimes, dietaryPreferences } from '../lib/data'
+import Link from 'next/link'
 import { 
   Plus, 
   Save, 
@@ -311,12 +312,12 @@ export default function Admin() {
           </div>
           <p className="text-gray-600">Manage your recipe database</p>
           <div className="mt-4">
-            <a 
+            <Link
               href="/test-supabase-admin" 
               className="text-sm text-blue-600 hover:text-blue-700 underline"
             >
               🔧 Test Supabase Connection
-            </a>
+            </Link>
           </div>
         </div>
 
