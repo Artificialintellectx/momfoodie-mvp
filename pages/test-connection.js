@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { testSupabaseConnection, getConnectionStatus, getSetupInstructions } from '../lib/supabase-test'
 import { CheckCircle2, XCircle, AlertCircle, Info, Copy, ExternalLink } from 'lucide-react'
 
@@ -229,12 +230,12 @@ export default function TestConnection() {
 
         {/* Quick Actions */}
         <div className="mt-6 text-center">
-          <a 
+          <Link 
             href="/" 
             className="btn-secondary inline-flex items-center gap-2"
           >
             ← Back to App
-          </a>
+          </Link>
         </div>
       </div>
     </div>
