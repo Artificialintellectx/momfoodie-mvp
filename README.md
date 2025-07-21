@@ -211,4 +211,3 @@ This project is licensed under the MIT License.
 5. **Scale** through referrals and social media
 
 **Made with ❤️ for Nigerian home cooks who deserve better than 30 minutes of meal indecision!** 🍽️✨
-# Vercel deployment test - Tue Jul 22 00:28:39 WAT 2025
