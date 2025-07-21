@@ -59,18 +59,28 @@ export default function Home() {
     try {
       let suggestions = []
       
-      if (supabase && !showIngredientMode) {
+      // Always try Supabase first if available
+      if (supabase) {
+        console.log('🔍 Querying Supabase for meals...')
         const query = supabase.from('meals').select('*')
         if (mealType) query.eq('meal_type', mealType)
         if (cookingTime) query.eq('cooking_time', cookingTime)
         if (dietaryPref) query.eq('dietary_preference', dietaryPref)
         const { data, error } = await query.limit(10)
-        if (!error && data && data.length > 0) {
+        
+        if (error) {
+          console.log('❌ Supabase error:', error.message)
+        } else if (data && data.length > 0) {
+          console.log(`✅ Found ${data.length} meals from Supabase`)
           suggestions = data
+        } else {
+          console.log('⚠️ No meals found in Supabase, using fallback')
         }
       }
       
+      // Fallback to local data if no Supabase or no results
       if (suggestions.length === 0) {
+        console.log('🔄 Using fallback meals data')
         suggestions = fallbackMeals.filter(meal => {
           if (showIngredientMode) {
             return selectedIngredients.some(ingredient => 
@@ -96,6 +106,8 @@ export default function Home() {
       
       const randomIndex = Math.floor(Math.random() * suggestions.length)
       const suggestion = suggestions[randomIndex]
+      console.log(`🎯 Selected meal: ${suggestion.name} (ID: ${suggestion.id})`)
+      console.log(`📝 Description: ${suggestion.description}`)
       setCurrentSuggestion(suggestion)
       trackEvent('suggestion_shown', { meal_id: suggestion.id, meal_name: suggestion.name })
       
