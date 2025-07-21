@@ -378,7 +378,7 @@ export default function Home() {
             <div className="mb-4 sm:mb-6">
               <h4 className="font-semibold text-gray-800 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
                 <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-primary-500" />
-                Ingredients You'll Need:
+                Ingredients You&apos;ll Need:
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {currentSuggestion.ingredients.map((ingredient, index) => (
