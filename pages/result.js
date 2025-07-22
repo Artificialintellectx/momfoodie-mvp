@@ -59,7 +59,7 @@ export default function Result() {
     } else {
       router.push('/')
     }
-  }, [router.query.meal])
+  }, [router.query.meal, router])
 
   const toggleSaveMeal = () => {
     if (!meal) return
@@ -402,7 +402,7 @@ export default function Result() {
                     onClick={() => setShowInstructionsModal(false)}
                     className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                   >
-                    Let's Start Cooking!
+                    Let&apos;s Start Cooking!
                   </button>
                 </div>
               </div>
