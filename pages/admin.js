@@ -26,6 +26,7 @@ export default function Admin() {
   const [searchTerm, setSearchTerm] = useState('')
   const [message, setMessage] = useState({ type: '', text: '' })
   const [lastUpdatedId, setLastUpdatedId] = useState(null)
+  const [lastLoadTime, setLastLoadTime] = useState(null)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -43,7 +44,20 @@ export default function Admin() {
 
   useEffect(() => {
     console.log('🔍 Admin: Component mounted, loading recipes...')
+    // Force fresh data on mount
     loadRecipes()
+    
+    // Also reload when window gains focus (in case user switches tabs)
+    const handleFocus = () => {
+      console.log('🔄 Admin: Window focused, reloading recipes...')
+      loadRecipes()
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [])
 
   const loadRecipes = async () => {
@@ -59,12 +73,12 @@ export default function Admin() {
       if (supabase) {
         console.log('🔍 Admin: Querying Supabase meals table...')
         
-        // Force cache busting by adding a timestamp
+        // Force cache busting by adding a timestamp and using different ordering
         const timestamp = Date.now()
         const { data, error } = await supabase
           .from('meals')
           .select('*')
-          .order('created_at', { ascending: false })
+          .order('id', { ascending: true }) // Change ordering to force fresh query
           .limit(1000) // Force fresh data
         
         console.log('🔍 Admin: Supabase response:', { data, error })
@@ -85,6 +99,7 @@ export default function Admin() {
         // Wait a bit, then set new data
         setTimeout(() => {
           setRecipes(data || [])
+          setLastLoadTime(new Date().toLocaleTimeString())
           console.log('🔄 Admin: Set new recipes data:', data?.length || 0, 'recipes')
           console.log('🔄 Admin: New recipe names:', data?.map(r => r.name))
         }, 200)
@@ -368,12 +383,17 @@ export default function Admin() {
           <button
             onClick={() => {
               console.log('🔄 Admin: Manual refresh triggered')
-              loadRecipes()
+              // Force complete reload by clearing state first
+              setRecipes([])
+              setLoading(true)
+              setTimeout(() => {
+                loadRecipes()
+              }, 100)
             }}
             className="btn-secondary flex items-center gap-2 px-6 py-2"
           >
             <Clock className="w-5 h-5" />
-            Refresh
+            Force Refresh
           </button>
         </div>
 
@@ -568,6 +588,7 @@ export default function Admin() {
             <p>Total recipes in state: {recipes.length}</p>
             <p>Filtered recipes: {filteredRecipes.length}</p>
             <p>Last updated ID: {lastUpdatedId || 'None'}</p>
+            <p>Last load time: {lastLoadTime || 'Never'}</p>
             <p>Current time: {new Date().toLocaleTimeString()}</p>
           </div>
         </div>
