@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { supabase } from '../lib/supabase'
-import { fallbackMeals, mealTypes, cookingTimes, dietaryPreferences } from '../lib/data'
+import { fallbackMeals, mealTypes, cookingTimes, dietaryPreferences, commonIngredients } from '../lib/data'
 import { 
   ChefHat, 
   Heart, 
@@ -10,7 +10,13 @@ import {
   Utensils, 
   Zap,
   Clock,
-  Users
+  Users,
+  Search,
+  Star,
+  ArrowRight,
+  Play,
+  Flame,
+  Coffee
 } from 'lucide-react'
 
 export default function Home() {
@@ -108,212 +114,252 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50 bg-pattern">
-      <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 max-w-4xl">
+    <div className="min-h-screen bg-pattern relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-orange-300/30 to-yellow-300/30 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-yellow-300/30 to-orange-300/30 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-r from-orange-200/20 to-yellow-200/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+      </div>
+
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-6xl">
         
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+        {/* Hero Section */}
+        <div className="text-center mb-12 sm:mb-16 animate-slide-in-up">
+          <div className="flex items-center justify-center gap-4 sm:gap-6 mb-8 sm:mb-10">
             <div className="relative">
-              <ChefHat className="w-8 h-8 sm:w-10 sm:h-10 text-primary-600" />
-              <Heart className="w-2 h-2 sm:w-3 sm:h-3 text-red-500 absolute -top-1 -right-1 animate-bounce-light" />
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-3xl flex items-center justify-center shadow-strong animate-pulse-glow">
+                <ChefHat className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
+              </div>
+              <div className="absolute -top-3 -right-3 w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-medium">
+                <Heart className="w-4 h-4 text-white animate-bounce-light" />
+              </div>
             </div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gradient">
-              MomFudy
-            </h1>
+            <div>
+              <h1 className="heading-xl text-gradient">
+                MomFudy
+              </h1>
+              <p className="text-gray-700 text-lg sm:text-xl font-medium">Your AI Kitchen Assistant</p>
+            </div>
           </div>
-          <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto px-2">
-            Stop wasting time deciding what to cook! Get instant Nigerian meal suggestions in under 30 seconds.
+          <p className="body-lg text-gray-600 max-w-3xl mx-auto px-4 leading-relaxed">
+            Stop wasting time deciding what to cook! Get instant Nigerian meal suggestions tailored to your ingredients and preferences in under 30 seconds.
           </p>
         </div>
 
-        <div className="flex justify-center mb-4 sm:mb-6">
-          <div className="bg-white rounded-full p-1 shadow-lg border w-full max-w-md">
+        {/* Mode Toggle */}
+        <div className="flex justify-center mb-8 sm:mb-12 animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
+          <div className="toggle-container w-full max-w-md">
             <button
               onClick={() => setShowIngredientMode(false)}
-              className={`px-3 sm:px-6 py-2 rounded-full font-medium transition-all text-sm sm:text-base w-1/2 ${
-                !showIngredientMode 
-                ? 'bg-primary-500 text-white shadow-md' 
-                : 'text-gray-600 hover:text-primary-600'
+              className={`toggle-button px-6 py-3 w-1/2 ${
+                !showIngredientMode ? 'active' : 'inactive'
               }`}
             >
-              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1 sm:mr-2" />
+              <Sparkles className="w-4 h-4 inline mr-2" />
               <span className="hidden sm:inline">Quick Suggestion</span>
               <span className="sm:hidden">Quick</span>
             </button>
             <button
               onClick={() => setShowIngredientMode(true)}
-              className={`px-3 sm:px-6 py-2 rounded-full font-medium transition-all text-sm sm:text-base w-1/2 ${
-                showIngredientMode 
-                ? 'bg-primary-500 text-white shadow-md' 
-                : 'text-gray-600 hover:text-primary-600'
+              className={`toggle-button px-6 py-3 w-1/2 ${
+                showIngredientMode ? 'active' : 'inactive'
               }`}
             >
-              <CircleCheck className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1 sm:mr-2" />
+              <CircleCheck className="w-4 h-4 inline mr-2" />
               <span className="hidden sm:inline">What Can I Make?</span>
               <span className="sm:hidden">Ingredients</span>
             </button>
           </div>
         </div>
 
-        {!showIngredientMode ? (
-          <div className="card mb-4 sm:mb-6">
-            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
-              <Utensils className="w-4 h-4 sm:w-5 sm:h-5 text-primary-500" />
-              What are you looking for?
-            </h3>
-            
-            <div className="mb-3 sm:mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Meal Type</label>
-              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
-                {mealTypes.map((type) => (
-                  <button
-                    key={type.value}
-                    onClick={() => setMealType(mealType === type.value ? '' : type.value)}
-                    className={`filter-button text-center ${
-                      mealType === type.value ? 'filter-button-active' : 'filter-button-inactive'
-                    }`}
-                  >
-                    <span className="mr-1 sm:mr-2">{type.emoji}</span>
-                    <span className="text-xs sm:text-sm">{type.label}</span>
-                  </button>
-                ))}
+        {/* Main Content */}
+        <div className="animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
+          {!showIngredientMode ? (
+            <div className="card mb-8 sm:mb-12">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-2xl flex items-center justify-center">
+                  <Utensils className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="heading-md text-gray-800">
+                  What are you looking for?
+                </h3>
               </div>
-            </div>
+              
+              <div className="space-y-8">
+                {/* Meal Type */}
+                <div>
+                  <label className="block text-lg font-semibold text-gray-700 mb-4">Meal Type</label>
+                  <div className="grid grid-cols-3 gap-4">
+                    {mealTypes.map((type) => (
+                      <button
+                        key={type.value}
+                        onClick={() => setMealType(mealType === type.value ? '' : type.value)}
+                        className={`filter-button text-center ${
+                          mealType === type.value ? 'filter-button-active' : 'filter-button-inactive'
+                        }`}
+                      >
+                        <span className="text-2xl mr-2">{type.emoji}</span>
+                        <span className="text-sm font-medium">{type.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="mb-3 sm:mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">How much time do you have?</label>
-              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
-                {cookingTimes.map((time) => (
-                  <button
-                    key={time.value}
-                    onClick={() => setCookingTime(cookingTime === time.value ? '' : time.value)}
-                    className={`filter-button text-center ${
-                      cookingTime === time.value ? 'filter-button-active' : 'filter-button-inactive'
-                    }`}
-                  >
-                    <span className="mr-1 sm:mr-2">{time.emoji}</span>
-                    <span className="text-xs sm:text-sm">{time.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+                {/* Cooking Time */}
+                <div>
+                  <label className="block text-lg font-semibold text-gray-700 mb-4">How much time do you have?</label>
+                  <div className="grid grid-cols-3 gap-4">
+                    {cookingTimes.map((time) => (
+                      <button
+                        key={time.value}
+                        onClick={() => setCookingTime(cookingTime === time.value ? '' : time.value)}
+                        className={`filter-button text-center ${
+                          cookingTime === time.value ? 'filter-button-active' : 'filter-button-inactive'
+                        }`}
+                      >
+                        <span className="text-2xl mr-2">{time.emoji}</span>
+                        <span className="text-sm font-medium">{time.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="mb-3 sm:mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Dietary Preference</label>
-              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
-                {dietaryPreferences.map((pref) => (
+                {/* Dietary Preference */}
+                <div>
+                  <label className="block text-lg font-semibold text-gray-700 mb-4">Dietary Preference</label>
+                  <div className="grid grid-cols-3 gap-4">
+                    {dietaryPreferences.map((pref) => (
+                      <button
+                        key={pref.value}
+                        onClick={() => setDietaryPref(dietaryPref === pref.value ? '' : pref.value)}
+                        className={`filter-button text-center ${
+                          dietaryPref === pref.value ? 'filter-button-active' : 'filter-button-inactive'
+                        }`}
+                      >
+                        <span className="text-2xl mr-2">{pref.emoji}</span>
+                        <span className="text-sm font-medium">{pref.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="card mb-8 sm:mb-12">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center">
+                  <CircleCheck className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="heading-md text-gray-800">
+                  What ingredients do you have?
+                </h3>
+              </div>
+              <p className="text-gray-600 mb-8 body-lg">Select ingredients you have available:</p>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {commonIngredients.map((ingredient) => (
                   <button
-                    key={pref.value}
-                    onClick={() => setDietaryPref(dietaryPref === pref.value ? '' : pref.value)}
+                    key={ingredient}
+                    onClick={() => toggleIngredient(ingredient)}
                     className={`filter-button text-center ${
-                      dietaryPref === pref.value ? 'filter-button-active' : 'filter-button-inactive'
+                      selectedIngredients.includes(ingredient) ? 'filter-button-active' : 'filter-button-inactive'
                     }`}
                   >
-                    <span className="text-xs sm:text-sm">{pref.label}</span>
+                    <span className="text-sm font-medium">{ingredient}</span>
                   </button>
                 ))}
               </div>
+              
+              {selectedIngredients.length > 0 && (
+                <div className="mt-8 p-6 glass-dark rounded-2xl border border-orange-200">
+                  <p className="text-gray-700 body-md">
+                    <span className="font-semibold text-orange-600">Selected:</span> {selectedIngredients.join(', ')}
+                  </p>
+                </div>
+              )}
             </div>
+          )}
+
+          {/* Action Button */}
+          <div className="text-center mb-12 sm:mb-16">
+            <button
+              onClick={getSuggestion}
+              disabled={loading}
+              className="btn-primary text-lg sm:text-xl px-8 sm:px-12 py-5 sm:py-6 flex items-center gap-4 mx-auto w-full max-w-md group"
+            >
+              {loading ? (
+                <>
+                  <div className="loading-spinner w-6 h-6"></div>
+                  <span>Finding Perfect Meal...</span>
+                </>
+              ) : (
+                <>
+                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                    <Flame className="w-4 h-4 text-white" />
+                  </div>
+                  <span>Get Meal Suggestion</span>
+                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
           </div>
-        ) : (
-          <div className="card mb-4 sm:mb-6">
-            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2">
-              <CircleCheck className="w-4 h-4 sm:w-5 sm:h-5 text-primary-500" />
-              What ingredients do you have?
-            </h3>
-            <p className="text-gray-600 mb-3 sm:mb-4 text-sm sm:text-base">Select ingredients you have available:</p>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-              {/* commonIngredients.map((ingredient) => ( // This line was removed as per the new_code */}
-              {/*   <button // This line was removed as per the new_code */}
-              {/*     key={ingredient} // This line was removed as per the new_code */}
-              {/*     onClick={() => toggleIngredient(ingredient)} // This line was removed as per the new_code */}
-              {/*     className={`filter-button text-center text-xs sm:text-sm ${ // This line was removed as per the new_code */}
-              {/*       selectedIngredients.includes(ingredient) ? 'filter-button-active' : 'filter-button-inactive' // This line was removed as per the new_code */}
-              {/*     }`} // This line was removed as per the new_code */}
-              {/*   > // This line was removed as per the new_code */}
-              {/*     {ingredient} // This line was removed as per the new_code */}
-              {/*   </button> // This line was removed as per the new_code */}
-              {/* ))} // This line was removed as per the new_code */}
-            </div>
-            
-            {selectedIngredients.length > 0 && (
-              <div className="mt-3 sm:mt-4 p-3 bg-primary-50 rounded-lg">
-                <p className="text-xs sm:text-sm text-primary-700">
-                  Selected: {selectedIngredients.join(', ')}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="text-center mb-6 sm:mb-8">
-          <button
-            onClick={getSuggestion}
-            disabled={loading}
-            className="btn-primary text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 flex items-center gap-2 sm:gap-3 mx-auto w-full max-w-sm"
-          >
-            {loading ? (
-              <>
-                <Clock className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" />
-                <span className="text-sm sm:text-base">Finding Perfect Meal...</span>
-              </>
-            ) : (
-              <>
-                <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span className="text-sm sm:text-base">Get Meal Suggestion</span>
-              </>
-            )}
-          </button>
         </div>
 
         {/* Saved Meals Section */}
         {savedMeals.length > 0 && (
-          <div className="card mb-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Heart className="w-5 h-5 text-red-500" />
-              Your Saved Meals ({savedMeals.length})
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {savedMeals.slice(0, 6).map((meal) => (
-                <div 
-                  key={meal.id} 
-                  className="p-3 sm:p-4 border border-gray-200 rounded-lg hover:border-primary-300 transition-colors cursor-pointer"
-                  onClick={() => {
-                    localStorage.setItem('currentMeal', JSON.stringify(meal))
-                    const mealParam = encodeURIComponent(JSON.stringify(meal))
-                    router.push(`/result?meal=${mealParam}`)
-                  }}
-                >
-                  <h4 className="font-medium text-gray-800 mb-1 text-sm sm:text-base">{meal.name}</h4>
-                  <p className="text-gray-600 text-xs sm:text-sm line-clamp-2">{meal.description}</p>
-                  <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-                    <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                      {meal.meal_type}
-                    </span>
-                    <span className="bg-green-100 text-green-700 px-2 py-1 rounded">
-                      {meal.difficulty}
-                    </span>
-                  </div>
+          <div className="animate-slide-in-up" style={{ animationDelay: '0.6s' }}>
+            <div className="card mb-8">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center">
+                  <Heart className="w-6 h-6 text-white" />
                 </div>
-              ))}
+                <h3 className="heading-md text-gray-800">
+                  Your Saved Meals ({savedMeals.length})
+                </h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {savedMeals.slice(0, 6).map((meal, index) => (
+                  <div 
+                    key={meal.id} 
+                    className="glass-dark rounded-2xl p-6 hover-lift cursor-pointer border border-orange-100 transition-all duration-300"
+                    onClick={() => {
+                      localStorage.setItem('currentMeal', JSON.stringify(meal))
+                      const mealParam = encodeURIComponent(JSON.stringify(meal))
+                      router.push(`/result?meal=${mealParam}`)
+                    }}
+                    style={{ animationDelay: `${0.1 * index}s` }}
+                  >
+                    <h4 className="font-semibold text-gray-800 mb-3 text-lg">{meal.name}</h4>
+                    <p className="text-gray-600 text-sm line-clamp-2 mb-4">{meal.description}</p>
+                    <div className="flex items-center gap-3">
+                      <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-xl text-xs font-medium">
+                        {meal.meal_type}
+                      </span>
+                      <span className="bg-green-100 text-green-700 px-3 py-1 rounded-xl text-xs font-medium">
+                        {meal.difficulty}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {savedMeals.length > 6 && (
+                <p className="text-center text-gray-500 body-md mt-6">
+                  And {savedMeals.length - 6} more saved meals...
+                </p>
+              )}
             </div>
-            {savedMeals.length > 6 && (
-              <p className="text-center text-sm text-gray-500 mt-3">
-                And {savedMeals.length - 6} more saved meals...
-              </p>
-            )}
           </div>
         )}
 
         {/* Footer */}
-        <div className="text-center mt-8 sm:mt-12 py-4 sm:py-6">
-          <div className="inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/30 shadow-sm">
-            <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-red-500 animate-bounce-light" />
-            <span className="text-gray-600 text-xs sm:text-sm font-medium">Made with love for Nigerian home cooks</span>
-            <ChefHat className="w-3 h-3 sm:w-4 sm:h-4 text-primary-500" />
+        <div className="text-center mt-16 sm:mt-20 animate-slide-in-up" style={{ animationDelay: '0.8s' }}>
+          <div className="glass rounded-3xl px-8 py-6 inline-flex items-center gap-4 border border-orange-200">
+            <Heart className="w-5 h-5 text-red-500 animate-bounce-light" />
+            <span className="text-gray-700 body-md font-medium">Made with love for Nigerian home cooks</span>
+            <ChefHat className="w-5 h-5 text-orange-500" />
           </div>
-          <p className="text-xs text-gray-500 mt-2">Beta version - Your feedback helps us improve!</p>
+          <p className="text-gray-500 text-sm mt-4">Beta version - Your feedback helps us improve!</p>
         </div>
       </div>
     </div>

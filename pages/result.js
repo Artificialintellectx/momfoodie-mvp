@@ -4,366 +4,357 @@ import { supabase } from '../lib/supabase'
 import { fallbackMeals } from '../lib/data'
 import { 
   ChefHat, 
+  Heart, 
   Clock, 
-  Utensils, 
   Users, 
-  Zap, 
-  Heart,
-  ArrowLeft,
-  Share2,
+  Star, 
+  ArrowLeft, 
+  Share2, 
   Bookmark,
-  Star,
-  Timer,
-  Target
+  BookOpen,
+  List,
+  Play,
+  ArrowRight,
+  Zap,
+  Flame
 } from 'lucide-react'
 
 export default function Result() {
   const router = useRouter()
   const [meal, setMeal] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [savedMeals, setSavedMeals] = useState([])
   const [showIngredients, setShowIngredients] = useState(false)
+  const [savedMeals, setSavedMeals] = useState([])
   const [generating, setGenerating] = useState(false)
 
   useEffect(() => {
-    // Get meal data from URL parameters or localStorage
-    const mealData = router.query.meal ? JSON.parse(decodeURIComponent(router.query.meal)) : null
-    
-    if (mealData) {
-      console.log('🔍 Result: Meal data from URL:', mealData)
-      console.log('🔍 Result: Ingredients:', mealData.ingredients)
-      setMeal(mealData)
-    } else {
-      // Fallback: get from localStorage
-      const storedMeal = localStorage.getItem('currentMeal')
-      if (storedMeal) {
-        const parsedMeal = JSON.parse(storedMeal)
-        console.log('🔍 Result: Meal data from localStorage:', parsedMeal)
-        console.log('🔍 Result: Ingredients:', parsedMeal.ingredients)
-        setMeal(parsedMeal)
+    const saved = JSON.parse(localStorage.getItem('savedMeals') || '[]')
+    setSavedMeals(saved)
+
+    // Get meal data from URL params or localStorage
+    let mealData = null
+    if (router.query.meal) {
+      try {
+        mealData = JSON.parse(decodeURIComponent(router.query.meal))
+      } catch (e) {
+        console.error('Error parsing meal data:', e)
       }
     }
     
-    // Load saved meals
-    const saved = JSON.parse(localStorage.getItem('savedMeals') || '[]')
-    setSavedMeals(saved)
-    setLoading(false)
-  }, [router.query])
+    if (!mealData) {
+      const stored = localStorage.getItem('currentMeal')
+      if (stored) {
+        try {
+          mealData = JSON.parse(stored)
+        } catch (e) {
+          console.error('Error parsing stored meal:', e)
+        }
+      }
+    }
+
+    if (mealData) {
+      setMeal(mealData)
+      console.log('Loaded meal:', mealData.name)
+      console.log('Ingredients count:', mealData.ingredients?.length)
+      console.log('Instructions count:', mealData.instructions?.length)
+    } else {
+      router.push('/')
+    }
+  }, [router.query.meal])
+
+  const toggleSaveMeal = () => {
+    if (!meal) return
+    
+    const updatedSavedMeals = savedMeals.find(m => m.id === meal.id)
+      ? savedMeals.filter(m => m.id !== meal.id)
+      : [...savedMeals, meal]
+    
+    setSavedMeals(updatedSavedMeals)
+    localStorage.setItem('savedMeals', JSON.stringify(updatedSavedMeals))
+  }
+
+  const shareMeal = async () => {
+    if (!meal) return
+    
+    const shareText = `Check out this delicious ${meal.name} recipe from MomFudy! 🍽️`
+    const shareUrl = window.location.href
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: meal.name,
+          text: shareText,
+          url: shareUrl
+        })
+      } catch (e) {
+        console.log('Share cancelled')
+      }
+    } else {
+      // Fallback to copying to clipboard
+      try {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`)
+        alert('Recipe link copied to clipboard!')
+      } catch (e) {
+        console.error('Failed to copy:', e)
+      }
+    }
+  }
 
   const getNewSuggestion = async () => {
     setGenerating(true)
-    
     try {
+      console.log('🔍 Getting new suggestion...')
       let suggestions = []
-      
-      // Try to get suggestions from Supabase first
+
+      // Try Supabase first
       if (supabase) {
-        console.log('🔍 Querying Supabase for meals...')
-        const { data, error } = await supabase
-          .from('meals')
-          .select('*')
-          .limit(10)
-        
-        if (error) {
-          console.log('❌ Supabase error:', error.message)
-        } else if (data && data.length > 0) {
+        const { data, error } = await supabase.from('meals').select('*').limit(10)
+        if (!error && data && data.length > 0) {
           console.log(`✅ Found ${data.length} meals from Supabase`)
           suggestions = data
         } else {
           console.log('⚠️ No meals found in Supabase, using fallback')
         }
       }
-      
-      // Use fallback meals if no Supabase data
+
+      // Fallback to local data
       if (suggestions.length === 0) {
-        console.log('🔄 Using fallback meals data')
         suggestions = fallbackMeals
       }
-      
-      // Select a random meal
-      const randomIndex = Math.floor(Math.random() * suggestions.length)
-      const newMeal = suggestions[randomIndex]
-      
-      console.log(`🎯 Selected new meal: ${newMeal.name} (ID: ${newMeal.id})`)
-      
-      // Update the meal state
-      setMeal(newMeal)
-      
-      // Store in localStorage
-      localStorage.setItem('currentMeal', JSON.stringify(newMeal))
-      
-      // Reset to instructions view
-      setShowIngredients(false)
-      
+
+      if (suggestions.length > 0) {
+        const randomIndex = Math.floor(Math.random() * suggestions.length)
+        const newMeal = suggestions[randomIndex]
+        setMeal(newMeal)
+        localStorage.setItem('currentMeal', JSON.stringify(newMeal))
+        console.log(`🎯 New meal selected: ${newMeal.name}`)
+      }
     } catch (error) {
       console.error('Error getting new suggestion:', error)
-      // Fallback to a random fallback meal
-      const randomIndex = Math.floor(Math.random() * fallbackMeals.length)
-      const fallbackMeal = fallbackMeals[randomIndex]
-      setMeal(fallbackMeal)
-      localStorage.setItem('currentMeal', JSON.stringify(fallbackMeal))
     } finally {
       setGenerating(false)
     }
   }
 
-  const saveMeal = () => {
-    if (!meal) return
-    
-    const updatedSaved = [...savedMeals, meal]
-    setSavedMeals(updatedSaved)
-    localStorage.setItem('savedMeals', JSON.stringify(updatedSaved))
-  }
-
-  const removeSavedMeal = () => {
-    const updatedSaved = savedMeals.filter(m => m.id !== meal.id)
-    setSavedMeals(updatedSaved)
-    localStorage.setItem('savedMeals', JSON.stringify(updatedSaved))
-  }
-
-  const isSaved = savedMeals.some(m => m.id === meal?.id)
-
-  const shareMeal = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: `Try this: ${meal.name}`,
-        text: `I found this amazing recipe: ${meal.name} - ${meal.description}`,
-        url: window.location.href
-      })
-    } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(`${meal.name}: ${meal.description}`)
-      alert('Recipe copied to clipboard!')
-    }
-  }
-
-  const getDifficultyColor = (difficulty) => {
-    switch (difficulty) {
-      case 'easy': return 'text-green-600 bg-green-100'
-      case 'medium': return 'text-yellow-600 bg-yellow-100'
-      case 'hard': return 'text-red-600 bg-red-100'
-      default: return 'text-gray-600 bg-gray-100'
-    }
-  }
-
-  const getMealTypeEmoji = (type) => {
-    switch (type) {
-      case 'breakfast': return '🌅'
-      case 'lunch': return '☀️'
-      case 'dinner': return '🌙'
-      default: return '🍽️'
-    }
-  }
-
-  if (loading) {
+  if (!meal) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50 flex items-center justify-center">
-        <div className="text-center">
-          <ChefHat className="w-12 h-12 animate-spin mx-auto mb-4 text-primary-500" />
+      <div className="min-h-screen bg-pattern flex items-center justify-center">
+        <div className="glass rounded-3xl p-8 text-center">
+          <div className="loading-spinner w-8 h-8 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your perfect meal...</p>
         </div>
       </div>
     )
   }
 
-  if (!meal) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50 flex items-center justify-center">
-        <div className="text-center">
-          <Utensils className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          <h2 className="text-xl font-semibold mb-2">No meal found</h2>
-          <p className="text-gray-600 mb-4">Let&apos;s find you something delicious!</p>
-          <button 
-            onClick={() => router.push('/')}
-            className="btn-primary"
-          >
-            Get New Suggestion
-          </button>
-        </div>
-      </div>
-    )
-  }
+  const isSaved = savedMeals.find(m => m.id === meal.id)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-white/30 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <button 
-              onClick={() => router.push('/')}
-              className="flex items-center gap-2 text-gray-600 hover:text-primary-600 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="hidden sm:inline">Back to Search</span>
-            </button>
-            
-            <div className="flex items-center gap-2">
-              <button
-                onClick={shareMeal}
-                className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-full transition-colors"
-                title="Share recipe"
-              >
-                <Share2 className="w-5 h-5" />
-              </button>
-              
-              <button
-                onClick={isSaved ? removeSavedMeal : saveMeal}
-                className={`p-2 rounded-full transition-colors ${
-                  isSaved 
-                    ? 'text-red-600 hover:text-red-700 hover:bg-red-50' 
-                    : 'text-gray-600 hover:text-primary-600 hover:bg-primary-50'
-                }`}
-                title={isSaved ? 'Remove from saved' : 'Save recipe'}
-              >
-                <Heart className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
-              </button>
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen bg-pattern relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-orange-300/30 to-yellow-300/30 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-yellow-300/30 to-orange-300/30 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-
-
-        {/* Meal Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="text-4xl">{getMealTypeEmoji(meal.meal_type)}</div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gradient">{meal.name}</h1>
-          </div>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">{meal.description}</p>
-        </div>
-
-        {/* Meal Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="card text-center">
-            <Clock className="w-6 h-6 mx-auto mb-2 text-blue-500" />
-            <p className="text-sm text-gray-600">Prep Time</p>
-            <p className="font-semibold">{meal.prep_time}</p>
-          </div>
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-4xl">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8 animate-slide-in-up">
+          <button
+            onClick={() => router.push('/')}
+            className="glass rounded-2xl p-3 hover-lift transition-all duration-300 group"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-700 group-hover:-translate-x-1 transition-transform" />
+          </button>
           
-          <div className="card text-center">
-            <Timer className="w-6 h-6 mx-auto mb-2 text-green-500" />
-            <p className="text-sm text-gray-600">Cooking Time</p>
-            <p className="font-semibold capitalize">{meal.cooking_time}</p>
-          </div>
-          
-          <div className="card text-center">
-            <Target className="w-6 h-6 mx-auto mb-2 text-purple-500" />
-            <p className="text-sm text-gray-600">Difficulty</p>
-            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(meal.difficulty)}`}>
-              {meal.difficulty}
-            </span>
-          </div>
-          
-          <div className="card text-center">
-            <Users className="w-6 h-6 mx-auto mb-2 text-orange-500" />
-            <p className="text-sm text-gray-600">Dietary</p>
-            <p className="font-semibold capitalize">{meal.dietary_preference}</p>
-          </div>
-        </div>
-
-        {/* Ingredients and Instructions Toggle */}
-        <div className="flex justify-center mb-6">
-          <div className="bg-white rounded-full p-1 shadow-lg border">
-            <button
-              onClick={() => setShowIngredients(false)}
-              className={`px-6 py-2 rounded-full font-medium transition-all ${
-                !showIngredients 
-                  ? 'bg-primary-500 text-white shadow-md' 
-                  : 'text-gray-600 hover:text-primary-600'
-              }`}
-            >
-              <Utensils className="w-4 h-4 inline mr-2" />
-              Instructions
-            </button>
-            <button
-              onClick={() => setShowIngredients(true)}
-              className={`px-6 py-2 rounded-full font-medium transition-all ${
-                showIngredients 
-                  ? 'bg-primary-500 text-white shadow-md' 
-                  : 'text-gray-600 hover:text-primary-600'
-              }`}
-            >
-              <ChefHat className="w-4 h-4 inline mr-2" />
-              Ingredients
-            </button>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="card">
-          {showIngredients ? (
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-3xl flex items-center justify-center shadow-strong">
+              <ChefHat className="w-7 h-7 text-white" />
+            </div>
             <div>
-              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <ChefHat className="w-6 h-6 text-primary-500" />
-                Ingredients You&apos;ll Need
-              </h2>
-              {meal.ingredients && meal.ingredients.length > 0 ? (
-                <div className="grid gap-3">
-                  {meal.ingredients.map((ingredient, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="w-2 h-2 bg-primary-500 rounded-full flex-shrink-0"></div>
-                      <span className="text-gray-800">{ingredient}</span>
+              <h1 className="heading-lg text-gradient">MomFudy</h1>
+              <p className="text-gray-600 text-sm">Your perfect meal</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <button
+              onClick={shareMeal}
+              className="glass rounded-2xl p-3 hover-lift transition-all duration-300"
+            >
+              <Share2 className="w-5 h-5 text-gray-700" />
+            </button>
+            <button
+              onClick={toggleSaveMeal}
+              className={`rounded-2xl p-3 transition-all duration-300 ${
+                isSaved 
+                  ? 'bg-red-500/20 border border-red-400/30 hover:bg-red-500/30' 
+                  : 'glass hover-lift'
+              }`}
+            >
+              <Heart className={`w-5 h-5 ${isSaved ? 'text-red-500 fill-red-500' : 'text-gray-700'}`} />
+            </button>
+          </div>
+        </div>
+
+        {/* Meal Card */}
+        <div className="animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
+          <div className="card mb-8">
+            {/* Meal Header */}
+            <div className="text-center mb-8">
+              <h2 className="heading-lg text-gray-800 mb-4">{meal.name}</h2>
+              <p className="body-lg text-gray-600 mb-8 max-w-2xl mx-auto">{meal.description}</p>
+              
+              {/* Meal Stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="glass-dark rounded-2xl p-4 text-center">
+                  <Clock className="w-6 h-6 text-orange-500 mx-auto mb-2" />
+                  <p className="text-gray-600 text-sm">Prep Time</p>
+                  <p className="text-gray-800 font-semibold">{meal.prep_time}</p>
+                </div>
+                <div className="glass-dark rounded-2xl p-4 text-center">
+                  <Users className="w-6 h-6 text-blue-500 mx-auto mb-2" />
+                  <p className="text-gray-600 text-sm">Difficulty</p>
+                  <p className="text-gray-800 font-semibold capitalize">{meal.difficulty}</p>
+                </div>
+                <div className="glass-dark rounded-2xl p-4 text-center">
+                  <Star className="w-6 h-6 text-yellow-500 mx-auto mb-2" />
+                  <p className="text-gray-600 text-sm">Type</p>
+                  <p className="text-gray-800 font-semibold capitalize">{meal.meal_type}</p>
+                </div>
+                <div className="glass-dark rounded-2xl p-4 text-center">
+                  <ChefHat className="w-6 h-6 text-green-500 mx-auto mb-2" />
+                  <p className="text-gray-600 text-sm">Diet</p>
+                  <p className="text-gray-800 font-semibold capitalize">{meal.dietary_preference}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Toggle Buttons */}
+            <div className="flex justify-center mb-8">
+              <div className="toggle-container">
+                <button
+                  onClick={() => setShowIngredients(true)}
+                  className={`toggle-button px-6 py-3 ${
+                    showIngredients ? 'active' : 'inactive'
+                  }`}
+                >
+                  <List className="w-4 h-4 inline mr-2" />
+                  Ingredients
+                </button>
+                <button
+                  onClick={() => setShowIngredients(false)}
+                  className={`toggle-button px-6 py-3 ${
+                    !showIngredients ? 'active' : 'inactive'
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4 inline mr-2" />
+                  Instructions
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="animate-fade-in">
+              {showIngredients ? (
+                <div>
+                  <h3 className="heading-md text-gray-800 mb-6 flex items-center gap-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center">
+                      <List className="w-5 h-5 text-white" />
                     </div>
-                  ))}
+                    Ingredients You&apos;ll Need
+                  </h3>
+                  {meal.ingredients && meal.ingredients.length > 0 ? (
+                    <div className="grid gap-4">
+                      {meal.ingredients.map((ingredient, index) => (
+                        <div 
+                          key={index}
+                          className="glass-dark rounded-2xl p-4 flex items-center gap-4 hover-lift transition-all duration-300"
+                          style={{ animationDelay: `${index * 0.1}s` }}
+                        >
+                          <div className="w-3 h-3 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full flex-shrink-0"></div>
+                          <span className="text-gray-700 body-md">{ingredient}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="glass-dark rounded-2xl p-8 text-center">
+                      <p className="text-gray-600 body-md">No ingredients available for this recipe.</p>
+                    </div>
+                  )}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <ChefHat className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>No ingredients available for this recipe.</p>
-                  <p className="text-sm mt-2">Please check the admin panel to add ingredients.</p>
+                <div>
+                  <h3 className="heading-md text-gray-800 mb-6 flex items-center gap-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center">
+                      <BookOpen className="w-5 h-5 text-white" />
+                    </div>
+                    How to Make It
+                  </h3>
+                  {meal.instructions && meal.instructions.length > 0 ? (
+                    <div className="space-y-4">
+                      {meal.instructions.map((instruction, index) => (
+                        <div 
+                          key={index}
+                          className="glass-dark rounded-2xl p-6 hover-lift transition-all duration-300"
+                          style={{ animationDelay: `${index * 0.1}s` }}
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
+                              <span className="text-white font-bold text-sm">{index + 1}</span>
+                            </div>
+                            <p className="text-gray-700 body-md leading-relaxed">{instruction}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="glass-dark rounded-2xl p-8 text-center">
+                      <p className="text-gray-600 body-md">No instructions available for this recipe.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          ) : (
-            <div>
-              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <Utensils className="w-6 h-6 text-primary-500" />
-                How to Make It
-              </h2>
-              <div className="space-y-4">
-                {meal.instructions.map((instruction, index) => (
-                  <div key={index} className="flex gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 bg-primary-500 text-white text-sm rounded-full flex items-center justify-center font-bold">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-gray-800 leading-relaxed">{instruction}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-center mt-8">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
+          <button
+            onClick={() => router.push('/')}
+            className="glass rounded-2xl px-6 py-4 text-gray-700 font-semibold hover-lift transition-all duration-300 flex items-center justify-center gap-3"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Back to Search
+          </button>
+          
           <button
             onClick={getNewSuggestion}
-            className="btn-primary flex items-center justify-center gap-2 px-8 py-3"
             disabled={generating}
+            className="btn-primary px-6 py-4 flex items-center justify-center gap-3 group"
           >
             {generating ? (
-              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
+              <>
+                <div className="loading-spinner w-5 h-5"></div>
+                <span>Finding Another Meal...</span>
+              </>
             ) : (
-              <Zap className="w-5 h-5" />
+              <>
+                <Flame className="w-5 h-5" />
+                <span>Get Another Suggestion</span>
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </>
             )}
-            {generating ? 'Generating...' : 'Get Another Suggestion'}
           </button>
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-12 py-6">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/30 shadow-sm">
-            <Heart className="w-4 h-4 text-red-500 animate-bounce-light" />
-            <span className="text-gray-600 text-sm font-medium">Made with love for Nigerian home cooks by MomFudy</span>
-            <ChefHat className="w-4 h-4 text-primary-500" />
+        <div className="text-center mt-16 animate-slide-in-up" style={{ animationDelay: '0.6s' }}>
+          <div className="glass rounded-3xl px-8 py-6 inline-flex items-center gap-4 border border-orange-200">
+            <Heart className="w-5 h-5 text-red-500 animate-bounce-light" />
+            <span className="text-gray-700 body-md font-medium">Made with love for Nigerian home cooks by MomFudy</span>
+            <ChefHat className="w-5 h-5 text-orange-500" />
           </div>
         </div>
       </div>
