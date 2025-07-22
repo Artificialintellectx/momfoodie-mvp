@@ -30,12 +30,17 @@ export default function Result() {
     const mealData = router.query.meal ? JSON.parse(decodeURIComponent(router.query.meal)) : null
     
     if (mealData) {
+      console.log('🔍 Result: Meal data from URL:', mealData)
+      console.log('🔍 Result: Ingredients:', mealData.ingredients)
       setMeal(mealData)
     } else {
       // Fallback: get from localStorage
       const storedMeal = localStorage.getItem('currentMeal')
       if (storedMeal) {
-        setMeal(JSON.parse(storedMeal))
+        const parsedMeal = JSON.parse(storedMeal)
+        console.log('🔍 Result: Meal data from localStorage:', parsedMeal)
+        console.log('🔍 Result: Ingredients:', parsedMeal.ingredients)
+        setMeal(parsedMeal)
       }
     }
     
@@ -219,6 +224,17 @@ export default function Result() {
       </div>
 
       <div className="container mx-auto px-4 py-6 max-w-4xl">
+        {/* Debug Info */}
+        <div className="card mb-4 bg-blue-50 border-blue-200">
+          <h3 className="text-sm font-semibold text-blue-800 mb-2">Debug Info</h3>
+          <div className="text-xs text-blue-700">
+            <p>Meal ID: {meal.id}</p>
+            <p>Ingredients count: {meal.ingredients?.length || 0}</p>
+            <p>Instructions count: {meal.instructions?.length || 0}</p>
+            <p>Ingredients: {meal.ingredients ? JSON.stringify(meal.ingredients) : 'undefined'}</p>
+          </div>
+        </div>
+
         {/* Meal Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
@@ -293,14 +309,22 @@ export default function Result() {
                 <ChefHat className="w-6 h-6 text-primary-500" />
                 Ingredients You&apos;ll Need
               </h2>
-              <div className="grid gap-3">
-                {meal.ingredients.map((ingredient, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="w-2 h-2 bg-primary-500 rounded-full flex-shrink-0"></div>
-                    <span className="text-gray-800">{ingredient}</span>
-                  </div>
-                ))}
-              </div>
+              {meal.ingredients && meal.ingredients.length > 0 ? (
+                <div className="grid gap-3">
+                  {meal.ingredients.map((ingredient, index) => (
+                    <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="w-2 h-2 bg-primary-500 rounded-full flex-shrink-0"></div>
+                      <span className="text-gray-800">{ingredient}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <ChefHat className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>No ingredients available for this recipe.</p>
+                  <p className="text-sm mt-2">Please check the admin panel to add ingredients.</p>
+                </div>
+              )}
             </div>
           ) : (
             <div>
