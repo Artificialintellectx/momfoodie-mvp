@@ -28,6 +28,7 @@ export default function Admin() {
   const [message, setMessage] = useState({ type: '', text: '' })
   const [lastUpdatedId, setLastUpdatedId] = useState(null)
   const [lastLoadTime, setLastLoadTime] = useState(null)
+  const [currentTime, setCurrentTime] = useState('')
 
   // Form state
   const [formData, setFormData] = useState({
@@ -47,6 +48,9 @@ export default function Admin() {
     console.log('🔍 Admin: Component mounted, loading recipes...')
     // Force fresh data on mount
     loadRecipes()
+    
+    // Set current time on client side only
+    setCurrentTime(new Date().toLocaleTimeString())
     
     // Also reload when window gains focus (in case user switches tabs)
     const handleFocus = () => {
@@ -210,7 +214,10 @@ export default function Admin() {
             .eq('id', editingRecipe.id)
           
           console.log('🔍 Admin: Update response:', { data, error })
-          if (error) throw error
+          if (error) {
+            console.error('❌ Admin: Supabase update error details:', error)
+            throw new Error(`Database update failed: ${error.message || error.details || 'Unknown error'}`)
+          }
         } else {
           // Update local data
           setRecipes(prev => prev.map(r => r.id === editingRecipe.id ? { ...r, ...recipeData } : r))
@@ -231,7 +238,10 @@ export default function Admin() {
             .insert([recipeData])
           
           console.log('🔍 Admin: Insert response:', { data, error })
-          if (error) throw error
+          if (error) {
+            console.error('❌ Admin: Supabase insert error details:', error)
+            throw new Error(`Database insert failed: ${error.message || error.details || 'Unknown error'}`)
+          }
         } else {
           // Add to local data
           const newRecipe = {
@@ -632,7 +642,7 @@ export default function Admin() {
             <p>Filtered recipes: {filteredRecipes.length}</p>
             <p>Last updated ID: {lastUpdatedId || 'None'}</p>
             <p>Last load time: {lastLoadTime || 'Never'}</p>
-            <p>Current time: {new Date().toLocaleTimeString()}</p>
+            <p>Current time: {currentTime || 'Loading...'}</p>
           </div>
         </div>
 
