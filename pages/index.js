@@ -189,58 +189,109 @@ export default function Home() {
               <div className="space-y-8">
                 {/* Meal Type */}
                 <div>
-                  <label className="block text-lg font-semibold text-gray-700 mb-4">Meal Type</label>
-                  <div className="grid grid-cols-3 gap-4">
-                    {mealTypes.map((type) => (
-                      <button
-                        key={type.value}
-                        onClick={() => setMealType(mealType === type.value ? '' : type.value)}
-                        className={`filter-button text-center ${
-                          mealType === type.value ? 'filter-button-active' : 'filter-button-inactive'
-                        }`}
-                      >
-                        <span className="text-2xl mr-2">{type.emoji}</span>
-                        <span className="text-sm font-medium">{type.label}</span>
-                      </button>
-                    ))}
+                  <label className="block text-lg font-semibold text-gray-700 mb-6">What type of meal are you looking for?</label>
+                  <div className="flex justify-center">
+                    <div className="grid grid-cols-3 gap-4 w-full max-w-md">
+                      {mealTypes.map((type) => (
+                        <button
+                          key={type.value}
+                          onClick={() => setMealType(mealType === type.value ? '' : type.value)}
+                          className={`relative rounded-2xl p-4 transition-all duration-300 text-center ${
+                            mealType === type.value 
+                              ? 'bg-gradient-to-br from-orange-100 to-orange-200 border-2 border-orange-300 shadow-lg transform scale-105' 
+                              : 'bg-white border-2 border-gray-100 hover:border-orange-200 hover:shadow-md'
+                          }`}
+                        >
+                          <div className="flex flex-col items-center space-y-2">
+                            <div className={`text-3xl ${mealType === type.value ? 'transform scale-110' : ''}`}>
+                              {type.emoji}
+                            </div>
+                            <span className={`text-sm font-semibold ${
+                              mealType === type.value ? 'text-orange-800' : 'text-gray-700'
+                            }`}>
+                              {type.label}
+                            </span>
+                          </div>
+                          {mealType === type.value && (
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+                              <div className="w-2 h-2 bg-white rounded-full"></div>
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
                 {/* Cooking Time */}
                 <div>
-                  <label className="block text-lg font-semibold text-gray-700 mb-4">How much time do you have?</label>
-                  <div className="grid grid-cols-3 gap-4">
-                    {cookingTimes.map((time) => (
-                      <button
-                        key={time.value}
-                        onClick={() => setCookingTime(cookingTime === time.value ? '' : time.value)}
-                        className={`filter-button text-center ${
-                          cookingTime === time.value ? 'filter-button-active' : 'filter-button-inactive'
-                        }`}
-                      >
-                        <span className="text-2xl mr-2">{time.emoji}</span>
-                        <span className="text-sm font-medium">{time.label}</span>
-                      </button>
-                    ))}
+                  <label className="block text-lg font-semibold text-gray-700 mb-6">How much time do you have?</label>
+                  <div className="flex justify-center">
+                    <div className="grid grid-cols-3 gap-4 w-full max-w-md">
+                      {cookingTimes.map((time) => (
+                        <button
+                          key={time.value}
+                          onClick={() => setCookingTime(cookingTime === time.value ? '' : time.value)}
+                          className={`relative rounded-2xl p-4 transition-all duration-300 text-center ${
+                            cookingTime === time.value 
+                              ? 'bg-gradient-to-br from-orange-100 to-orange-200 border-2 border-orange-300 shadow-lg transform scale-105' 
+                              : 'bg-white border-2 border-gray-100 hover:border-orange-200 hover:shadow-md'
+                          }`}
+                        >
+                          <div className="flex flex-col items-center space-y-2">
+                            <div className={`text-3xl ${cookingTime === time.value ? 'transform scale-110' : ''}`}>
+                              {time.emoji}
+                            </div>
+                            <span className={`text-sm font-semibold ${
+                              cookingTime === time.value ? 'text-orange-800' : 'text-gray-700'
+                            }`}>
+                              {time.label}
+                            </span>
+                          </div>
+                          {cookingTime === time.value && (
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+                              <div className="w-2 h-2 bg-white rounded-full"></div>
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
                 {/* Dietary Preference */}
                 <div>
-                  <label className="block text-lg font-semibold text-gray-700 mb-4">Dietary Preference</label>
-                  <div className="grid grid-cols-3 gap-4">
-                    {dietaryPreferences.map((pref) => (
-                      <button
-                        key={pref.value}
-                        onClick={() => setDietaryPref(dietaryPref === pref.value ? '' : pref.value)}
-                        className={`filter-button text-center ${
-                          dietaryPref === pref.value ? 'filter-button-active' : 'filter-button-inactive'
-                        }`}
-                      >
-                        <span className="text-2xl mr-2">{pref.emoji}</span>
-                        <span className="text-sm font-medium">{pref.label}</span>
-                      </button>
-                    ))}
+                  <label className="block text-lg font-semibold text-gray-700 mb-6">Any dietary preferences?</label>
+                  <div className="flex justify-center">
+                    <div className="grid grid-cols-3 gap-4 w-full max-w-md">
+                      {dietaryPreferences.map((pref) => (
+                        <button
+                          key={pref.value}
+                          onClick={() => setDietaryPref(dietaryPref === pref.value ? '' : pref.value)}
+                          className={`relative rounded-2xl p-4 transition-all duration-300 text-center ${
+                            dietaryPref === pref.value 
+                              ? 'bg-gradient-to-br from-orange-100 to-orange-200 border-2 border-orange-300 shadow-lg transform scale-105' 
+                              : 'bg-white border-2 border-gray-100 hover:border-orange-200 hover:shadow-md'
+                          }`}
+                        >
+                          <div className="flex flex-col items-center space-y-2">
+                            <div className={`text-3xl ${dietaryPref === pref.value ? 'transform scale-110' : ''}`}>
+                              {pref.emoji}
+                            </div>
+                            <span className={`text-sm font-semibold ${
+                              dietaryPref === pref.value ? 'text-orange-800' : 'text-gray-700'
+                            }`}>
+                              {pref.label}
+                            </span>
+                          </div>
+                          {dietaryPref === pref.value && (
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+                              <div className="w-2 h-2 bg-white rounded-full"></div>
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
