@@ -274,9 +274,7 @@ export default function Home() {
               <p className="text-gray-700 text-lg sm:text-xl font-medium">Your Smart Kitchen Assistant</p>
             </div>
           </div>
-          <p className="body-lg text-gray-600 max-w-3xl mx-auto px-4 leading-relaxed">
-            Stop wasting time deciding what to cook! Get instant Nigerian meal suggestions tailored to your ingredients and preferences in under 30 seconds.
-          </p>
+
         </div>
 
         {/* Mode Toggle */}
@@ -464,29 +462,7 @@ export default function Home() {
             </div>
           )}
 
-          {/* Action Button */}
-          <div className="text-center mb-12 sm:mb-16">
-            <button
-              onClick={getSuggestion}
-              disabled={loading}
-              className="btn-primary text-lg sm:text-xl px-8 sm:px-12 py-5 sm:py-6 flex items-center gap-4 mx-auto w-full max-w-md group"
-            >
-              {loading ? (
-                <>
-                  <div className="loading-spinner w-6 h-6"></div>
-                  <span>Finding Perfect Meal...</span>
-                </>
-              ) : (
-                <>
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                    <Flame className="w-4 h-4 text-white" />
-                  </div>
-                  <span>Get Meal Suggestion</span>
-                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </button>
-          </div>
+
         </div>
 
         {/* Saved Meals Section */}
@@ -543,6 +519,28 @@ export default function Home() {
             <ChefHat className="w-5 h-5 text-orange-500" />
           </div>
           <p className="text-gray-500 text-sm mt-4">Beta version - Your feedback helps us improve!</p>
+        </div>
+
+        {/* Floating Get Meal Suggestion Button */}
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
+          <button
+            onClick={getSuggestion}
+            disabled={loading}
+            className="btn-primary px-8 py-3 flex items-center justify-center gap-3 group shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 min-w-[200px]"
+          >
+            {loading ? (
+              <>
+                <div className="loading-spinner w-4 h-4"></div>
+                <span className="text-sm whitespace-nowrap">Finding Perfect Meal...</span>
+              </>
+            ) : (
+              <>
+                <Flame className="w-4 h-4" />
+                <span className="text-sm whitespace-nowrap">Get Meal Suggestion</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>
