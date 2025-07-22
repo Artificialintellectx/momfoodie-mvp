@@ -22,9 +22,9 @@ import {
 export default function Result() {
   const router = useRouter()
   const [meal, setMeal] = useState(null)
-  const [showIngredients, setShowIngredients] = useState(false)
   const [savedMeals, setSavedMeals] = useState([])
   const [generating, setGenerating] = useState(false)
+  const [showInstructionsModal, setShowInstructionsModal] = useState(false)
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('savedMeals') || '[]')
@@ -197,125 +197,97 @@ export default function Result() {
           </div>
         </div>
 
-        {/* Meal Card */}
+        {/* Ultra Compact Hero Section */}
         <div className="animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
-          <div className="card mb-8">
-            {/* Meal Header */}
-            <div className="text-center mb-8">
-              <h2 className="heading-lg text-gray-800 mb-4">{meal.name}</h2>
-              <p className="body-lg text-gray-600 mb-8 max-w-2xl mx-auto">{meal.description}</p>
-              
-              {/* Meal Stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="glass-dark rounded-2xl p-4 text-center">
-                  <Clock className="w-6 h-6 text-orange-500 mx-auto mb-2" />
-                  <p className="text-gray-600 text-sm">Prep Time</p>
-                  <p className="text-gray-800 font-semibold">{meal.prep_time}</p>
-                </div>
-                <div className="glass-dark rounded-2xl p-4 text-center">
-                  <Users className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-                  <p className="text-gray-600 text-sm">Difficulty</p>
-                  <p className="text-gray-800 font-semibold capitalize">{meal.difficulty}</p>
-                </div>
-                <div className="glass-dark rounded-2xl p-4 text-center">
-                  <Star className="w-6 h-6 text-yellow-500 mx-auto mb-2" />
-                  <p className="text-gray-600 text-sm">Type</p>
-                  <p className="text-gray-800 font-semibold capitalize">{meal.meal_type}</p>
-                </div>
-                <div className="glass-dark rounded-2xl p-4 text-center">
-                  <ChefHat className="w-6 h-6 text-green-500 mx-auto mb-2" />
-                  <p className="text-gray-600 text-sm">Diet</p>
-                  <p className="text-gray-800 font-semibold capitalize">{meal.dietary_preference}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Toggle Buttons */}
-            <div className="flex justify-center mb-8">
-              <div className="toggle-container">
-                <button
-                  onClick={() => setShowIngredients(true)}
-                  className={`toggle-button px-6 py-3 ${
-                    showIngredients ? 'active' : 'inactive'
-                  }`}
-                >
-                  <List className="w-4 h-4 inline mr-2" />
-                  Ingredients
-                </button>
-                <button
-                  onClick={() => setShowIngredients(false)}
-                  className={`toggle-button px-6 py-3 ${
-                    !showIngredients ? 'active' : 'inactive'
-                  }`}
-                >
-                  <BookOpen className="w-4 h-4 inline mr-2" />
-                  Instructions
-                </button>
-              </div>
-            </div>
-
+          <div className="relative overflow-hidden rounded-2xl mb-4">
+            {/* Background Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-yellow-400 to-red-400 opacity-10"></div>
+            
             {/* Content */}
-            <div className="animate-fade-in">
-              {showIngredients ? (
-                <div>
-                  <h3 className="heading-md text-gray-800 mb-6 flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center">
-                      <List className="w-5 h-5 text-white" />
-                    </div>
-                    Ingredients You&apos;ll Need
-                  </h3>
-                  {meal.ingredients && meal.ingredients.length > 0 ? (
-                    <div className="grid gap-4">
-                      {meal.ingredients.map((ingredient, index) => (
-                        <div
-                          key={index}
-                          className="glass-dark rounded-2xl p-4 flex items-center gap-4 hover-lift transition-all duration-300"
-                          style={{ animationDelay: `${index * 0.1}s` }}
-                        >
-                          <div className="w-3 h-3 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full flex-shrink-0"></div>
-                          <span className="text-gray-700 body-md">{ingredient}</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="glass-dark rounded-2xl p-8 text-center">
-                      <p className="text-gray-600 body-md">No ingredients available for this recipe.</p>
-                    </div>
-                  )}
+            <div className="relative p-4">
+              <div className="text-center mb-4">
+                <h1 className="heading-md text-gradient mb-2">{meal.name}</h1>
+                <p className="text-sm text-gray-600 max-w-xl mx-auto">{meal.description}</p>
+              </div>
+
+              {/* Ultra Compact Meal Stats */}
+              <div className="grid grid-cols-4 gap-2">
+                <div className="glass-dark rounded-lg p-2 text-center">
+                  <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center mx-auto mb-1">
+                    <Clock className="w-3 h-3 text-white" />
+                  </div>
+                  <p className="text-gray-600 text-xs mb-0.5">Time</p>
+                  <p className="text-gray-800 font-bold text-xs">{meal.prep_time}</p>
                 </div>
-              ) : (
-                <div>
-                  <h3 className="heading-md text-gray-800 mb-6 flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center">
-                      <BookOpen className="w-5 h-5 text-white" />
-                    </div>
-                    How to Make It
-                  </h3>
-                  {meal.instructions && meal.instructions.length > 0 ? (
-                    <div className="space-y-4">
-                      {meal.instructions.map((instruction, index) => (
-                        <div 
-                          key={index}
-                          className="glass-dark rounded-2xl p-6 hover-lift transition-all duration-300"
-                          style={{ animationDelay: `${index * 0.1}s` }}
-                        >
-                          <div className="flex items-start gap-4">
-                            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
-                              <span className="text-white font-bold text-sm">{index + 1}</span>
-                            </div>
-                            <p className="text-gray-700 body-md leading-relaxed">{instruction}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="glass-dark rounded-2xl p-8 text-center">
-                      <p className="text-gray-600 body-md">No instructions available for this recipe.</p>
-                    </div>
-                  )}
+                
+                <div className="glass-dark rounded-lg p-2 text-center">
+                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mx-auto mb-1">
+                    <Users className="w-3 h-3 text-white" />
+                  </div>
+                  <p className="text-gray-600 text-xs mb-0.5">Level</p>
+                  <p className="text-gray-800 font-bold text-xs capitalize">{meal.difficulty}</p>
                 </div>
-              )}
+                
+                <div className="glass-dark rounded-lg p-2 text-center">
+                  <div className="w-6 h-6 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center mx-auto mb-1">
+                    <Star className="w-3 h-3 text-white" />
+                  </div>
+                  <p className="text-gray-600 text-xs mb-0.5">Type</p>
+                  <p className="text-gray-800 font-bold text-xs capitalize">{meal.meal_type}</p>
+                </div>
+                
+                <div className="glass-dark rounded-lg p-2 text-center">
+                  <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mx-auto mb-1">
+                    <ChefHat className="w-3 h-3 text-white" />
+                  </div>
+                  <p className="text-gray-600 text-xs mb-0.5">Diet</p>
+                  <p className="text-gray-800 font-bold text-xs capitalize">{meal.dietary_preference}</p>
+                </div>
+              </div>
             </div>
+          </div>
+        </div>
+
+        {/* Ultra Compact Ingredients Section */}
+        <div className="animate-slide-in-up" style={{ animationDelay: '0.3s' }}>
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="heading-sm text-gray-800 flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-lg">
+                  <List className="w-4 h-4 text-white" />
+                </div>
+                Ingredients
+              </h2>
+              
+              <button
+                onClick={() => setShowInstructionsModal(true)}
+                className="btn-primary px-3 py-1.5 flex items-center gap-1.5 text-xs font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                <Play className="w-3 h-3" />
+                Instructions
+                <ArrowRight className="w-2.5 h-2.5" />
+              </button>
+            </div>
+            
+            {meal.ingredients && meal.ingredients.length > 0 ? (
+              <div className="grid gap-2">
+                {meal.ingredients.map((ingredient, index) => (
+                  <div
+                    key={index}
+                    className="glass-dark rounded-lg p-3 flex items-center gap-2 hover-lift transition-all duration-300 border border-orange-100"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <div className="w-2 h-2 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full flex-shrink-0 shadow-sm"></div>
+                    <span className="text-gray-700 text-sm font-medium">{ingredient}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="glass-dark rounded-lg p-6 text-center border-2 border-dashed border-gray-300">
+                <List className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-gray-600 text-sm">No ingredients available for this recipe.</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -323,10 +295,12 @@ export default function Result() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
           <button
             onClick={() => router.push('/')}
-            className="glass rounded-2xl px-6 py-4 text-gray-700 font-semibold hover-lift transition-all duration-300 flex items-center justify-center gap-3"
+            className="group inline-flex items-center gap-3 px-6 py-4 bg-white/90 backdrop-blur-sm rounded-2xl border border-gray-200/60 hover:bg-white hover:border-orange-300 hover:shadow-xl transition-all duration-300 text-gray-700 hover:text-orange-600 font-semibold"
           >
-            <ArrowLeft className="w-5 h-5" />
-            Back to Search
+            <div className="w-8 h-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center group-hover:from-orange-100 group-hover:to-orange-200 transition-all duration-300">
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-300" />
+            </div>
+            <span>Back to Search</span>
           </button>
           
           <button
@@ -348,6 +322,93 @@ export default function Result() {
             )}
           </button>
         </div>
+
+        {/* Modern Instructions Modal */}
+        {showInstructionsModal && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div className="bg-white/95 backdrop-blur-xl rounded-[2rem] max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl animate-slide-in-up border border-white/20">
+              {/* Modern Header */}
+              <div className="relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 opacity-90"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent"></div>
+                <div className="relative p-8 text-white">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-6">
+                      <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30">
+                        <BookOpen className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <h3 className="text-3xl font-bold mb-2 tracking-tight">{meal.name}</h3>
+                        <p className="text-white/90 text-lg font-medium">Cooking Instructions</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowInstructionsModal(false)}
+                      className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white/30 transition-all duration-300 border border-white/30 group"
+                    >
+                      <span className="text-white text-2xl font-light group-hover:scale-110 transition-transform duration-300">×</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modern Content */}
+              <div className="p-8 overflow-y-auto max-h-[calc(90vh-180px)]">
+                {meal.instructions && meal.instructions.length > 0 ? (
+                  <div className="space-y-4">
+                    {meal.instructions.map((instruction, index) => (
+                      <div 
+                        key={index}
+                        className="group bg-white/60 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/80 transition-all duration-300 border border-gray-100/50 hover:border-orange-200/50 hover:shadow-lg"
+                        style={{ animationDelay: `${index * 0.1}s` }}
+                      >
+                        <div className="flex items-start gap-5">
+                          <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-105 transition-transform duration-300">
+                            <span className="text-white font-bold text-lg">{index + 1}</span>
+                          </div>
+                          <div className="flex-1 pt-1">
+                            <p className="text-gray-800 text-lg leading-relaxed font-medium">{instruction}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-12 text-center border-2 border-dashed border-gray-300/50">
+                    <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 text-xl font-medium">No instructions available for this recipe.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Modern Footer */}
+              <div className="p-6 bg-gradient-to-r from-gray-50/80 to-orange-50/80 backdrop-blur-sm border-t border-gray-200/50">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <div className="flex items-center gap-6 text-gray-600">
+                    <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-3 py-2 rounded-xl">
+                      <Clock className="w-4 h-4 text-orange-500" />
+                      <span className="font-medium text-sm">{meal.prep_time}</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-3 py-2 rounded-xl">
+                      <Users className="w-4 h-4 text-blue-500" />
+                      <span className="font-medium text-sm capitalize">{meal.difficulty}</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-3 py-2 rounded-xl">
+                      <Star className="w-4 h-4 text-yellow-500" />
+                      <span className="font-medium text-sm capitalize">{meal.meal_type}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowInstructionsModal(false)}
+                    className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                  >
+                    Let's Start Cooking!
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="text-center mt-16 animate-slide-in-up" style={{ animationDelay: '0.6s' }}>
