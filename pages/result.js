@@ -267,21 +267,13 @@ export default function Result() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 mt-8">
+        <div className="flex justify-center mt-8">
           <button
             onClick={() => router.push('/')}
-            className="btn-primary flex-1 flex items-center justify-center gap-2"
+            className="btn-primary flex items-center justify-center gap-2 px-8 py-3"
           >
             <Zap className="w-5 h-5" />
             Get Another Suggestion
-          </button>
-          
-          <button
-            onClick={() => router.push('/admin')}
-            className="btn-secondary flex-1 flex items-center justify-center gap-2"
-          >
-            <ChefHat className="w-5 h-5" />
-            Manage Recipes
           </button>
         </div>
 
