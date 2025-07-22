@@ -73,7 +73,69 @@ export default function Home() {
             let matches = true
             if (mealType && meal.meal_type !== mealType) matches = false
             if (cookingTime && meal.cooking_time !== cookingTime) matches = false
-            if (dietaryPref && dietaryPref !== 'any' && meal.dietary_preference !== dietaryPref && meal.dietary_preference !== 'any') matches = false
+            if (dietaryPref && dietaryPref !== 'any') {
+              // Enhanced dietary preference filtering
+              const mealPref = meal.dietary_preference
+              const userPref = dietaryPref
+              
+              // Handle special dietary preference logic
+              if (userPref === 'halal') {
+                // Halal meals should not contain pork or alcohol
+                const hasPork = meal.ingredients.some(ingredient => 
+                  ingredient.toLowerCase().includes('pork') || 
+                  ingredient.toLowerCase().includes('bacon') ||
+                  ingredient.toLowerCase().includes('ham')
+                )
+                if (hasPork) matches = false
+              } else if (userPref === 'pescatarian') {
+                // Pescatarian can have fish but not other meat
+                const hasMeat = meal.ingredients.some(ingredient => 
+                  ingredient.toLowerCase().includes('chicken') || 
+                  ingredient.toLowerCase().includes('beef') ||
+                  ingredient.toLowerCase().includes('pork') ||
+                  ingredient.toLowerCase().includes('lamb')
+                )
+                if (hasMeat) matches = false
+              } else if (userPref === 'lacto_vegetarian') {
+                // Lacto-vegetarian can have dairy but not meat/fish
+                const hasMeatOrFish = meal.ingredients.some(ingredient => 
+                  ingredient.toLowerCase().includes('chicken') || 
+                  ingredient.toLowerCase().includes('beef') ||
+                  ingredient.toLowerCase().includes('fish') ||
+                  ingredient.toLowerCase().includes('pork')
+                )
+                if (hasMeatOrFish) matches = false
+              } else if (userPref === 'gluten_free') {
+                // Gluten-free should not contain wheat, barley, rye
+                const hasGluten = meal.ingredients.some(ingredient => 
+                  ingredient.toLowerCase().includes('wheat') || 
+                  ingredient.toLowerCase().includes('barley') ||
+                  ingredient.toLowerCase().includes('rye') ||
+                  ingredient.toLowerCase().includes('bread') ||
+                  ingredient.toLowerCase().includes('flour')
+                )
+                if (hasGluten) matches = false
+              } else if (userPref === 'low_sodium') {
+                // Low-sodium meals should avoid high-salt ingredients
+                const hasHighSodium = meal.ingredients.some(ingredient => 
+                  ingredient.toLowerCase().includes('seasoning cube') || 
+                  ingredient.toLowerCase().includes('stock cube') ||
+                  ingredient.toLowerCase().includes('bouillon')
+                )
+                if (hasHighSodium) matches = false
+              } else if (userPref === 'low_fat') {
+                // Low-fat meals should avoid high-fat ingredients
+                const hasHighFat = meal.ingredients.some(ingredient => 
+                  ingredient.toLowerCase().includes('palm oil') || 
+                  ingredient.toLowerCase().includes('coconut oil') ||
+                  ingredient.toLowerCase().includes('butter')
+                )
+                if (hasHighFat) matches = false
+              } else {
+                // Standard dietary preference matching
+                if (mealPref !== userPref && mealPref !== 'any') matches = false
+              }
+            }
             return matches
           }
         })
@@ -263,30 +325,30 @@ export default function Home() {
                 <div>
                   <label className="block text-lg font-semibold text-gray-700 mb-6">Any dietary preferences?</label>
                   <div className="flex justify-center">
-                    <div className="grid grid-cols-3 gap-4 w-full max-w-md">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 w-full max-w-4xl">
                       {dietaryPreferences.map((pref) => (
                         <button
                           key={pref.value}
                           onClick={() => setDietaryPref(dietaryPref === pref.value ? '' : pref.value)}
-                          className={`relative rounded-2xl p-4 transition-all duration-300 text-center ${
+                          className={`relative rounded-2xl p-3 transition-all duration-300 text-center ${
                             dietaryPref === pref.value 
                               ? 'bg-gradient-to-br from-orange-100 to-orange-200 border-2 border-orange-300 shadow-lg transform scale-105' 
                               : 'bg-white border-2 border-gray-100 hover:border-orange-200 hover:shadow-md'
                           }`}
                         >
-                          <div className="flex flex-col items-center space-y-2">
-                            <div className={`text-3xl ${dietaryPref === pref.value ? 'transform scale-110' : ''}`}>
+                          <div className="flex flex-col items-center space-y-1">
+                            <div className={`text-2xl ${dietaryPref === pref.value ? 'transform scale-110' : ''}`}>
                               {pref.emoji}
                             </div>
-                            <span className={`text-sm font-semibold ${
+                            <span className={`text-xs font-semibold ${
                               dietaryPref === pref.value ? 'text-orange-800' : 'text-gray-700'
                             }`}>
                               {pref.label}
                             </span>
                           </div>
                           {dietaryPref === pref.value && (
-                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
-                              <div className="w-2 h-2 bg-white rounded-full"></div>
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full flex items-center justify-center">
+                              <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                             </div>
                           )}
                         </button>
