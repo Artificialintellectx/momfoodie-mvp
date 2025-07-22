@@ -279,7 +279,7 @@
 - Advanced dietary filters
 
 ### Version 2.0 (Month 6)
-- AI-powered personalized suggestions
+- Smart-powered personalized suggestions
 - Nutritional information
 - Marketplace integration
 - Multi-city expansion

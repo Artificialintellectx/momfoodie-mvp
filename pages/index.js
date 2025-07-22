@@ -139,7 +139,7 @@ export default function Home() {
               <h1 className="heading-xl text-gradient">
                 MomFudy
               </h1>
-              <p className="text-gray-700 text-lg sm:text-xl font-medium">Your AI Kitchen Assistant</p>
+              <p className="text-gray-700 text-lg sm:text-xl font-medium">Your Smart Kitchen Assistant</p>
             </div>
           </div>
           <p className="body-lg text-gray-600 max-w-3xl mx-auto px-4 leading-relaxed">
