@@ -1,0 +1,24 @@
+# Ignore development files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Ignore cache directories
+.next/cache
+node_modules/.cache
+
+# Ignore test files
+**/*.test.js
+**/*.test.ts
+**/*.spec.js
+**/*.spec.ts
+
+# Ignore documentation
+*.md
+!README.md
+
+# Ignore development tools
+.vscode/
+.idea/
+*.log 

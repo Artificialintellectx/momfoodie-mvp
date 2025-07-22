@@ -118,7 +118,7 @@ export default function Home() {
               <Heart className="w-2 h-2 sm:w-3 sm:h-3 text-red-500 absolute -top-1 -right-1 animate-bounce-light" />
             </div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gradient">
-              MomFoodie
+              MomFudy
             </h1>
           </div>
           <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto px-2">

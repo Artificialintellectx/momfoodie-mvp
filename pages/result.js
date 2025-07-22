@@ -347,7 +347,7 @@ export default function Result() {
         <div className="text-center mt-12 py-6">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/30 shadow-sm">
             <Heart className="w-4 h-4 text-red-500 animate-bounce-light" />
-            <span className="text-gray-600 text-sm font-medium">Made with love for Nigerian home cooks</span>
+            <span className="text-gray-600 text-sm font-medium">Made with love for Nigerian home cooks by MomFudy</span>
             <ChefHat className="w-4 h-4 text-primary-500" />
           </div>
         </div>
