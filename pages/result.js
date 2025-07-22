@@ -224,16 +224,7 @@ export default function Result() {
       </div>
 
       <div className="container mx-auto px-4 py-6 max-w-4xl">
-        {/* Debug Info */}
-        <div className="card mb-4 bg-blue-50 border-blue-200">
-          <h3 className="text-sm font-semibold text-blue-800 mb-2">Debug Info</h3>
-          <div className="text-xs text-blue-700">
-            <p>Meal ID: {meal.id}</p>
-            <p>Ingredients count: {meal.ingredients?.length || 0}</p>
-            <p>Instructions count: {meal.instructions?.length || 0}</p>
-            <p>Ingredients: {meal.ingredients ? JSON.stringify(meal.ingredients) : 'undefined'}</p>
-          </div>
-        </div>
+
 
         {/* Meal Header */}
         <div className="text-center mb-8">
