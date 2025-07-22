@@ -241,11 +241,11 @@ body {
 
 .toggle-button.inactive {
   @apply text-gray-600 hover:text-gray-800;
-  background: rgba(255, 255, 255, 0.9);
+  background: transparent;
 }
 
 .toggle-button.inactive:hover {
-  background: rgba(255, 255, 255, 1);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* Modern Text Gradients */
@@ -301,6 +301,12 @@ body {
   }
 }
 
+@keyframes toggle-slide {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+
 /* Animation Classes */
 .animate-float {
   animation: float 3s ease-in-out infinite;
@@ -324,6 +330,10 @@ body {
 
 .animate-bounce-light {
   animation: bounce 2s infinite;
+}
+
+.animate-toggle-slide {
+  animation: toggle-slide 0.3s ease-in-out;
 }
 
 /* Modern Loading Spinner */

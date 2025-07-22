@@ -185,7 +185,7 @@ export default function Home() {
                   What are you looking for?
                 </h3>
               </div>
-              
+
               <div className="space-y-8">
                 {/* Meal Type */}
                 <div>

@@ -7,9 +7,9 @@ import {
   Heart, 
   Clock, 
   Users, 
-  Star, 
+  Star,
   ArrowLeft, 
-  Share2, 
+  Share2,
   Bookmark,
   BookOpen,
   List,
@@ -176,7 +176,7 @@ export default function Result() {
               <p className="text-gray-600 text-sm">Your perfect meal</p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <button
               onClick={shareMeal}
@@ -267,7 +267,7 @@ export default function Result() {
                   {meal.ingredients && meal.ingredients.length > 0 ? (
                     <div className="grid gap-4">
                       {meal.ingredients.map((ingredient, index) => (
-                        <div 
+                        <div
                           key={index}
                           className="glass-dark rounded-2xl p-4 flex items-center gap-4 hover-lift transition-all duration-300"
                           style={{ animationDelay: `${index * 0.1}s` }}
