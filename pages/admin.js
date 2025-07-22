@@ -24,6 +24,7 @@ export default function Admin() {
   const [editingRecipe, setEditingRecipe] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+  const [dietaryFilter, setDietaryFilter] = useState('')
   const [message, setMessage] = useState({ type: '', text: '' })
   const [lastUpdatedId, setLastUpdatedId] = useState(null)
   const [lastLoadTime, setLastLoadTime] = useState(null)
@@ -317,11 +318,18 @@ export default function Admin() {
     setShowForm(true)
   }
 
-  const filteredRecipes = recipes.filter(recipe =>
-    recipe.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    recipe.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    recipe.meal_type.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredRecipes = recipes.filter(recipe => {
+    // Text search filter
+    const matchesSearch = !searchTerm || 
+      recipe.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      recipe.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      recipe.meal_type.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    // Dietary preference filter
+    const matchesDietary = !dietaryFilter || recipe.dietary_preference === dietaryFilter
+    
+    return matchesSearch && matchesDietary
+  })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
@@ -369,6 +377,20 @@ export default function Admin() {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
+          </div>
+          <div className="w-full sm:w-48">
+            <select
+              value={dietaryFilter}
+              onChange={(e) => setDietaryFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+            >
+              <option value="">All Dietary Preferences</option>
+              {dietaryPreferences.map(pref => (
+                <option key={pref.value} value={pref.value}>
+                  {pref.emoji} {pref.label}
+                </option>
+              ))}
+            </select>
           </div>
           <button
             onClick={() => {
@@ -473,16 +495,37 @@ export default function Admin() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Dietary Preference</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Dietary Preference
+                  <span className="text-xs text-gray-500 ml-1">(Select the most appropriate option)</span>
+                </label>
                 <select
                   value={formData.dietary_preference}
                   onChange={(e) => handleInputChange('dietary_preference', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
                   {dietaryPreferences.map(pref => (
-                    <option key={pref.value} value={pref.value}>{pref.label}</option>
+                    <option key={pref.value} value={pref.value}>
+                      {pref.emoji} {pref.label}
+                    </option>
                   ))}
                 </select>
+                <div className="mt-2 text-xs text-gray-600">
+                  <strong>Dietary Preference Guide:</strong>
+                  <ul className="mt-1 space-y-1">
+                    <li>• <strong>Any:</strong> Suitable for all diets</li>
+                    <li>• <strong>Vegetarian:</strong> No meat or fish, but may include dairy/eggs</li>
+                    <li>• <strong>Vegan:</strong> No animal products at all</li>
+                    <li>• <strong>Halal:</strong> No pork or alcohol, follows Islamic dietary laws</li>
+                    <li>• <strong>Pescatarian:</strong> Fish and seafood only, no other meat</li>
+                    <li>• <strong>Lacto-Vegetarian:</strong> Dairy allowed, no meat/fish</li>
+                    <li>• <strong>Gluten-Free:</strong> No wheat, barley, rye, or bread products</li>
+                    <li>• <strong>Low-Sodium:</strong> Minimal salt, no seasoning cubes</li>
+                    <li>• <strong>Diabetic-Friendly:</strong> Low glycemic index foods</li>
+                    <li>• <strong>Low-Fat:</strong> Minimal oil and high-fat ingredients</li>
+                    <li>• <strong>High-Protein:</strong> Rich in protein from meat, fish, eggs, beans, or dairy</li>
+                  </ul>
+                </div>
               </div>
             </div>
 
@@ -652,6 +695,10 @@ export default function Admin() {
                     </span>
                     <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded">
                       {recipe.prep_time}
+                    </span>
+                    <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded flex items-center gap-1">
+                      {dietaryPreferences.find(pref => pref.value === recipe.dietary_preference)?.emoji || '🍽️'}
+                      {dietaryPreferences.find(pref => pref.value === recipe.dietary_preference)?.label || recipe.dietary_preference}
                     </span>
                   </div>
                   

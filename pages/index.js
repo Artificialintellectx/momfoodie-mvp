@@ -131,6 +131,20 @@ export default function Home() {
                   ingredient.toLowerCase().includes('butter')
                 )
                 if (hasHighFat) matches = false
+              } else if (userPref === 'high_protein') {
+                // High-protein meals should contain protein-rich ingredients
+                const hasProtein = meal.ingredients.some(ingredient => 
+                  ingredient.toLowerCase().includes('chicken') || 
+                  ingredient.toLowerCase().includes('beef') ||
+                  ingredient.toLowerCase().includes('fish') ||
+                  ingredient.toLowerCase().includes('eggs') ||
+                  ingredient.toLowerCase().includes('beans') ||
+                  ingredient.toLowerCase().includes('lentils') ||
+                  ingredient.toLowerCase().includes('tofu') ||
+                  ingredient.toLowerCase().includes('milk') ||
+                  ingredient.toLowerCase().includes('yogurt')
+                )
+                if (!hasProtein) matches = false
               } else {
                 // Standard dietary preference matching
                 if (mealPref !== userPref && mealPref !== 'any') matches = false
