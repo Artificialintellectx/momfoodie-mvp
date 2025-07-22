@@ -145,6 +145,62 @@ export default function Home() {
                   ingredient.toLowerCase().includes('yogurt')
                 )
                 if (!hasProtein) matches = false
+              } else if (userPref === 'soft_foods') {
+                // Soft foods are easy to chew and digest
+                const isSoftFood = meal.name.toLowerCase().includes('porridge') ||
+                  meal.name.toLowerCase().includes('soup') ||
+                  meal.name.toLowerCase().includes('moi moi') ||
+                  meal.name.toLowerCase().includes('yam') ||
+                  meal.ingredients.some(ingredient => 
+                    ingredient.toLowerCase().includes('porridge') ||
+                    ingredient.toLowerCase().includes('soup')
+                  )
+                if (!isSoftFood) matches = false
+              } else if (userPref === 'high_fiber') {
+                // High-fiber meals contain fiber-rich ingredients
+                const hasFiber = meal.ingredients.some(ingredient => 
+                  ingredient.toLowerCase().includes('beans') ||
+                  ingredient.toLowerCase().includes('vegetables') ||
+                  ingredient.toLowerCase().includes('spinach') ||
+                  ingredient.toLowerCase().includes('okra') ||
+                  ingredient.toLowerCase().includes('plantain') ||
+                  ingredient.toLowerCase().includes('yam')
+                )
+                if (!hasFiber) matches = false
+              } else if (userPref === 'traditional') {
+                // Traditional Nigerian dishes
+                const isTraditional = meal.name.toLowerCase().includes('jollof') ||
+                  meal.name.toLowerCase().includes('egusi') ||
+                  meal.name.toLowerCase().includes('amala') ||
+                  meal.name.toLowerCase().includes('eba') ||
+                  meal.name.toLowerCase().includes('akara') ||
+                  meal.name.toLowerCase().includes('moi moi') ||
+                  meal.name.toLowerCase().includes('pepper soup')
+                if (!isTraditional) matches = false
+              } else if (userPref === 'rice_based') {
+                // Rice-based meals
+                const isRiceBased = meal.name.toLowerCase().includes('rice') ||
+                  meal.name.toLowerCase().includes('jollof') ||
+                  meal.name.toLowerCase().includes('fried rice') ||
+                  meal.ingredients.some(ingredient => 
+                    ingredient.toLowerCase().includes('rice') ||
+                    ingredient.toLowerCase().includes('basmati')
+                  )
+                if (!isRiceBased) matches = false
+              } else if (userPref === 'swallow_based') {
+                // Swallow-based meals (starchy accompaniments)
+                const isSwallowBased = meal.name.toLowerCase().includes('amala') ||
+                  meal.name.toLowerCase().includes('eba') ||
+                  meal.name.toLowerCase().includes('pounded yam') ||
+                  meal.name.toLowerCase().includes('fufu') ||
+                  meal.name.toLowerCase().includes('garri') ||
+                  meal.ingredients.some(ingredient => 
+                    ingredient.toLowerCase().includes('yam flour') ||
+                    ingredient.toLowerCase().includes('cassava') ||
+                    ingredient.toLowerCase().includes('garri') ||
+                    ingredient.toLowerCase().includes('pounded yam')
+                  )
+                if (!isSwallowBased) matches = false
               } else {
                 // Standard dietary preference matching
                 if (mealPref !== userPref && mealPref !== 'any') matches = false

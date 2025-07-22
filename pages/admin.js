@@ -534,6 +534,11 @@ export default function Admin() {
                     <li>• <strong>Diabetic-Friendly:</strong> Low glycemic index foods</li>
                     <li>• <strong>Low-Fat:</strong> Minimal oil and high-fat ingredients</li>
                     <li>• <strong>High-Protein:</strong> Rich in protein from meat, fish, eggs, beans, or dairy</li>
+                    <li>• <strong>Soft Foods:</strong> Easy to chew and digest (porridge, soup, yam)</li>
+                    <li>• <strong>High-Fiber:</strong> Rich in fiber (beans, vegetables, whole grains)</li>
+                    <li>• <strong>Traditional:</strong> Classic Nigerian dishes (jollof, egusi, amala)</li>
+                    <li>• <strong>Rice-Based:</strong> Meals centered around rice (jollof, fried rice, white rice)</li>
+                    <li>• <strong>Swallow-Based:</strong> Starchy accompaniments (amala, eba, pounded yam, fufu)</li>
                   </ul>
                 </div>
               </div>

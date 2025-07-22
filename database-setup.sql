@@ -7,7 +7,7 @@ CREATE TABLE meals (
     name VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
     meal_type VARCHAR(20) NOT NULL CHECK (meal_type IN ('breakfast', 'lunch', 'dinner')),
-    dietary_preference VARCHAR(20) NOT NULL CHECK (dietary_preference IN ('any', 'vegetarian', 'vegan', 'halal', 'pescatarian', 'lacto_vegetarian', 'gluten_free', 'low_sodium', 'diabetic_friendly', 'low_fat', 'high_protein')),
+    dietary_preference VARCHAR(20) NOT NULL CHECK (dietary_preference IN ('any', 'vegetarian', 'vegan', 'halal', 'pescatarian', 'lacto_vegetarian', 'gluten_free', 'low_sodium', 'diabetic_friendly', 'low_fat', 'high_protein', 'soft_foods', 'high_fiber', 'traditional', 'rice_based', 'swallow_based')),
     cooking_time VARCHAR(20) NOT NULL CHECK (cooking_time IN ('quick', 'regular', 'elaborate')),
     prep_time VARCHAR(50) NOT NULL,
     difficulty VARCHAR(20) NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard')),
