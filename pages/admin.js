@@ -58,6 +58,9 @@ export default function Admin() {
       
       if (supabase) {
         console.log('🔍 Admin: Querying Supabase meals table...')
+        
+        // Force cache busting by adding a timestamp
+        const timestamp = Date.now()
         const { data, error } = await supabase
           .from('meals')
           .select('*')
@@ -65,6 +68,7 @@ export default function Admin() {
           .limit(1000) // Force fresh data
         
         console.log('🔍 Admin: Supabase response:', { data, error })
+        console.log('🔍 Admin: Timestamp:', timestamp)
         
         if (error) {
           console.error('❌ Admin: Supabase error:', error)
@@ -72,14 +76,18 @@ export default function Admin() {
         }
         
         console.log(`✅ Admin: Found ${data?.length || 0} recipes from Supabase`)
-        console.log('🔍 Admin: Setting recipes state:', data)
+        console.log('🔍 Admin: Recipe names:', data?.map(r => r.name))
         
-        // Force a complete state refresh
+        // Force a complete state refresh with multiple steps
         setRecipes([]) // Clear first
+        console.log('🔄 Admin: Cleared recipes state')
+        
+        // Wait a bit, then set new data
         setTimeout(() => {
-          setRecipes(data || []) // Then set new data
-          console.log('🔄 Admin: Recipes state updated with fresh data')
-        }, 100)
+          setRecipes(data || [])
+          console.log('🔄 Admin: Set new recipes data:', data?.length || 0, 'recipes')
+          console.log('🔄 Admin: New recipe names:', data?.map(r => r.name))
+        }, 200)
         
       } else {
         console.log('⚠️ Admin: No Supabase client, using fallback data')
@@ -553,6 +561,17 @@ export default function Admin() {
           </div>
         )}
 
+        {/* Debug Info */}
+        <div className="card mb-4 bg-yellow-50 border-yellow-200">
+          <h3 className="text-sm font-semibold text-yellow-800 mb-2">Debug Info</h3>
+          <div className="text-xs text-yellow-700">
+            <p>Total recipes in state: {recipes.length}</p>
+            <p>Filtered recipes: {filteredRecipes.length}</p>
+            <p>Last updated ID: {lastUpdatedId || 'None'}</p>
+            <p>Current time: {new Date().toLocaleTimeString()}</p>
+          </div>
+        </div>
+
         {/* Recipes List */}
         <div className="card">
           <h2 className="text-xl font-bold mb-4">Recipe Database ({filteredRecipes.length})</h2>
@@ -571,7 +590,7 @@ export default function Admin() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredRecipes.map((recipe) => (
                 <div 
-                  key={recipe.id} 
+                  key={`${recipe.id}-${recipe.updated_at || Date.now()}`} 
                   className={`border rounded-lg p-4 transition-all duration-300 ${
                     recipe.id === lastUpdatedId 
                       ? 'border-green-500 bg-green-50 shadow-lg' 
