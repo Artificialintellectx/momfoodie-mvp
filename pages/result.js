@@ -23,6 +23,7 @@ export default function Result() {
   const [loading, setLoading] = useState(true)
   const [savedMeals, setSavedMeals] = useState([])
   const [showIngredients, setShowIngredients] = useState(false)
+  const [generating, setGenerating] = useState(false)
 
   useEffect(() => {
     // Get meal data from URL parameters or localStorage
@@ -43,6 +44,63 @@ export default function Result() {
     setSavedMeals(saved)
     setLoading(false)
   }, [router.query])
+
+  const getNewSuggestion = async () => {
+    setGenerating(true)
+    
+    try {
+      let suggestions = []
+      
+      // Try to get suggestions from Supabase first
+      if (supabase) {
+        console.log('🔍 Querying Supabase for meals...')
+        const { data, error } = await supabase
+          .from('meals')
+          .select('*')
+          .limit(10)
+        
+        if (error) {
+          console.log('❌ Supabase error:', error.message)
+        } else if (data && data.length > 0) {
+          console.log(`✅ Found ${data.length} meals from Supabase`)
+          suggestions = data
+        } else {
+          console.log('⚠️ No meals found in Supabase, using fallback')
+        }
+      }
+      
+      // Use fallback meals if no Supabase data
+      if (suggestions.length === 0) {
+        console.log('🔄 Using fallback meals data')
+        suggestions = fallbackMeals
+      }
+      
+      // Select a random meal
+      const randomIndex = Math.floor(Math.random() * suggestions.length)
+      const newMeal = suggestions[randomIndex]
+      
+      console.log(`🎯 Selected new meal: ${newMeal.name} (ID: ${newMeal.id})`)
+      
+      // Update the meal state
+      setMeal(newMeal)
+      
+      // Store in localStorage
+      localStorage.setItem('currentMeal', JSON.stringify(newMeal))
+      
+      // Reset to instructions view
+      setShowIngredients(false)
+      
+    } catch (error) {
+      console.error('Error getting new suggestion:', error)
+      // Fallback to a random fallback meal
+      const randomIndex = Math.floor(Math.random() * fallbackMeals.length)
+      const fallbackMeal = fallbackMeals[randomIndex]
+      setMeal(fallbackMeal)
+      localStorage.setItem('currentMeal', JSON.stringify(fallbackMeal))
+    } finally {
+      setGenerating(false)
+    }
+  }
 
   const saveMeal = () => {
     if (!meal) return
@@ -269,11 +327,19 @@ export default function Result() {
         {/* Action Buttons */}
         <div className="flex justify-center mt-8">
           <button
-            onClick={() => router.push('/')}
+            onClick={getNewSuggestion}
             className="btn-primary flex items-center justify-center gap-2 px-8 py-3"
+            disabled={generating}
           >
-            <Zap className="w-5 h-5" />
-            Get Another Suggestion
+            {generating ? (
+              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            ) : (
+              <Zap className="w-5 h-5" />
+            )}
+            {generating ? 'Generating...' : 'Get Another Suggestion'}
           </button>
         </div>
 
