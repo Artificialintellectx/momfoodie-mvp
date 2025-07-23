@@ -275,43 +275,43 @@ export default function Home() {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-r from-orange-200/20 to-yellow-200/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-6xl">
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-6xl">
         
-        {/* Hero Section */}
-        <div className="text-center mb-12 sm:mb-16 animate-slide-in-up">
-          <div className="flex flex-col items-center gap-6 mb-8 sm:mb-10">
-            {/* Modern Logo Icon */}
+        {/* Optimized Hero Section */}
+        <div className="text-center mb-6 sm:mb-8 animate-slide-in-up">
+          <div className="flex flex-col items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+            {/* Compact Logo Icon */}
             <div className="relative group">
-              <div className="w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-[2rem] flex items-center justify-center shadow-strong animate-pulse-glow group-hover:scale-105 transition-transform duration-300">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-strong animate-pulse-glow group-hover:scale-105 transition-transform duration-300">
                 <div className="relative">
-                  <Utensils className="w-12 h-12 sm:w-14 sm:h-14 text-white drop-shadow-lg" />
-                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-rose-400 to-pink-500 rounded-full flex items-center justify-center shadow-medium">
-                    <Heart className="w-3 h-3 text-white animate-bounce-light" />
+                  <Utensils className="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-lg" />
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-rose-400 to-pink-500 rounded-full flex items-center justify-center shadow-medium">
+                    <Heart className="w-2 h-2 text-white animate-bounce-light" />
                   </div>
                 </div>
               </div>
-              {/* Floating elements for fun */}
-              <div className="absolute -top-2 -left-2 w-4 h-4 bg-purple-300 rounded-full opacity-80 animate-float"></div>
-              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-indigo-300 rounded-full opacity-70 animate-float" style={{ animationDelay: '1s' }}></div>
+              {/* Subtle floating elements */}
+              <div className="absolute -top-1 -left-1 w-2 h-2 bg-purple-300 rounded-full opacity-60 animate-float"></div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 bg-indigo-300 rounded-full opacity-50 animate-float" style={{ animationDelay: '1s' }}></div>
             </div>
             
-            {/* Modern Typography */}
+            {/* Compact Typography */}
             <div className="text-center">
-              <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2 tracking-tight">
+              <h1 className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-1 tracking-tight">
                 MomFudy
               </h1>
-              <p className="text-gray-600 text-lg sm:text-xl font-medium">Your Smart Kitchen Assistant</p>
-              <div className="flex items-center justify-center gap-2 mt-2">
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-                <span className="text-sm text-gray-500 font-medium">Never wonder what to cook again</span>
-                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+              <p className="text-gray-600 text-base sm:text-lg font-medium">Your Smart Kitchen Assistant</p>
+              <div className="flex items-center justify-center gap-1.5 mt-1">
+                <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse"></div>
+                <span className="text-xs sm:text-sm text-gray-500 font-medium">Never wonder what to cook again</span>
+                <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Mode Toggle */}
-        <div className="flex justify-center mb-8 sm:mb-12 animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
+        <div className="flex justify-center mb-6 sm:mb-8 animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
           <div className="toggle-container w-full max-w-md">
             <button
               onClick={() => setShowIngredientMode(false)}

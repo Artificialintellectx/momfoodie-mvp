@@ -95,22 +95,22 @@ export const HomepageSkeleton = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6">
       <div className="max-w-4xl mx-auto">
-        {/* Logo skeleton with shimmer */}
-        <div className="text-center mb-12">
-          <div className="relative w-28 h-28 bg-gradient-to-r from-gray-200 to-gray-300 rounded-[2rem] mx-auto mb-4 overflow-hidden">
+        {/* Compact Logo skeleton with shimmer */}
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="relative w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-r from-gray-200 to-gray-300 rounded-2xl mx-auto mb-3 sm:mb-4 overflow-hidden">
             <Shimmer />
             <div className="absolute inset-0 bg-gradient-to-br from-gray-100/50 to-transparent"></div>
           </div>
-          <div className="h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-48 mx-auto mb-2 overflow-hidden" style={{ animationDelay: '0.3s' }}>
+          <div className="h-6 sm:h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-32 sm:w-40 mx-auto mb-1 sm:mb-2 overflow-hidden" style={{ animationDelay: '0.3s' }}>
             <Shimmer />
           </div>
-          <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-64 mx-auto overflow-hidden" style={{ animationDelay: '0.5s' }}>
+          <div className="h-4 sm:h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-48 sm:w-56 mx-auto overflow-hidden" style={{ animationDelay: '0.5s' }}>
             <Shimmer />
           </div>
         </div>
         
         {/* Toggle buttons skeleton with shimmer */}
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-6 sm:mb-8">
           <div className="relative w-full max-w-md h-12 bg-gradient-to-r from-gray-200 to-gray-300 rounded-2xl overflow-hidden">
             <Shimmer />
           </div>
