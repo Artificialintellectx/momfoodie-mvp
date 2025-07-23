@@ -522,6 +522,12 @@ export default function Home() {
                                   🔥 HOT
                                 </div>
                               )}
+                              {/* Popular indicator for rice-based option */}
+                              {preference.value === 'rice_based' && (
+                                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg animate-pulse">
+                                  ⭐ POPULAR
+                                </div>
+                              )}
                             </button>
                           ))}
                         </div>
