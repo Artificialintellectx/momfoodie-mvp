@@ -26,7 +26,7 @@ export default function Home() {
   const [selectedIngredients, setSelectedIngredients] = useState([])
   const [mealType, setMealType] = useState('')
   const [cookingTime, setCookingTime] = useState('')
-  const [dietaryPref, setDietaryPref] = useState('any')
+  const [dietaryPreference, setDietaryPreference] = useState('any')
   const [savedMeals, setSavedMeals] = useState([])
 
   useEffect(() => {
@@ -46,7 +46,7 @@ export default function Home() {
         const query = supabase.from('meals').select('*')
         if (mealType) query.eq('meal_type', mealType)
         if (cookingTime) query.eq('cooking_time', cookingTime)
-        if (dietaryPref) query.eq('dietary_preference', dietaryPref)
+        if (dietaryPreference) query.eq('dietary_preference', dietaryPreference)
         const { data, error } = await query.limit(10)
 
         if (error) {
@@ -73,10 +73,10 @@ export default function Home() {
             let matches = true
             if (mealType && meal.meal_type !== mealType) matches = false
             if (cookingTime && meal.cooking_time !== cookingTime) matches = false
-            if (dietaryPref && dietaryPref !== 'any') {
+            if (dietaryPreference && dietaryPreference !== 'any') {
               // Enhanced dietary preference filtering
               const mealPref = meal.dietary_preference
-              const userPref = dietaryPref
+              const userPref = dietaryPreference
               
               // Handle special dietary preference logic
               if (userPref === 'halal') {
@@ -261,29 +261,29 @@ export default function Home() {
           <div className="flex flex-col items-center gap-6 mb-8 sm:mb-10">
             {/* Modern Logo Icon */}
             <div className="relative group">
-              <div className="w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-br from-orange-400 via-orange-500 to-yellow-500 rounded-[2rem] flex items-center justify-center shadow-strong animate-pulse-glow group-hover:scale-105 transition-transform duration-300">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-[2rem] flex items-center justify-center shadow-strong animate-pulse-glow group-hover:scale-105 transition-transform duration-300">
                 <div className="relative">
                   <Utensils className="w-12 h-12 sm:w-14 sm:h-14 text-white drop-shadow-lg" />
-                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-red-400 to-pink-500 rounded-full flex items-center justify-center shadow-medium">
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-rose-400 to-pink-500 rounded-full flex items-center justify-center shadow-medium">
                     <Heart className="w-3 h-3 text-white animate-bounce-light" />
                   </div>
                 </div>
               </div>
               {/* Floating elements for fun */}
-              <div className="absolute -top-2 -left-2 w-4 h-4 bg-yellow-300 rounded-full opacity-80 animate-float"></div>
-              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-orange-300 rounded-full opacity-70 animate-float" style={{ animationDelay: '1s' }}></div>
+              <div className="absolute -top-2 -left-2 w-4 h-4 bg-purple-300 rounded-full opacity-80 animate-float"></div>
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-indigo-300 rounded-full opacity-70 animate-float" style={{ animationDelay: '1s' }}></div>
             </div>
             
             {/* Modern Typography */}
             <div className="text-center">
-              <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-orange-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent mb-2 tracking-tight">
+              <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2 tracking-tight">
                 MomFudy
               </h1>
               <p className="text-gray-600 text-lg sm:text-xl font-medium">Your Smart Kitchen Assistant</p>
               <div className="flex items-center justify-center gap-2 mt-2">
-                <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
                 <span className="text-sm text-gray-500 font-medium">Never wonder what to cook again</span>
-                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
               </div>
             </div>
           </div>
@@ -320,7 +320,7 @@ export default function Home() {
           {!showIngredientMode ? (
             <div className="card mb-8 sm:mb-12">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-2xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center">
                   <Utensils className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="heading-md text-gray-800">
@@ -340,8 +340,8 @@ export default function Home() {
                           onClick={() => setMealType(mealType === type.value ? '' : type.value)}
                           className={`relative rounded-2xl p-4 transition-all duration-300 text-center ${
                             mealType === type.value 
-                              ? 'bg-gradient-to-br from-orange-100 to-orange-200 border-2 border-orange-300 shadow-lg transform scale-105' 
-                              : 'bg-white border-2 border-gray-100 hover:border-orange-200 hover:shadow-md'
+                              ? 'bg-gradient-to-br from-indigo-100 to-purple-100 border-2 border-indigo-300 shadow-lg transform scale-105' 
+                              : 'bg-white border-2 border-gray-100 hover:border-indigo-200 hover:shadow-md'
                           }`}
                         >
                           <div className="flex flex-col items-center space-y-2">
@@ -349,13 +349,13 @@ export default function Home() {
                               {type.emoji}
                             </div>
                             <span className={`text-sm font-semibold ${
-                              mealType === type.value ? 'text-orange-800' : 'text-gray-700'
+                              mealType === type.value ? 'text-indigo-800' : 'text-gray-700'
                             }`}>
                               {type.label}
                             </span>
                           </div>
                           {mealType === type.value && (
-                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-indigo-500 rounded-full flex items-center justify-center">
                               <div className="w-2 h-2 bg-white rounded-full"></div>
                             </div>
                           )}
@@ -376,22 +376,22 @@ export default function Home() {
                           onClick={() => setCookingTime(cookingTime === time.value ? '' : time.value)}
                           className={`relative rounded-2xl p-4 transition-all duration-300 text-center ${
                             cookingTime === time.value 
-                              ? 'bg-gradient-to-br from-orange-100 to-orange-200 border-2 border-orange-300 shadow-lg transform scale-105' 
-                              : 'bg-white border-2 border-gray-100 hover:border-orange-200 hover:shadow-md'
+                              ? 'bg-gradient-to-br from-purple-100 to-pink-100 border-2 border-purple-300 shadow-lg transform scale-105' 
+                              : 'bg-white border-2 border-gray-100 hover:border-purple-200 hover:shadow-md'
                           }`}
                         >
                           <div className="flex flex-col items-center space-y-2">
-                            <div className={`text-3xl ${cookingTime === time.value ? 'transform scale-110' : ''}`}>
+                            <div className={`text-2xl ${cookingTime === time.value ? 'transform scale-110' : ''}`}>
                               {time.emoji}
                             </div>
                             <span className={`text-sm font-semibold ${
-                              cookingTime === time.value ? 'text-orange-800' : 'text-gray-700'
+                              cookingTime === time.value ? 'text-purple-800' : 'text-gray-700'
                             }`}>
                               {time.label}
                             </span>
                           </div>
                           {cookingTime === time.value && (
-                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
                               <div className="w-2 h-2 bg-white rounded-full"></div>
                             </div>
                           )}
@@ -401,33 +401,33 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Dietary Preference */}
+                {/* Dietary Preferences */}
                 <div>
                   <label className="block text-lg font-semibold text-gray-700 mb-6">Any dietary preferences?</label>
                   <div className="flex justify-center">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 w-full max-w-4xl">
-                      {dietaryPreferences.map((pref) => (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 w-full max-w-4xl">
+                      {dietaryPreferences.map((preference) => (
                         <button
-                          key={pref.value}
-                          onClick={() => setDietaryPref(dietaryPref === pref.value ? '' : pref.value)}
-                          className={`relative rounded-2xl p-3 transition-all duration-300 text-center ${
-                            dietaryPref === pref.value 
-                              ? 'bg-gradient-to-br from-orange-100 to-orange-200 border-2 border-orange-300 shadow-lg transform scale-105' 
-                              : 'bg-white border-2 border-gray-100 hover:border-orange-200 hover:shadow-md'
+                          key={preference.value}
+                          onClick={() => setDietaryPreference(dietaryPreference === preference.value ? '' : preference.value)}
+                          className={`relative rounded-xl p-3 transition-all duration-300 text-center ${
+                            dietaryPreference === preference.value 
+                              ? 'bg-gradient-to-br from-indigo-100 to-purple-100 border-2 border-indigo-300 shadow-lg transform scale-105' 
+                              : 'bg-white border-2 border-gray-100 hover:border-indigo-200 hover:shadow-md'
                           }`}
                         >
                           <div className="flex flex-col items-center space-y-1">
-                            <div className={`text-2xl ${dietaryPref === pref.value ? 'transform scale-110' : ''}`}>
-                              {pref.emoji}
+                            <div className={`text-2xl ${dietaryPreference === preference.value ? 'transform scale-110' : ''}`}>
+                              {preference.emoji}
                             </div>
                             <span className={`text-xs font-semibold ${
-                              dietaryPref === pref.value ? 'text-orange-800' : 'text-gray-700'
+                              dietaryPreference === preference.value ? 'text-indigo-800' : 'text-gray-700'
                             }`}>
-                              {pref.label}
+                              {preference.label}
                             </span>
                           </div>
-                          {dietaryPref === pref.value && (
-                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full flex items-center justify-center">
+                          {dietaryPreference === preference.value && (
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 rounded-full flex items-center justify-center">
                               <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                             </div>
                           )}
@@ -441,7 +441,7 @@ export default function Home() {
           ) : (
             <div className="card mb-8 sm:mb-12">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
                   <CircleCheck className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="heading-md text-gray-800">
@@ -455,11 +455,27 @@ export default function Home() {
                   <button
                     key={ingredient}
                     onClick={() => toggleIngredient(ingredient)}
-                    className={`filter-button text-center ${
-                      selectedIngredients.includes(ingredient) ? 'filter-button-active' : 'filter-button-inactive'
+                    className={`relative rounded-xl p-3 transition-all duration-300 text-center ${
+                      selectedIngredients.includes(ingredient)
+                        ? 'bg-gradient-to-br from-indigo-100 to-purple-100 border-2 border-indigo-300 shadow-lg transform scale-105'
+                        : 'bg-white border-2 border-gray-100 hover:border-indigo-200 hover:shadow-md'
                     }`}
                   >
-                    <span className="text-sm font-medium">{ingredient}</span>
+                    <div className="flex flex-col items-center space-y-1">
+                      <div className={`text-2xl ${selectedIngredients.includes(ingredient) ? 'transform scale-110' : ''}`}>
+                        🥬
+                      </div>
+                      <span className={`text-xs font-semibold ${
+                        selectedIngredients.includes(ingredient) ? 'text-indigo-800' : 'text-gray-700'
+                      }`}>
+                        {ingredient}
+                      </span>
+                    </div>
+                    {selectedIngredients.includes(ingredient) && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 rounded-full flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
@@ -538,13 +554,13 @@ export default function Home() {
               <button
                 onClick={getSuggestion}
                 disabled={loading}
-                className="relative px-10 py-4 flex items-center justify-center gap-3 group transition-all duration-300 transform hover:scale-105 min-w-[280px] bg-gradient-to-r from-orange-500 via-orange-600 to-yellow-500 hover:from-orange-600 hover:via-orange-700 hover:to-yellow-600 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-orange-500/25 border-2 border-orange-400/20"
+                className="relative px-10 py-4 flex items-center justify-center gap-3 group transition-all duration-300 transform hover:scale-105 min-w-[280px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-purple-500/25 border-2 border-indigo-400/20"
               >
                 {/* Animated background glow */}
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"></div>
                 
                 {/* Pulsing ring effect */}
-                <div className="absolute inset-0 rounded-2xl border-2 border-orange-300/30 animate-pulse"></div>
+                <div className="absolute inset-0 rounded-2xl border-2 border-purple-300/30 animate-pulse"></div>
                 
                 {loading ? (
                   <>
@@ -561,9 +577,9 @@ export default function Home() {
               </button>
               
               {/* Attention-grabbing dots */}
-              <div className="absolute -top-2 -left-2 w-3 h-3 bg-yellow-400 rounded-full animate-bounce"></div>
-              <div className="absolute -top-2 -right-2 w-3 h-3 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
-              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+              <div className="absolute -top-2 -left-2 w-3 h-3 bg-purple-400 rounded-full animate-bounce"></div>
+              <div className="absolute -top-2 -right-2 w-3 h-3 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-pink-400 rounded-full animate-pulse"></div>
             </div>
       </div>
     </div>
