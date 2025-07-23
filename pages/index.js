@@ -25,7 +25,7 @@ export default function Home() {
   const [pageLoading, setPageLoading] = useState(true)
   const [showIngredientMode, setShowIngredientMode] = useState(false)
   const [mealType, setMealType] = useState('')
-  const [cookingTime, setCookingTime] = useState('')
+  const [cookingTime, setCookingTime] = useState('quick')
   const [dietaryPreference, setDietaryPreference] = useState('any')
   const [savedMeals, setSavedMeals] = useState([])
   const [selectedIngredients, setSelectedIngredients] = useState([])
@@ -414,40 +414,76 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* Cooking Time */}
-                    <div>
-                      <label className="block text-lg font-semibold text-gray-700 mb-6">How much time do you have?</label>
+                    {/* Cooking Time - Enhanced Prominence */}
+                    <div className="relative animate-slide-in-up" style={{ animationDelay: '0.6s' }}>
+                                            {/* Attention-grabbing header */}
+                      <div className="text-center mb-4 sm:mb-6">
+                        <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg animate-pulse">
+                            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                          </div>
+                          <h3 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent animate-pulse" style={{ animationDuration: '2s' }}>
+                            How much time do you have?
+                          </h3>
+                        </div>
+                        <p className="text-gray-600 text-xs sm:text-sm font-medium px-2">
+                          This helps us find the perfect recipe for your schedule!
+                        </p>
+                      </div>
+                      
+                      {/* Enhanced cooking time options */}
                       <div className="flex justify-center">
-                        <div className="grid grid-cols-3 gap-4 w-full max-w-md">
+                        <div className="grid grid-cols-3 gap-3 sm:gap-4 w-full max-w-2xl">
                           {cookingTimes.map((time) => (
                             <button
                               key={time.value}
                               onClick={() => setCookingTime(cookingTime === time.value ? '' : time.value)}
-                              className={`relative rounded-2xl p-4 transition-all duration-300 text-center ${
+                              className={`relative rounded-xl sm:rounded-2xl p-3 sm:p-6 transition-all duration-300 text-center group ${
                                 cookingTime === time.value 
-                                  ? 'bg-gradient-to-br from-purple-100 to-pink-100 border-2 border-purple-300 shadow-lg transform scale-105' 
-                                  : 'bg-white border-2 border-gray-100 hover:border-purple-200 hover:shadow-md'
+                                  ? 'bg-gradient-to-br from-orange-100 to-red-100 border-2 sm:border-3 border-orange-400 shadow-lg sm:shadow-xl transform scale-105' 
+                                  : 'bg-white border-2 border-gray-200 hover:border-orange-300 hover:shadow-md sm:hover:shadow-lg hover:scale-102'
                               }`}
                             >
-                              <div className="flex flex-col items-center space-y-2">
-                                <div className={`text-2xl ${cookingTime === time.value ? 'transform scale-110' : ''}`}>
+                              {/* Animated background for selected state */}
+                              {cookingTime === time.value && (
+                                <div className="absolute inset-0 bg-gradient-to-br from-orange-200/20 to-red-200/20 rounded-xl sm:rounded-2xl animate-pulse"></div>
+                              )}
+                              
+                              <div className="relative z-10 flex flex-col items-center space-y-2 sm:space-y-3">
+                                <div className={`text-2xl sm:text-4xl ${cookingTime === time.value ? 'transform scale-110 animate-bounce' : 'group-hover:scale-110 transition-transform duration-300'}`}>
                                   {time.emoji}
                                 </div>
-                                <span className={`text-sm font-semibold ${
-                                  cookingTime === time.value ? 'text-purple-800' : 'text-gray-700'
-                                }`}>
-                                  {time.label}
-                                </span>
+                                <div className="space-y-0.5 sm:space-y-1">
+                                  <div className={`text-sm sm:text-lg font-bold ${
+                                    cookingTime === time.value ? 'text-orange-800' : 'text-gray-800'
+                                  }`}>
+                                    {time.label}
+                                  </div>
+                                  <div className={`text-xs ${
+                                    cookingTime === time.value ? 'text-orange-600' : 'text-gray-500'
+                                  }`}>
+                                    {time.value === 'quick' ? 'Under 30 min' : 
+                                     time.value === 'regular' ? '30-60 min' : 
+                                     'Over 60 min'}
+                                  </div>
+                                </div>
                               </div>
+                              
+                              {/* Selection indicator */}
                               {cookingTime === time.value && (
-                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
-                                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                                <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-4 h-4 sm:w-6 sm:h-6 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                                  <div className="w-1.5 h-1.5 sm:w-3 sm:h-3 bg-white rounded-full"></div>
                                 </div>
                               )}
+                              
+                              {/* Hover glow effect */}
+                              <div className="absolute inset-0 bg-gradient-to-br from-orange-400/10 to-red-400/10 rounded-xl sm:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             </button>
                           ))}
                         </div>
                       </div>
+                      
+
                     </div>
 
                     {/* Dietary Preferences */}

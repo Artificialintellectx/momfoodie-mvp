@@ -29,6 +29,7 @@ export default function Admin() {
   const [success, setSuccess] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [dietaryFilter, setDietaryFilter] = useState('')
+  const [groupBy, setGroupBy] = useState('none') // 'none', 'meal_type', 'dietary_preference', 'nested'
   const [message, setMessage] = useState({ type: '', text: '' })
   const [lastUpdatedId, setLastUpdatedId] = useState(null)
   const [lastLoadTime, setLastLoadTime] = useState(null)
@@ -354,6 +355,58 @@ export default function Admin() {
     return matchesSearch && matchesDietary
   })
 
+  // Group recipes based on selected grouping option
+  const groupedRecipes = (() => {
+    if (groupBy === 'none') {
+      return { 'All Recipes': filteredRecipes }
+    }
+    
+    if (groupBy === 'meal_type') {
+      const groups = {}
+      filteredRecipes.forEach(recipe => {
+        const mealType = recipe.meal_type || 'Unknown'
+        if (!groups[mealType]) {
+          groups[mealType] = []
+        }
+        groups[mealType].push(recipe)
+      })
+      return groups
+    }
+    
+    if (groupBy === 'dietary_preference') {
+      const groups = {}
+      filteredRecipes.forEach(recipe => {
+        const dietary = recipe.dietary_preference || 'any'
+        const dietaryLabel = dietaryPreferences.find(pref => pref.value === dietary)?.label || dietary
+        if (!groups[dietaryLabel]) {
+          groups[dietaryLabel] = []
+        }
+        groups[dietaryLabel].push(recipe)
+      })
+      return groups
+    }
+    
+    if (groupBy === 'nested') {
+      const groups = {}
+      filteredRecipes.forEach(recipe => {
+        const mealType = recipe.meal_type || 'Unknown'
+        const dietary = recipe.dietary_preference || 'any'
+        const dietaryLabel = dietaryPreferences.find(pref => pref.value === dietary)?.label || dietary
+        
+        if (!groups[mealType]) {
+          groups[mealType] = {}
+        }
+        if (!groups[mealType][dietaryLabel]) {
+          groups[mealType][dietaryLabel] = []
+        }
+        groups[mealType][dietaryLabel].push(recipe)
+      })
+      return groups
+    }
+    
+    return { 'All Recipes': filteredRecipes }
+  })()
+
   // Show skeleton loader while page is loading
   if (pageLoading) {
     return <AdminPageSkeleton />
@@ -447,6 +500,61 @@ export default function Admin() {
             <Clock className="w-5 h-5" />
             Force Refresh
           </button>
+        </div>
+
+        {/* Grouping Controls */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-gray-700">Group by:</span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setGroupBy('none')}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  groupBy === 'none'
+                    ? 'bg-orange-500 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                No Grouping
+              </button>
+              <button
+                onClick={() => setGroupBy('meal_type')}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  groupBy === 'meal_type'
+                    ? 'bg-blue-500 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Meal Type
+              </button>
+              <button
+                onClick={() => setGroupBy('dietary_preference')}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  groupBy === 'dietary_preference'
+                    ? 'bg-green-500 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Dietary Preference
+              </button>
+              <button
+                onClick={() => setGroupBy('nested')}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  groupBy === 'nested'
+                    ? 'bg-purple-500 text-white shadow-md'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Meal Type + Dietary
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <span>Total: {filteredRecipes.length} recipes</span>
+            {groupBy !== 'none' && (
+              <span>• {Object.keys(groupedRecipes).length} groups</span>
+            )}
+          </div>
         </div>
 
         {/* Recipe Form */}
@@ -682,66 +790,206 @@ export default function Admin() {
             </div>
           ) : filteredRecipes.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-                              <ChefHat className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+              <ChefHat className="w-12 h-12 mx-auto mb-2 text-gray-300" />
               <p>No recipes found</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredRecipes.map((recipe) => (
-                <div 
-                  key={`${recipe.id}-${recipe.updated_at || Date.now()}`} 
-                  className={`border rounded-lg p-4 transition-all duration-300 ${
-                    recipe.id === lastUpdatedId 
-                      ? 'border-green-500 bg-green-50 shadow-lg' 
-                      : 'border-gray-200 hover:border-primary-300'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-gray-800">{recipe.name}</h3>
-                    <div className="flex items-center gap-1">
-                      {recipe.id === lastUpdatedId && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
-                          Updated
-                        </span>
-                      )}
-                      <button
-                        onClick={() => editRecipe(recipe)}
-                        className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => deleteRecipe(recipe.id)}
-                        className="p-1 text-red-600 hover:bg-red-50 rounded"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+            <div className="space-y-8">
+              {groupBy === 'nested' ? (
+                // Nested grouping display
+                Object.entries(groupedRecipes).map(([mealType, dietaryGroups]) => (
+                  <div key={mealType} className="space-y-6">
+                    {/* Meal Type Header */}
+                    <div className="flex items-center justify-between border-b-2 border-blue-200 pb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center">
+                          <span className="text-xl">🍽️</span>
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-800">
+                            {mealType}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            {Object.values(dietaryGroups).flat().length} total recipes
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Dietary Preference Groups */}
+                    <div className="space-y-6 ml-4">
+                      {Object.entries(dietaryGroups).map(([dietaryLabel, recipes]) => (
+                        <div key={dietaryLabel} className="space-y-4">
+                          {/* Dietary Preference Header */}
+                          <div className="flex items-center justify-between border-b border-green-200 pb-2">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-green-100 text-green-600 rounded-lg flex items-center justify-center">
+                                <span className="text-lg">🥗</span>
+                              </div>
+                              <h4 className="text-lg font-semibold text-gray-700">
+                                {dietaryLabel}
+                              </h4>
+                              <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-sm font-medium">
+                                {recipes.length} {recipes.length === 1 ? 'recipe' : 'recipes'}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {/* Recipes Grid */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {recipes.map((recipe) => (
+                              <div 
+                                key={`${recipe.id}-${recipe.updated_at || Date.now()}`} 
+                                className={`border rounded-lg p-4 transition-all duration-300 ${
+                                  recipe.id === lastUpdatedId 
+                                    ? 'border-green-500 bg-green-50 shadow-lg' 
+                                    : 'border-gray-200 hover:border-primary-300'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between mb-2">
+                                  <h3 className="font-semibold text-gray-800">{recipe.name}</h3>
+                                  <div className="flex items-center gap-1">
+                                    {recipe.id === lastUpdatedId && (
+                                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                                        Updated
+                                      </span>
+                                    )}
+                                    <button
+                                      onClick={() => editRecipe(recipe)}
+                                      className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => deleteRecipe(recipe.id)}
+                                      className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                                
+                                <p className="text-sm text-gray-600 mb-3 line-clamp-2">{recipe.description}</p>
+                                
+                                <div className="flex flex-wrap gap-2 text-xs">
+                                  <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                                    {recipe.meal_type}
+                                  </span>
+                                  <span className="bg-green-100 text-green-700 px-2 py-1 rounded">
+                                    {recipe.difficulty}
+                                  </span>
+                                  <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded">
+                                    {recipe.prep_time}
+                                  </span>
+                                  <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded flex items-center gap-1">
+                                    {dietaryPreferences.find(pref => pref.value === recipe.dietary_preference)?.emoji || '🍽️'}
+                                    {dietaryPreferences.find(pref => pref.value === recipe.dietary_preference)?.label || recipe.dietary_preference}
+                                  </span>
+                                </div>
+                                
+                                <div className="mt-3 text-xs text-gray-500">
+                                  {recipe.ingredients.length} ingredients • {recipe.instructions.length} steps
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  
-                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">{recipe.description}</p>
-                  
-                  <div className="flex flex-wrap gap-2 text-xs">
-                    <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                      {recipe.meal_type}
-                    </span>
-                    <span className="bg-green-100 text-green-700 px-2 py-1 rounded">
-                      {recipe.difficulty}
-                    </span>
-                    <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded">
-                      {recipe.prep_time}
-                    </span>
-                    <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded flex items-center gap-1">
-                      {dietaryPreferences.find(pref => pref.value === recipe.dietary_preference)?.emoji || '🍽️'}
-                      {dietaryPreferences.find(pref => pref.value === recipe.dietary_preference)?.label || recipe.dietary_preference}
-                    </span>
+                ))
+              ) : (
+                // Regular grouping display
+                Object.entries(groupedRecipes).map(([groupName, recipes]) => (
+                  <div key={groupName} className="space-y-4">
+                    {/* Group Header */}
+                    <div className="flex items-center justify-between border-b border-gray-200 pb-2">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                          groupBy === 'meal_type' 
+                            ? 'bg-blue-100 text-blue-600' 
+                            : groupBy === 'dietary_preference'
+                            ? 'bg-green-100 text-green-600'
+                            : 'bg-orange-100 text-orange-600'
+                        }`}>
+                          {groupBy === 'meal_type' ? (
+                            <span className="text-lg">🍽️</span>
+                          ) : groupBy === 'dietary_preference' ? (
+                            <span className="text-lg">🥗</span>
+                          ) : (
+                            <ChefHat className="w-4 h-4" />
+                          )}
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          {groupName}
+                        </h3>
+                        <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-sm font-medium">
+                          {recipes.length} {recipes.length === 1 ? 'recipe' : 'recipes'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Recipes Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {recipes.map((recipe) => (
+                        <div 
+                          key={`${recipe.id}-${recipe.updated_at || Date.now()}`} 
+                          className={`border rounded-lg p-4 transition-all duration-300 ${
+                            recipe.id === lastUpdatedId 
+                              ? 'border-green-500 bg-green-50 shadow-lg' 
+                              : 'border-gray-200 hover:border-primary-300'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <h3 className="font-semibold text-gray-800">{recipe.name}</h3>
+                            <div className="flex items-center gap-1">
+                              {recipe.id === lastUpdatedId && (
+                                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                                  Updated
+                                </span>
+                              )}
+                              <button
+                                onClick={() => editRecipe(recipe)}
+                                className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => deleteRecipe(recipe.id)}
+                                className="p-1 text-red-600 hover:bg-red-50 rounded"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                          
+                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{recipe.description}</p>
+                          
+                          <div className="flex flex-wrap gap-2 text-xs">
+                            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                              {recipe.meal_type}
+                            </span>
+                            <span className="bg-green-100 text-green-700 px-2 py-1 rounded">
+                              {recipe.difficulty}
+                            </span>
+                            <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded">
+                              {recipe.prep_time}
+                            </span>
+                            <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded flex items-center gap-1">
+                              {dietaryPreferences.find(pref => pref.value === recipe.dietary_preference)?.emoji || '🍽️'}
+                              {dietaryPreferences.find(pref => pref.value === recipe.dietary_preference)?.label || recipe.dietary_preference}
+                            </span>
+                          </div>
+                          
+                          <div className="mt-3 text-xs text-gray-500">
+                            {recipe.ingredients.length} ingredients • {recipe.instructions.length} steps
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  
-                  <div className="mt-3 text-xs text-gray-500">
-                    {recipe.ingredients.length} ingredients • {recipe.instructions.length} steps
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           )}
         </div>
