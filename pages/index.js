@@ -516,6 +516,12 @@ export default function Home() {
                                   <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                                 </div>
                               )}
+                              {/* Trending indicator for traditional option */}
+                              {preference.value === 'traditional' && (
+                                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg animate-pulse">
+                                  🔥 HOT
+                                </div>
+                              )}
                             </button>
                           ))}
                         </div>
