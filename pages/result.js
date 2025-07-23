@@ -18,13 +18,24 @@ import {
   Zap,
   Flame
 } from 'lucide-react'
+import { ResultPageSkeleton } from '../components/SkeletonLoader'
 
 export default function Result() {
   const router = useRouter()
   const [meal, setMeal] = useState(null)
-  const [savedMeals, setSavedMeals] = useState([])
   const [generating, setGenerating] = useState(false)
+  const [pageLoading, setPageLoading] = useState(true)
   const [showInstructionsModal, setShowInstructionsModal] = useState(false)
+  const [savedMeals, setSavedMeals] = useState([])
+
+  useEffect(() => {
+    // Simulate page loading
+    const timer = setTimeout(() => {
+      setPageLoading(false)
+    }, 1200)
+    
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('savedMeals') || '[]')
@@ -133,6 +144,16 @@ export default function Result() {
     } finally {
       setGenerating(false)
     }
+  }
+
+  // Show skeleton loader while page is loading
+  if (pageLoading) {
+    return <ResultPageSkeleton />
+  }
+
+  // Show skeleton loader while generating new suggestion
+  if (generating) {
+    return <ResultPageSkeleton />
   }
 
   if (!meal) {

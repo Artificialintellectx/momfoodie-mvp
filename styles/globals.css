@@ -307,6 +307,15 @@ body {
   100% { transform: translateX(0); }
 }
 
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 /* Animation Classes */
 .animate-float {
   animation: float 3s ease-in-out infinite;
@@ -334,6 +343,10 @@ body {
 
 .animate-toggle-slide {
   animation: toggle-slide 0.3s ease-in-out;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
 }
 
 /* Modern Loading Spinner */

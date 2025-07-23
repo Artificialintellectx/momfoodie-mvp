@@ -18,16 +18,32 @@ import {
   Flame,
   Coffee
 } from 'lucide-react'
+import { HomepageSkeleton } from '../components/SkeletonLoader'
 
 export default function Home() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [pageLoading, setPageLoading] = useState(true)
   const [showIngredientMode, setShowIngredientMode] = useState(false)
-  const [selectedIngredients, setSelectedIngredients] = useState([])
   const [mealType, setMealType] = useState('')
   const [cookingTime, setCookingTime] = useState('')
   const [dietaryPreference, setDietaryPreference] = useState('any')
   const [savedMeals, setSavedMeals] = useState([])
+  const [selectedIngredients, setSelectedIngredients] = useState([])
+  const [availableIngredients] = useState([
+    'Rice', 'Beans', 'Tomatoes', 'Onions', 'Garlic', 'Ginger', 
+    'Pepper', 'Oil', 'Salt', 'Chicken', 'Fish', 'Beef', 
+    'Spinach', 'Carrots', 'Potatoes', 'Yam', 'Plantain'
+  ])
+
+  useEffect(() => {
+    // Simulate page loading
+    const timer = setTimeout(() => {
+      setPageLoading(false)
+    }, 1500)
+    
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('savedMeals') || '[]')
@@ -245,6 +261,11 @@ export default function Home() {
     )
   }
 
+  // Show skeleton loader while page is loading
+  if (pageLoading) {
+    return <HomepageSkeleton />
+  }
+
   return (
     <div className="min-h-screen bg-pattern relative overflow-hidden">
       {/* Animated Background Elements */}
@@ -317,177 +338,238 @@ export default function Home() {
 
         {/* Main Content */}
         <div className="animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
-          {!showIngredientMode ? (
-            <div className="card mb-8 sm:mb-12">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center">
-                  <Utensils className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="heading-md text-gray-800">
-                  What are you looking for?
-                </h3>
-              </div>
-
-              <div className="space-y-8">
-                {/* Meal Type */}
-                <div>
-                  <label className="block text-lg font-semibold text-gray-700 mb-6">What type of meal are you looking for?</label>
-                  <div className="flex justify-center">
-                    <div className="grid grid-cols-3 gap-4 w-full max-w-md">
-                      {mealTypes.map((type) => (
-                        <button
-                          key={type.value}
-                          onClick={() => setMealType(mealType === type.value ? '' : type.value)}
-                          className={`relative rounded-2xl p-4 transition-all duration-300 text-center ${
-                            mealType === type.value 
-                              ? 'bg-gradient-to-br from-indigo-100 to-purple-100 border-2 border-indigo-300 shadow-lg transform scale-105' 
-                              : 'bg-white border-2 border-gray-100 hover:border-indigo-200 hover:shadow-md'
-                          }`}
-                        >
-                          <div className="flex flex-col items-center space-y-2">
-                            <div className={`text-3xl ${mealType === type.value ? 'transform scale-110' : ''}`}>
-                              {type.emoji}
-                            </div>
-                            <span className={`text-sm font-semibold ${
-                              mealType === type.value ? 'text-indigo-800' : 'text-gray-700'
-                            }`}>
-                              {type.label}
-                            </span>
-                          </div>
-                          {mealType === type.value && (
-                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-indigo-500 rounded-full flex items-center justify-center">
-                              <div className="w-2 h-2 bg-white rounded-full"></div>
-                            </div>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Cooking Time */}
-                <div>
-                  <label className="block text-lg font-semibold text-gray-700 mb-6">How much time do you have?</label>
-                  <div className="flex justify-center">
-                    <div className="grid grid-cols-3 gap-4 w-full max-w-md">
-                      {cookingTimes.map((time) => (
-                        <button
-                          key={time.value}
-                          onClick={() => setCookingTime(cookingTime === time.value ? '' : time.value)}
-                          className={`relative rounded-2xl p-4 transition-all duration-300 text-center ${
-                            cookingTime === time.value 
-                              ? 'bg-gradient-to-br from-purple-100 to-pink-100 border-2 border-purple-300 shadow-lg transform scale-105' 
-                              : 'bg-white border-2 border-gray-100 hover:border-purple-200 hover:shadow-md'
-                          }`}
-                        >
-                          <div className="flex flex-col items-center space-y-2">
-                            <div className={`text-2xl ${cookingTime === time.value ? 'transform scale-110' : ''}`}>
-                              {time.emoji}
-                            </div>
-                            <span className={`text-sm font-semibold ${
-                              cookingTime === time.value ? 'text-purple-800' : 'text-gray-700'
-                            }`}>
-                              {time.label}
-                            </span>
-                          </div>
-                          {cookingTime === time.value && (
-                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
-                              <div className="w-2 h-2 bg-white rounded-full"></div>
-                            </div>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Dietary Preferences */}
-                <div>
-                  <label className="block text-lg font-semibold text-gray-700 mb-6">Any dietary preferences?</label>
-                  <div className="flex justify-center">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 w-full max-w-4xl">
-                      {dietaryPreferences.map((preference) => (
-                        <button
-                          key={preference.value}
-                          onClick={() => setDietaryPreference(dietaryPreference === preference.value ? '' : preference.value)}
-                          className={`relative rounded-xl p-3 transition-all duration-300 text-center ${
-                            dietaryPreference === preference.value 
-                              ? 'bg-gradient-to-br from-indigo-100 to-purple-100 border-2 border-indigo-300 shadow-lg transform scale-105' 
-                              : 'bg-white border-2 border-gray-100 hover:border-indigo-200 hover:shadow-md'
-                          }`}
-                        >
-                          <div className="flex flex-col items-center space-y-1">
-                            <div className={`text-2xl ${dietaryPreference === preference.value ? 'transform scale-110' : ''}`}>
-                              {preference.emoji}
-                            </div>
-                            <span className={`text-xs font-semibold ${
-                              dietaryPreference === preference.value ? 'text-indigo-800' : 'text-gray-700'
-                            }`}>
-                              {preference.label}
-                            </span>
-                          </div>
-                          {dietaryPreference === preference.value && (
-                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 rounded-full flex items-center justify-center">
-                              <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                            </div>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {pageLoading ? (
+            <HomepageSkeleton />
           ) : (
-            <div className="card mb-8 sm:mb-12">
-              <div className="flex items-center gap-4 mb-8">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
-                  <CircleCheck className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="heading-md text-gray-800">
-                  What ingredients do you have?
-                </h3>
-              </div>
-              <p className="text-gray-600 mb-8 body-lg">Select ingredients you have available:</p>
-              
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {commonIngredients.map((ingredient) => (
-                  <button
-                    key={ingredient}
-                    onClick={() => toggleIngredient(ingredient)}
-                    className={`relative rounded-xl p-3 transition-all duration-300 text-center ${
-                      selectedIngredients.includes(ingredient)
-                        ? 'bg-gradient-to-br from-indigo-100 to-purple-100 border-2 border-indigo-300 shadow-lg transform scale-105'
-                        : 'bg-white border-2 border-gray-100 hover:border-indigo-200 hover:shadow-md'
-                    }`}
-                  >
-                    <div className="flex flex-col items-center space-y-1">
-                      <div className={`text-2xl ${selectedIngredients.includes(ingredient) ? 'transform scale-110' : ''}`}>
-                        🥬
-                      </div>
-                      <span className={`text-xs font-semibold ${
-                        selectedIngredients.includes(ingredient) ? 'text-indigo-800' : 'text-gray-700'
-                      }`}>
-                        {ingredient}
-                      </span>
+            <>
+              {!showIngredientMode ? (
+                <div className="card mb-8 sm:mb-12">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center">
+                      <Utensils className="w-6 h-6 text-white" />
                     </div>
-                    {selectedIngredients.includes(ingredient) && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 rounded-full flex items-center justify-center">
-                        <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                    <h3 className="heading-md text-gray-800">
+                      What are you looking for?
+                    </h3>
+                  </div>
+
+                  <div className="space-y-8">
+                    {/* Meal Type */}
+                    <div>
+                      <label className="block text-lg font-semibold text-gray-700 mb-6">What type of meal are you looking for?</label>
+                      <div className="flex justify-center">
+                        <div className="grid grid-cols-3 gap-4 w-full max-w-md">
+                          {mealTypes.map((type) => (
+                            <button
+                              key={type.value}
+                              onClick={() => setMealType(mealType === type.value ? '' : type.value)}
+                              className={`relative rounded-2xl p-4 transition-all duration-300 text-center ${
+                                mealType === type.value 
+                                  ? 'bg-gradient-to-br from-indigo-100 to-purple-100 border-2 border-indigo-300 shadow-lg transform scale-105' 
+                                  : 'bg-white border-2 border-gray-100 hover:border-indigo-200 hover:shadow-md'
+                              }`}
+                            >
+                              <div className="flex flex-col items-center space-y-2">
+                                <div className={`text-3xl ${mealType === type.value ? 'transform scale-110' : ''}`}>
+                                  {type.emoji}
+                                </div>
+                                <span className={`text-sm font-semibold ${
+                                  mealType === type.value ? 'text-indigo-800' : 'text-gray-700'
+                                }`}>
+                                  {type.label}
+                                </span>
+                              </div>
+                              {mealType === type.value && (
+                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-indigo-500 rounded-full flex items-center justify-center">
+                                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-              
-              {selectedIngredients.length > 0 && (
-                <div className="mt-8 p-6 glass-dark rounded-2xl border border-orange-200">
-                  <p className="text-gray-700 body-md">
-                    <span className="font-semibold text-orange-600">Selected:</span> {selectedIngredients.join(', ')}
-                  </p>
+                    </div>
+
+                    {/* Cooking Time */}
+                    <div>
+                      <label className="block text-lg font-semibold text-gray-700 mb-6">How much time do you have?</label>
+                      <div className="flex justify-center">
+                        <div className="grid grid-cols-3 gap-4 w-full max-w-md">
+                          {cookingTimes.map((time) => (
+                            <button
+                              key={time.value}
+                              onClick={() => setCookingTime(cookingTime === time.value ? '' : time.value)}
+                              className={`relative rounded-2xl p-4 transition-all duration-300 text-center ${
+                                cookingTime === time.value 
+                                  ? 'bg-gradient-to-br from-purple-100 to-pink-100 border-2 border-purple-300 shadow-lg transform scale-105' 
+                                  : 'bg-white border-2 border-gray-100 hover:border-purple-200 hover:shadow-md'
+                              }`}
+                            >
+                              <div className="flex flex-col items-center space-y-2">
+                                <div className={`text-2xl ${cookingTime === time.value ? 'transform scale-110' : ''}`}>
+                                  {time.emoji}
+                                </div>
+                                <span className={`text-sm font-semibold ${
+                                  cookingTime === time.value ? 'text-purple-800' : 'text-gray-700'
+                                }`}>
+                                  {time.label}
+                                </span>
+                              </div>
+                              {cookingTime === time.value && (
+                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
+                                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Dietary Preferences */}
+                    <div>
+                      <label className="block text-lg font-semibold text-gray-700 mb-6">Any dietary preferences?</label>
+                      <div className="flex justify-center">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 w-full max-w-4xl">
+                          {dietaryPreferences.map((preference) => (
+                            <button
+                              key={preference.value}
+                              onClick={() => setDietaryPreference(dietaryPreference === preference.value ? '' : preference.value)}
+                              className={`relative rounded-xl p-3 transition-all duration-300 text-center ${
+                                dietaryPreference === preference.value 
+                                  ? 'bg-gradient-to-br from-indigo-100 to-purple-100 border-2 border-indigo-300 shadow-lg transform scale-105' 
+                                  : 'bg-white border-2 border-gray-100 hover:border-indigo-200 hover:shadow-md'
+                              }`}
+                            >
+                              <div className="flex flex-col items-center space-y-1">
+                                <div className={`text-2xl ${dietaryPreference === preference.value ? 'transform scale-110' : ''}`}>
+                                  {preference.emoji}
+                                </div>
+                                <span className={`text-xs font-semibold ${
+                                  dietaryPreference === preference.value ? 'text-indigo-800' : 'text-gray-700'
+                                }`}>
+                                  {preference.label}
+                                </span>
+                              </div>
+                              {dietaryPreference === preference.value && (
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 rounded-full flex items-center justify-center">
+                                  <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Get Meal Suggestion Button */}
+                    <div className="flex justify-center mt-12">
+                      <button
+                        onClick={getSuggestion}
+                        disabled={loading}
+                        className="relative px-10 py-4 flex items-center justify-center gap-3 group transition-all duration-300 transform hover:scale-105 min-w-[280px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-purple-500/25 border-2 border-indigo-400/20"
+                      >
+                        {/* Animated background glow */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"></div>
+                        
+                        {/* Pulsing ring effect */}
+                        <div className="absolute inset-0 rounded-2xl border-2 border-purple-300/30 animate-pulse"></div>
+                        
+                        {loading ? (
+                          <>
+                            <div className="loading-spinner w-5 h-5 border-2 border-white/30 border-t-white"></div>
+                            <span className="text-base whitespace-nowrap font-semibold">Finding Perfect Meal...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Flame className="w-5 h-5 animate-pulse" />
+                            <span className="text-base whitespace-nowrap font-semibold">Get Meal Suggestion</span>
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="card mb-8 sm:mb-12">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
+                      <CircleCheck className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="heading-md text-gray-800">
+                      What ingredients do you have?
+                    </h3>
+                  </div>
+
+                  <div className="space-y-8">
+                    {/* Available Ingredients */}
+                    <div>
+                      <label className="block text-lg font-semibold text-gray-700 mb-6">Select the ingredients you have:</label>
+                      <div className="flex justify-center">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 w-full max-w-4xl">
+                          {availableIngredients.map((ingredient) => (
+                            <button
+                              key={ingredient}
+                              onClick={() => toggleIngredient(ingredient)}
+                              className={`relative rounded-xl p-3 transition-all duration-300 text-center ${
+                                selectedIngredients.includes(ingredient)
+                                  ? 'bg-gradient-to-br from-indigo-100 to-purple-100 border-2 border-indigo-300 shadow-lg transform scale-105'
+                                  : 'bg-white border-2 border-gray-100 hover:border-indigo-200 hover:shadow-md'
+                              }`}
+                            >
+                              <div className="flex flex-col items-center space-y-1">
+                                <div className={`text-2xl ${selectedIngredients.includes(ingredient) ? 'transform scale-110' : ''}`}>
+                                  🥬
+                                </div>
+                                <span className={`text-xs font-semibold ${
+                                  selectedIngredients.includes(ingredient) ? 'text-indigo-800' : 'text-gray-700'
+                                }`}>
+                                  {ingredient}
+                                </span>
+                              </div>
+                              {selectedIngredients.includes(ingredient) && (
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 rounded-full flex items-center justify-center">
+                                  <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Get Meal Suggestion Button */}
+                    <div className="flex justify-center mt-12">
+                      <button
+                        onClick={getSuggestion}
+                        disabled={loading || selectedIngredients.length === 0}
+                        className="relative px-10 py-4 flex items-center justify-center gap-3 group transition-all duration-300 transform hover:scale-105 min-w-[280px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-purple-500/25 border-2 border-indigo-400/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                      >
+                        {/* Animated background glow */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"></div>
+                        
+                        {/* Pulsing ring effect */}
+                        <div className="absolute inset-0 rounded-2xl border-2 border-purple-300/30 animate-pulse"></div>
+                        
+                        {loading ? (
+                          <>
+                            <div className="loading-spinner w-5 h-5 border-2 border-white/30 border-t-white"></div>
+                            <span className="text-base whitespace-nowrap font-semibold">Finding Perfect Meal...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Flame className="w-5 h-5 animate-pulse" />
+                            <span className="text-base whitespace-nowrap font-semibold">Get Meal Suggestion</span>
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
-            </div>
+            </>
           )}
 
 
@@ -548,39 +630,6 @@ export default function Home() {
           </div>
           <p className="text-gray-500 text-sm mt-4">Beta version - Your feedback helps us improve!</p>
         </div>
-
-                    {/* Floating Get Meal Suggestion Button */}
-            <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
-              <button
-                onClick={getSuggestion}
-                disabled={loading}
-                className="relative px-10 py-4 flex items-center justify-center gap-3 group transition-all duration-300 transform hover:scale-105 min-w-[280px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-purple-500/25 border-2 border-indigo-400/20"
-              >
-                {/* Animated background glow */}
-                <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"></div>
-                
-                {/* Pulsing ring effect */}
-                <div className="absolute inset-0 rounded-2xl border-2 border-purple-300/30 animate-pulse"></div>
-                
-                {loading ? (
-                  <>
-                    <div className="loading-spinner w-5 h-5 border-2 border-white/30 border-t-white"></div>
-                    <span className="text-base whitespace-nowrap font-semibold">Finding Perfect Meal...</span>
-                  </>
-                ) : (
-                  <>
-                    <Flame className="w-5 h-5 animate-pulse" />
-                    <span className="text-base whitespace-nowrap font-semibold">Get Meal Suggestion</span>
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
-                  </>
-                )}
-              </button>
-              
-              {/* Attention-grabbing dots */}
-              <div className="absolute -top-2 -left-2 w-3 h-3 bg-purple-400 rounded-full animate-bounce"></div>
-              <div className="absolute -top-2 -right-2 w-3 h-3 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
-              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-pink-400 rounded-full animate-pulse"></div>
-            </div>
       </div>
     </div>
   )

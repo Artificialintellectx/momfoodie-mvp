@@ -17,12 +17,17 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react'
+import { createClient } from '@supabase/supabase-js'
+import { AdminPageSkeleton } from '../components/SkeletonLoader'
 
 export default function Admin() {
-  const [recipes, setRecipes] = useState([])
+  const [meals, setMeals] = useState([])
   const [loading, setLoading] = useState(false)
-  const [editingRecipe, setEditingRecipe] = useState(null)
+  const [pageLoading, setPageLoading] = useState(true)
+  const [editingMeal, setEditingMeal] = useState(null)
   const [showForm, setShowForm] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [dietaryFilter, setDietaryFilter] = useState('')
   const [message, setMessage] = useState({ type: '', text: '' })
@@ -43,6 +48,15 @@ export default function Admin() {
     instructions: [''],
     cuisine_type: 'Nigerian'
   })
+
+  useEffect(() => {
+    // Simulate page loading
+    const timer = setTimeout(() => {
+      setPageLoading(false)
+    }, 1000)
+    
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     console.log('🔍 Admin: Component mounted, loading recipes...')
@@ -98,12 +112,12 @@ export default function Admin() {
         console.log('🔍 Admin: Recipe names:', data?.map(r => r.name))
         
         // Force a complete state refresh with multiple steps
-        setRecipes([]) // Clear first
+        setMeals([]) // Clear first
         console.log('🔄 Admin: Cleared recipes state')
         
         // Wait a bit, then set new data
         setTimeout(() => {
-          setRecipes(data || [])
+          setMeals(data || [])
           setLastLoadTime(new Date().toLocaleTimeString())
           console.log('🔄 Admin: Set new recipes data:', data?.length || 0, 'recipes')
           console.log('🔄 Admin: New recipe names:', data?.map(r => r.name))
@@ -112,7 +126,7 @@ export default function Admin() {
       } else {
         console.log('⚠️ Admin: No Supabase client, using fallback data')
         // Fallback to local data
-        setRecipes(fallbackMeals)
+        setMeals(fallbackMeals)
       }
     } catch (error) {
       console.error('❌ Admin: Error loading recipes:', error)
@@ -135,7 +149,7 @@ export default function Admin() {
       instructions: [''],
       cuisine_type: 'Nigerian'
     })
-    setEditingRecipe(null)
+    setEditingMeal(null)
   }
 
   const handleInputChange = (field, value) => {
@@ -204,14 +218,14 @@ export default function Admin() {
 
       console.log('🔍 Admin: Processed recipe data:', recipeData)
 
-      if (editingRecipe) {
+      if (editingMeal) {
         // Update existing recipe
-        console.log('🔍 Admin: Updating existing recipe with ID:', editingRecipe.id)
+        console.log('🔍 Admin: Updating existing recipe with ID:', editingMeal.id)
         if (supabase) {
           const { data, error } = await supabase
             .from('meals')
             .update(recipeData)
-            .eq('id', editingRecipe.id)
+            .eq('id', editingMeal.id)
           
           console.log('🔍 Admin: Update response:', { data, error })
           if (error) {
@@ -220,10 +234,10 @@ export default function Admin() {
           }
         } else {
           // Update local data
-          setRecipes(prev => prev.map(r => r.id === editingRecipe.id ? { ...r, ...recipeData } : r))
+          setMeals(prev => prev.map(r => r.id === editingMeal.id ? { ...r, ...recipeData } : r))
         }
         setMessage({ type: 'success', text: 'Recipe updated successfully!' })
-        setLastUpdatedId(editingRecipe.id) // Track which recipe was updated
+        setLastUpdatedId(editingMeal.id) // Track which recipe was updated
         
         // Clear the highlight after 3 seconds
         setTimeout(() => {
@@ -248,7 +262,7 @@ export default function Admin() {
             ...recipeData,
             id: Date.now() // Simple ID for local storage
           }
-          setRecipes(prev => [newRecipe, ...prev])
+          setMeals(prev => [newRecipe, ...prev])
         }
         setMessage({ type: 'success', text: 'Recipe created successfully!' })
       }
@@ -262,12 +276,12 @@ export default function Admin() {
       await loadRecipes()
       
       // Double-check the specific recipe was updated
-      if (editingRecipe && supabase) {
-        console.log('🔍 Admin: Verifying update for recipe ID:', editingRecipe.id)
+      if (editingMeal && supabase) {
+        console.log('🔍 Admin: Verifying update for recipe ID:', editingMeal.id)
         const { data: verifyData, error: verifyError } = await supabase
           .from('meals')
           .select('*')
-          .eq('id', editingRecipe.id)
+          .eq('id', editingMeal.id)
           .single()
         
         if (verifyError) {
@@ -298,7 +312,7 @@ export default function Admin() {
         
         if (error) throw error
       } else {
-        setRecipes(prev => prev.filter(r => r.id !== id))
+        setMeals(prev => prev.filter(r => r.id !== id))
       }
       
       setMessage({ type: 'success', text: 'Recipe deleted successfully!' })
@@ -324,11 +338,11 @@ export default function Admin() {
       instructions: recipe.instructions.length > 0 ? recipe.instructions : [''],
       cuisine_type: recipe.cuisine_type || 'Nigerian'
     })
-    setEditingRecipe(recipe)
+    setEditingMeal(recipe)
     setShowForm(true)
   }
 
-  const filteredRecipes = recipes.filter(recipe => {
+  const filteredRecipes = meals.filter(recipe => {
     // Text search filter
     const matchesSearch = !searchTerm || 
       recipe.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -340,6 +354,11 @@ export default function Admin() {
     
     return matchesSearch && matchesDietary
   })
+
+  // Show skeleton loader while page is loading
+  if (pageLoading) {
+    return <AdminPageSkeleton />
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-red-50">
@@ -418,7 +437,7 @@ export default function Admin() {
             onClick={() => {
               console.log('🔄 Admin: Manual refresh triggered')
               // Force complete reload by clearing state first
-              setRecipes([])
+              setMeals([])
               setLoading(true)
               setTimeout(() => {
                 loadRecipes()
@@ -435,7 +454,7 @@ export default function Admin() {
         {showForm && (
           <div className="card mb-6">
             <h2 className="text-xl font-bold mb-4">
-              {editingRecipe ? 'Edit Recipe' : 'Create New Recipe'}
+              {editingMeal ? 'Edit Recipe' : 'Create New Recipe'}
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -626,7 +645,7 @@ export default function Admin() {
                 className="btn-primary flex items-center gap-2"
               >
                 {loading ? <Clock className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                {editingRecipe ? 'Update Recipe' : 'Save Recipe'}
+                {editingMeal ? 'Update Recipe' : 'Save Recipe'}
               </button>
               <button
                 onClick={() => {
@@ -645,7 +664,7 @@ export default function Admin() {
         <div className="card mb-4 bg-yellow-50 border-yellow-200">
           <h3 className="text-sm font-semibold text-yellow-800 mb-2">Debug Info</h3>
           <div className="text-xs text-yellow-700">
-            <p>Total recipes in state: {recipes.length}</p>
+            <p>Total recipes in state: {meals.length}</p>
             <p>Filtered recipes: {filteredRecipes.length}</p>
             <p>Last updated ID: {lastUpdatedId || 'None'}</p>
             <p>Last load time: {lastLoadTime || 'Never'}</p>
