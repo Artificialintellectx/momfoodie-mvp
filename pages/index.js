@@ -302,7 +302,7 @@ export default function Home() {
             
             {/* Compact Typography */}
             <div className="text-center">
-              <h1 className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-1 tracking-tight">
+              <h1 className="text-3xl sm:text-4xl font-fun bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-1 tracking-tight hover:scale-105 transition-transform duration-300 cursor-pointer">
                 MomFudy
               </h1>
               <p className="text-gray-600 text-base sm:text-lg font-medium">Your Smart Kitchen Assistant</p>

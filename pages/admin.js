@@ -370,7 +370,7 @@ export default function Admin() {
               <div className="w-12 h-12 bg-gradient-to-br from-orange-400 via-orange-500 to-yellow-500 rounded-2xl flex items-center justify-center shadow-medium">
                 <Utensils className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent">MomFudy Admin</h1>
+              <h1 className="text-3xl font-fun bg-gradient-to-r from-orange-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent">MomFudy Admin</h1>
             </div>
           <p className="text-gray-600">Manage your recipe database</p>
           <div className="mt-4">

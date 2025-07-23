@@ -378,6 +378,26 @@ body {
   @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-transparent;
 }
 
+/* Fun Typography */
+.font-fun {
+  font-family: 'Fredoka One', cursive;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  animation: fun-bounce 2s ease-in-out infinite;
+}
+
+.font-bubble {
+  font-family: 'Bubblegum Sans', cursive;
+}
+
+.font-comic {
+  font-family: 'Comic Neue', cursive;
+}
+
+@keyframes fun-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
 /* Modern Typography */
 .heading-xl {
   @apply text-4xl sm:text-5xl md:text-6xl font-bold;
