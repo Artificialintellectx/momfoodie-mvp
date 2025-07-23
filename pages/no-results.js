@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
-import { ArrowLeft, ChefHat, Heart, Sparkles, Clock, Utensils } from 'lucide-react'
+import { ArrowLeft, ChefHat, Heart, Sparkles, Clock } from 'lucide-react'
 import { dietaryPreferences } from '../lib/data'
 
 export default function NoResults() {
@@ -175,7 +175,7 @@ export default function NoResults() {
               onClick={goHome}
               className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-2xl font-semibold hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
             >
-              <Utensils className="w-5 h-5" />
+              <ChefHat className="w-5 h-5" />
               Try Different Filters
             </button>
             <button

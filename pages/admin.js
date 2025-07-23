@@ -11,7 +11,6 @@ import {
   Search,
   ChefHat,
   Clock,
-  Utensils,
   Users,
   Zap,
   CheckCircle2,
@@ -368,7 +367,7 @@ export default function Admin() {
         <div className="text-center mb-8">
                       <div className="flex items-center justify-center gap-3 mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-orange-400 via-orange-500 to-yellow-500 rounded-2xl flex items-center justify-center shadow-medium">
-                <Utensils className="w-6 h-6 text-white" />
+                                  <ChefHat className="w-6 h-6 text-white" />
               </div>
               <h1 className="text-3xl font-fun bg-gradient-to-r from-orange-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent">MomFudy Admin</h1>
             </div>
@@ -683,7 +682,7 @@ export default function Admin() {
             </div>
           ) : filteredRecipes.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              <Utensils className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                              <ChefHat className="w-12 h-12 mx-auto mb-2 text-gray-300" />
               <p>No recipes found</p>
             </div>
           ) : (

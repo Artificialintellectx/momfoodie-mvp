@@ -7,7 +7,6 @@ import {
   Heart, 
   Sparkles, 
   CircleCheck, 
-  Utensils, 
   Zap,
   Clock,
   Users,
@@ -309,7 +308,7 @@ export default function Home() {
             <div className="relative group">
               <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-strong animate-pulse-glow group-hover:scale-105 transition-transform duration-300">
                 <div className="relative">
-                  <Utensils className="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-lg" />
+                  <ChefHat className="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-lg" />
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-rose-400 to-pink-500 rounded-full flex items-center justify-center shadow-medium">
                     <Heart className="w-2 h-2 text-white animate-bounce-light" />
                   </div>
@@ -371,7 +370,7 @@ export default function Home() {
                 <div className="card mb-8 sm:mb-12">
                   <div className="flex items-center gap-4 mb-8">
                     <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center">
-                      <Utensils className="w-6 h-6 text-white" />
+                      <ChefHat className="w-6 h-6 text-white" />
                     </div>
                     <h3 className="heading-md text-gray-800">
                       What are you looking for?
