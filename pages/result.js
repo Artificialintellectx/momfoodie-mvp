@@ -16,7 +16,10 @@ import {
   Play,
   ArrowRight,
   Zap,
-  Flame
+  Flame,
+  Sparkles,
+  RefreshCw,
+  Home
 } from 'lucide-react'
 
 export default function Result() {
@@ -26,6 +29,7 @@ export default function Result() {
   const [generating, setGenerating] = useState(false)
   const [showInstructionsModal, setShowInstructionsModal] = useState(false)
   const [savedMeals, setSavedMeals] = useState([])
+  const [showExhaustionModal, setShowExhaustionModal] = useState(false)
 
   useEffect(() => {
     const loadData = async () => {
@@ -82,6 +86,23 @@ export default function Result() {
     localStorage.setItem('savedMeals', JSON.stringify(updatedSavedMeals))
   }
 
+  const showExhaustionMessage = () => {
+    setShowExhaustionModal(true)
+  }
+
+  const resetShownMeals = () => {
+    localStorage.setItem('shownMeals', JSON.stringify([]))
+    setShowExhaustionModal(false)
+    getNewSuggestion()
+  }
+
+  const goToHomepage = () => {
+    // Clear stored data and go to homepage
+    localStorage.removeItem('searchCriteria')
+    localStorage.removeItem('shownMeals')
+    router.push('/')
+  }
+
   const shareMeal = async () => {
     if (!meal) return
     
@@ -114,11 +135,28 @@ export default function Result() {
     setLoading(true) // Show loading schema while getting new meal
     try {
       console.log('🔍 Getting new suggestion...')
+      
+      // Get stored search criteria and shown meals
+      const searchCriteria = JSON.parse(localStorage.getItem('searchCriteria') || '{}')
+      const shownMeals = JSON.parse(localStorage.getItem('shownMeals') || '[]')
+      
+      console.log('📋 Search criteria:', searchCriteria)
+      console.log('👀 Already shown meals:', shownMeals)
+      
       let suggestions = []
 
       // Try Supabase first
       if (supabase) {
-        const { data, error } = await supabase.from('meals').select('*').limit(10)
+        const query = supabase.from('meals').select('*')
+        
+        // Apply the same filters as the original search
+        if (searchCriteria.mealType) query.eq('meal_type', searchCriteria.mealType)
+        if (searchCriteria.cookingTime) query.eq('cooking_time', searchCriteria.cookingTime)
+        if (searchCriteria.dietaryPreference && searchCriteria.dietaryPreference !== 'any') {
+          query.eq('dietary_preference', searchCriteria.dietaryPreference)
+        }
+        
+        const { data, error } = await query.limit(50) // Get more meals to filter from
         if (!error && data && data.length > 0) {
           console.log(`✅ Found ${data.length} meals from Supabase`)
           suggestions = data
@@ -127,17 +165,164 @@ export default function Result() {
         }
       }
 
-      // Fallback to local data
+      // Fallback to local data with the same filtering logic
       if (suggestions.length === 0) {
-        suggestions = fallbackMeals
+        console.log('🔄 Using fallback meals data')
+        suggestions = fallbackMeals.filter(meal => {
+          if (searchCriteria.showIngredientMode && searchCriteria.selectedIngredients?.length > 0) {
+            return searchCriteria.selectedIngredients.some(ingredient =>
+              meal.ingredients.some(mealIngredient =>
+                mealIngredient.toLowerCase().includes(ingredient.toLowerCase())
+              )
+            )
+          } else {
+            let matches = true
+            if (searchCriteria.mealType && meal.meal_type !== searchCriteria.mealType) matches = false
+            if (searchCriteria.cookingTime && meal.cooking_time !== searchCriteria.cookingTime) matches = false
+            if (searchCriteria.dietaryPreference && searchCriteria.dietaryPreference !== 'any') {
+              // Apply the same dietary preference filtering logic
+              const mealPref = meal.dietary_preference
+              const userPref = searchCriteria.dietaryPreference
+              
+              if (userPref === 'halal') {
+                const hasPork = meal.ingredients.some(ingredient => 
+                  ingredient.toLowerCase().includes('pork') || 
+                  ingredient.toLowerCase().includes('bacon') ||
+                  ingredient.toLowerCase().includes('ham')
+                )
+                if (hasPork) matches = false
+              } else if (userPref === 'pescatarian') {
+                const hasMeat = meal.ingredients.some(ingredient => 
+                  ingredient.toLowerCase().includes('chicken') || 
+                  ingredient.toLowerCase().includes('beef') ||
+                  ingredient.toLowerCase().includes('pork') ||
+                  ingredient.toLowerCase().includes('lamb')
+                )
+                if (hasMeat) matches = false
+              } else if (userPref === 'lacto_vegetarian') {
+                const hasMeatOrFish = meal.ingredients.some(ingredient => 
+                  ingredient.toLowerCase().includes('chicken') || 
+                  ingredient.toLowerCase().includes('beef') ||
+                  ingredient.toLowerCase().includes('fish') ||
+                  ingredient.toLowerCase().includes('pork')
+                )
+                if (hasMeatOrFish) matches = false
+              } else if (userPref === 'gluten_free') {
+                const hasGluten = meal.ingredients.some(ingredient => 
+                  ingredient.toLowerCase().includes('wheat') || 
+                  ingredient.toLowerCase().includes('barley') ||
+                  ingredient.toLowerCase().includes('rye') ||
+                  ingredient.toLowerCase().includes('bread') ||
+                  ingredient.toLowerCase().includes('flour')
+                )
+                if (hasGluten) matches = false
+              } else if (userPref === 'low_sodium') {
+                const hasHighSodium = meal.ingredients.some(ingredient => 
+                  ingredient.toLowerCase().includes('seasoning cube') || 
+                  ingredient.toLowerCase().includes('stock cube') ||
+                  ingredient.toLowerCase().includes('bouillon')
+                )
+                if (hasHighSodium) matches = false
+              } else if (userPref === 'low_fat') {
+                const hasHighFat = meal.ingredients.some(ingredient => 
+                  ingredient.toLowerCase().includes('palm oil') || 
+                  ingredient.toLowerCase().includes('coconut oil') ||
+                  ingredient.toLowerCase().includes('butter')
+                )
+                if (hasHighFat) matches = false
+              } else if (userPref === 'high_protein') {
+                const hasProtein = meal.ingredients.some(ingredient => 
+                  ingredient.toLowerCase().includes('chicken') || 
+                  ingredient.toLowerCase().includes('beef') ||
+                  ingredient.toLowerCase().includes('fish') ||
+                  ingredient.toLowerCase().includes('eggs') ||
+                  ingredient.toLowerCase().includes('beans') ||
+                  ingredient.toLowerCase().includes('lentils') ||
+                  ingredient.toLowerCase().includes('tofu') ||
+                  ingredient.toLowerCase().includes('milk') ||
+                  ingredient.toLowerCase().includes('yogurt')
+                )
+                if (!hasProtein) matches = false
+              } else if (userPref === 'soft_foods') {
+                const isSoftFood = meal.name.toLowerCase().includes('porridge') ||
+                  meal.name.toLowerCase().includes('soup') ||
+                  meal.name.toLowerCase().includes('moi moi') ||
+                  meal.name.toLowerCase().includes('yam') ||
+                  meal.ingredients.some(ingredient => 
+                    ingredient.toLowerCase().includes('porridge') ||
+                    ingredient.toLowerCase().includes('soup')
+                  )
+                if (!isSoftFood) matches = false
+              } else if (userPref === 'high_fiber') {
+                const hasFiber = meal.ingredients.some(ingredient => 
+                  ingredient.toLowerCase().includes('beans') ||
+                  ingredient.toLowerCase().includes('vegetables') ||
+                  ingredient.toLowerCase().includes('spinach') ||
+                  ingredient.toLowerCase().includes('okra') ||
+                  ingredient.toLowerCase().includes('plantain') ||
+                  ingredient.toLowerCase().includes('yam')
+                )
+                if (!hasFiber) matches = false
+              } else if (userPref === 'traditional') {
+                const isTraditional = meal.name.toLowerCase().includes('jollof') ||
+                  meal.name.toLowerCase().includes('egusi') ||
+                  meal.name.toLowerCase().includes('amala') ||
+                  meal.name.toLowerCase().includes('eba') ||
+                  meal.name.toLowerCase().includes('akara') ||
+                  meal.name.toLowerCase().includes('moi moi') ||
+                  meal.name.toLowerCase().includes('pepper soup')
+                if (!isTraditional) matches = false
+              } else if (userPref === 'rice_based') {
+                const isRiceBased = meal.name.toLowerCase().includes('rice') ||
+                  meal.name.toLowerCase().includes('jollof') ||
+                  meal.name.toLowerCase().includes('fried rice') ||
+                  meal.ingredients.some(ingredient => 
+                    ingredient.toLowerCase().includes('rice') ||
+                    ingredient.toLowerCase().includes('basmati')
+                  )
+                if (!isRiceBased) matches = false
+              } else if (userPref === 'swallow_based') {
+                const isSwallowBased = meal.name.toLowerCase().includes('amala') ||
+                  meal.name.toLowerCase().includes('eba') ||
+                  meal.name.toLowerCase().includes('pounded yam') ||
+                  meal.name.toLowerCase().includes('fufu') ||
+                  meal.name.toLowerCase().includes('garri') ||
+                  meal.ingredients.some(ingredient => 
+                    ingredient.toLowerCase().includes('yam flour') ||
+                    ingredient.toLowerCase().includes('cassava') ||
+                    ingredient.toLowerCase().includes('garri') ||
+                    ingredient.toLowerCase().includes('pounded yam')
+                  )
+                if (!isSwallowBased) matches = false
+              } else {
+                if (mealPref !== userPref && mealPref !== 'any') matches = false
+              }
+            }
+            return matches
+          }
+        })
       }
 
-      if (suggestions.length > 0) {
-        const randomIndex = Math.floor(Math.random() * suggestions.length)
-        const newMeal = suggestions[randomIndex]
+      // Filter out already shown meals
+      const availableMeals = suggestions.filter(meal => !shownMeals.includes(meal.id))
+      console.log(`🎯 Available meals (excluding ${shownMeals.length} shown): ${availableMeals.length}`)
+
+      if (availableMeals.length > 0) {
+        const randomIndex = Math.floor(Math.random() * availableMeals.length)
+        const newMeal = availableMeals[randomIndex]
         setMeal(newMeal)
         localStorage.setItem('currentMeal', JSON.stringify(newMeal))
+        
+        // Add to shown meals
+        const updatedShownMeals = [...shownMeals, newMeal.id]
+        localStorage.setItem('shownMeals', JSON.stringify(updatedShownMeals))
+        
         console.log(`🎯 New meal selected: ${newMeal.name}`)
+        console.log(`📊 Total shown meals: ${updatedShownMeals.length}`)
+      } else {
+        // All meals for this preference have been shown
+        console.log('🏁 All meals for this preference have been shown')
+        showExhaustionMessage()
       }
     } catch (error) {
       console.error('Error getting new suggestion:', error)
@@ -679,8 +864,88 @@ export default function Result() {
           </div>
         )}
 
+        {/* Exhaustion Modal */}
+        {showExhaustionModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl animate-slide-in-up">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-orange-50 to-yellow-50 border-b border-orange-200 p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-xl flex items-center justify-center">
+                      <ChefHat className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900">All Recipes Shown! 🎉</h3>
+                      <p className="text-gray-600">You&apos;ve seen all available recipes for your preference</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowExhaustionModal(false)}
+                    className="w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors duration-200"
+                  >
+                    <span className="text-gray-600 text-xl font-light">×</span>
+                  </button>
+                </div>
+              </div>
 
+              {/* Content */}
+              <div className="p-6">
+                <div className="text-center mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Sparkles className="w-10 h-10 text-green-500" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                    Congratulations! 🎊
+                  </h4>
+                  <p className="text-gray-600 leading-relaxed">
+                    You&apos;ve explored all the recipes that match your current preferences. 
+                    We&apos;re constantly adding new recipes to our platform!
+                  </p>
+                </div>
 
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 mb-6">
+                  <h5 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-indigo-500" />
+                    What would you like to do next?
+                  </h5>
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
+                      <span>Start over with the same preferences</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                      <span>Try different dietary preferences</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-pink-400 rounded-full"></div>
+                      <span>Explore other meal types</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={resetShownMeals}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-semibold hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
+                  >
+                    <RefreshCw className="w-5 h-5" />
+                    Start Over
+                  </button>
+                  <button
+                    onClick={goToHomepage}
+                    className="flex-1 px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    <Home className="w-5 h-5" />
+                    Try Different Filters
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

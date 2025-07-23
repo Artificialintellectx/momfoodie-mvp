@@ -255,8 +255,16 @@ export default function Home() {
       console.log(`🎯 Selected meal: ${suggestion.name} (ID: ${suggestion.id})`)
       console.log(`📝 Description: ${suggestion.description}`)
       
-      // Store the meal in localStorage and redirect to results page
+      // Store the meal and search criteria in localStorage
       localStorage.setItem('currentMeal', JSON.stringify(suggestion))
+      localStorage.setItem('searchCriteria', JSON.stringify({
+        dietaryPreference,
+        mealType,
+        cookingTime,
+        showIngredientMode,
+        selectedIngredients: showIngredientMode ? selectedIngredients : []
+      }))
+      localStorage.setItem('shownMeals', JSON.stringify([suggestion.id])) // Track shown meals
       
       // Redirect to results page with meal data
       const mealParam = encodeURIComponent(JSON.stringify(suggestion))
