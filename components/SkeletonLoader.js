@@ -156,7 +156,7 @@ export const HomepageSkeleton = () => {
           </div>
           
           {/* Dietary preferences skeleton with staggered animation */}
-          <div>
+          <div className="mb-8">
             <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-56 mb-6 overflow-hidden" style={{ animationDelay: '1.2s' }}>
               <Shimmer />
             </div>
@@ -168,12 +168,12 @@ export const HomepageSkeleton = () => {
               ))}
             </div>
           </div>
-        </div>
-        
-        {/* Floating button skeleton with shimmer */}
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2">
-          <div className="relative h-14 w-72 bg-gradient-to-r from-gray-200 to-gray-300 rounded-2xl overflow-hidden">
-            <Shimmer />
+          
+          {/* Get Meal Suggestion Button skeleton */}
+          <div className="flex justify-center mt-12">
+            <div className="relative h-14 w-72 bg-gradient-to-r from-gray-200 to-gray-300 rounded-2xl overflow-hidden" style={{ animationDelay: '1.8s' }}>
+              <Shimmer />
+            </div>
           </div>
         </div>
       </div>
@@ -256,13 +256,6 @@ export const ResultPageSkeleton = () => {
           <div className="relative h-48 bg-gradient-to-r from-gray-200 to-gray-300 rounded-xl overflow-hidden" style={{ animationDelay: '2.3s' }}>
             <Shimmer />
             <div className="absolute inset-0 bg-gradient-to-br from-gray-100/50 to-transparent"></div>
-          </div>
-        </div>
-        
-        {/* Floating button skeleton with shimmer */}
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2">
-          <div className="relative h-14 w-64 bg-gradient-to-r from-gray-200 to-gray-300 rounded-2xl overflow-hidden">
-            <Shimmer />
           </div>
         </div>
       </div>

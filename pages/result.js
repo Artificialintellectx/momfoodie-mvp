@@ -18,24 +18,13 @@ import {
   Zap,
   Flame
 } from 'lucide-react'
-import { ResultPageSkeleton } from '../components/SkeletonLoader'
 
 export default function Result() {
   const router = useRouter()
   const [meal, setMeal] = useState(null)
   const [generating, setGenerating] = useState(false)
-  const [pageLoading, setPageLoading] = useState(true)
   const [showInstructionsModal, setShowInstructionsModal] = useState(false)
   const [savedMeals, setSavedMeals] = useState([])
-
-  useEffect(() => {
-    // Simulate page loading
-    const timer = setTimeout(() => {
-      setPageLoading(false)
-    }, 1200)
-    
-    return () => clearTimeout(timer)
-  }, [])
 
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('savedMeals') || '[]')
@@ -67,9 +56,8 @@ export default function Result() {
       console.log('Loaded meal:', mealData.name)
       console.log('Ingredients count:', mealData.ingredients?.length)
       console.log('Instructions count:', mealData.instructions?.length)
-    } else {
-      router.push('/')
     }
+    // Removed redirect to show wireframe instead
   }, [router.query.meal, router])
 
   const toggleSaveMeal = () => {
@@ -146,22 +134,85 @@ export default function Result() {
     }
   }
 
-  // Show skeleton loader while page is loading
-  if (pageLoading) {
-    return <ResultPageSkeleton />
-  }
-
-  // Show skeleton loader while generating new suggestion
-  if (generating) {
-    return <ResultPageSkeleton />
-  }
-
+  // Show schema immediately if no meal data
   if (!meal) {
     return (
-      <div className="min-h-screen bg-pattern flex items-center justify-center">
-        <div className="glass rounded-3xl p-8 text-center">
-          <div className="loading-spinner w-8 h-8 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your perfect meal...</p>
+      <div className="min-h-screen bg-white p-4 sm:p-6">
+        <div className="max-w-4xl mx-auto">
+          {/* Header wireframe */}
+          <div className="flex items-center justify-between mb-6 p-4 border-2 border-dashed border-gray-400 rounded-lg">
+            <div className="w-8 h-8 border-2 border-gray-400 rounded-full flex items-center justify-center">
+              <div className="w-4 h-4 border border-gray-400"></div>
+            </div>
+            <div className="flex gap-2">
+              <div className="w-8 h-8 border-2 border-gray-400 rounded-full"></div>
+              <div className="w-8 h-8 border-2 border-gray-400 rounded-full"></div>
+            </div>
+          </div>
+          
+          {/* Hero section wireframe */}
+          <div className="border-2 border-dashed border-gray-400 rounded-3xl p-6 sm:p-8 mb-6">
+            <div className="text-center mb-6">
+              <div className="h-8 border-2 border-gray-400 rounded w-3/4 mx-auto mb-3"></div>
+              <div className="h-4 border border-gray-400 rounded w-1/2 mx-auto"></div>
+            </div>
+            
+            {/* Stats wireframe */}
+            <div className="grid grid-cols-4 gap-2">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-16 border-2 border-dashed border-gray-400 rounded-lg flex flex-col items-center justify-center">
+                  <div className="w-6 h-6 border border-gray-400 rounded mb-1"></div>
+                  <div className="h-3 border border-gray-400 rounded w-12"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Ingredients wireframe */}
+          <div className="border-2 border-dashed border-gray-400 rounded-3xl p-6 sm:p-8 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-6 border-2 border-gray-400 rounded w-24"></div>
+              <div className="h-8 w-24 border-2 border-gray-400 rounded"></div>
+            </div>
+            
+            <div className="space-y-2">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-12 border-2 border-dashed border-gray-400 rounded-lg flex items-center px-3">
+                  <div className="w-3 h-3 border border-gray-400 rounded-full mr-3"></div>
+                  <div className="h-4 border border-gray-400 rounded flex-1"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Video tutorial wireframe */}
+          <div className="border-2 border-dashed border-gray-400 rounded-3xl p-6 sm:p-8 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-6 border-2 border-gray-400 rounded w-28"></div>
+              <div className="h-6 w-20 border-2 border-gray-400 rounded-full"></div>
+            </div>
+            
+            <div className="h-48 border-2 border-dashed border-gray-400 rounded-xl flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-16 h-16 border-2 border-gray-400 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <div className="w-6 h-6 border border-gray-400"></div>
+                </div>
+                <div className="h-4 border border-gray-400 rounded w-32 mx-auto mb-1"></div>
+                <div className="h-3 border border-gray-400 rounded w-24 mx-auto"></div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Floating button wireframe */}
+          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2">
+            <div className="h-14 w-64 border-2 border-dashed border-gray-400 rounded-2xl flex items-center justify-center">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border border-gray-400"></div>
+                <div className="h-4 border border-gray-400 rounded w-32"></div>
+                <div className="w-4 h-4 border border-gray-400"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -209,10 +260,10 @@ export default function Result() {
         </div>
 
         {/* Ultra Compact Hero Section */}
-        <div className="animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
+        <div>
           <div className="relative overflow-hidden rounded-2xl mb-4">
             {/* Background Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-yellow-400 to-red-400 opacity-10"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 opacity-10"></div>
             
             {/* Content */}
             <div className="relative p-4">
@@ -224,7 +275,7 @@ export default function Result() {
               {/* Ultra Compact Meal Stats */}
               <div className="grid grid-cols-4 gap-2">
                 <div className="glass-dark rounded-lg p-2 text-center">
-                  <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center mx-auto mb-1">
+                  <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center mx-auto mb-1">
                     <Clock className="w-3 h-3 text-white" />
                   </div>
                   <p className="text-gray-600 text-xs mb-0.5">Time</p>
@@ -232,7 +283,7 @@ export default function Result() {
                 </div>
                 
                 <div className="glass-dark rounded-lg p-2 text-center">
-                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mx-auto mb-1">
+                  <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-1">
                     <Users className="w-3 h-3 text-white" />
                   </div>
                   <p className="text-gray-600 text-xs mb-0.5">Level</p>
@@ -240,7 +291,7 @@ export default function Result() {
                 </div>
                 
                 <div className="glass-dark rounded-lg p-2 text-center">
-                  <div className="w-6 h-6 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center mx-auto mb-1">
+                  <div className="w-6 h-6 bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg flex items-center justify-center mx-auto mb-1">
                     <Star className="w-3 h-3 text-white" />
                   </div>
                   <p className="text-gray-600 text-xs mb-0.5">Type</p>
@@ -248,7 +299,7 @@ export default function Result() {
                 </div>
                 
                 <div className="glass-dark rounded-lg p-2 text-center">
-                  <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mx-auto mb-1">
+                  <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center mx-auto mb-1">
                     <ChefHat className="w-3 h-3 text-white" />
                   </div>
                   <p className="text-gray-600 text-xs mb-0.5">Diet</p>
@@ -260,11 +311,11 @@ export default function Result() {
         </div>
 
         {/* Ultra Compact Ingredients Section */}
-        <div className="animate-slide-in-up" style={{ animationDelay: '0.3s' }}>
+        <div>
           <div className="card">
             <div className="flex items-center justify-between mb-4">
               <h2 className="heading-sm text-gray-800 flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-lg">
+                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center shadow-lg">
                   <List className="w-4 h-4 text-white" />
                 </div>
                 Ingredients
@@ -285,10 +336,9 @@ export default function Result() {
                 {meal.ingredients.map((ingredient, index) => (
                   <div
                     key={index}
-                    className="glass-dark rounded-lg p-3 flex items-center gap-2 hover-lift transition-all duration-300 border border-orange-100"
-                    style={{ animationDelay: `${index * 0.1}s` }}
+                    className="glass-dark rounded-lg p-3 flex items-center gap-2 hover-lift transition-all duration-300 border border-indigo-100"
                   >
-                    <div className="w-2 h-2 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full flex-shrink-0 shadow-sm"></div>
+                    <div className="w-2 h-2 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full flex-shrink-0 shadow-sm"></div>
                     <span className="text-gray-700 text-sm font-medium">{ingredient}</span>
                   </div>
                 ))}
@@ -303,7 +353,7 @@ export default function Result() {
         </div>
 
         {/* Coming Soon: Video Tutorial Section */}
-        <div className="animate-slide-in-up" style={{ animationDelay: '0.35s' }}>
+        <div>
           <div className="card">
             <div className="flex items-center justify-between mb-4">
               <h2 className="heading-sm text-gray-800 flex items-center gap-2">
@@ -389,22 +439,28 @@ export default function Result() {
 
 
         {/* Floating Get Another Recipe Button */}
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
           <button
             onClick={getNewSuggestion}
             disabled={generating}
-            className="btn-primary px-8 py-3 flex items-center justify-center gap-3 group shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 min-w-[200px]"
+            className="relative px-8 py-3 flex items-center justify-center gap-3 group transition-all duration-300 hover:scale-105 min-w-[200px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-purple-500/25 border-2 border-indigo-400/20"
           >
+            {/* Animated background glow */}
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"></div>
+            
+            {/* Pulsing ring effect */}
+            <div className="absolute inset-0 rounded-2xl border-2 border-purple-300/30 animate-pulse"></div>
+            
             {generating ? (
               <>
-                <div className="loading-spinner w-4 h-4"></div>
+                <div className="loading-spinner w-4 h-4 border-2 border-white/30 border-t-white"></div>
                 <span className="text-sm whitespace-nowrap">Finding Another Meal...</span>
               </>
             ) : (
               <>
-                <Flame className="w-4 h-4" />
+                <Flame className="w-4 h-4 animate-pulse" />
                 <span className="text-sm whitespace-nowrap">Get Another Recipe</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform duration-300" />
               </>
             )}
           </button>
@@ -420,7 +476,7 @@ export default function Result() {
               <div className="bg-gray-50 border-b border-gray-200 p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center">
                       <BookOpen className="w-6 h-6 text-white" />
                     </div>
                     <div>
@@ -444,11 +500,11 @@ export default function Result() {
                     {meal.instructions.map((instruction, index) => (
                       <div 
                         key={index}
-                        className="bg-white border border-gray-200 rounded-xl p-5 hover:border-orange-200 hover:shadow-sm transition-all duration-200"
+                        className="bg-white border border-gray-200 rounded-xl p-5 hover:border-indigo-200 hover:shadow-sm transition-all duration-200"
                         style={{ animationDelay: `${index * 0.05}s` }}
                       >
                         <div className="flex items-start gap-4">
-                          <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
                             <span className="text-white font-bold text-sm">{index + 1}</span>
                           </div>
                           <div className="flex-1 pt-1">
@@ -471,21 +527,21 @@ export default function Result() {
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                   <div className="flex items-center gap-4 text-gray-600">
                     <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-gray-200">
-                      <Clock className="w-4 h-4 text-orange-500" />
+                      <Clock className="w-4 h-4 text-indigo-500" />
                       <span className="font-medium text-sm">{meal.prep_time}</span>
                     </div>
                     <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-gray-200">
-                      <Users className="w-4 h-4 text-blue-500" />
+                      <Users className="w-4 h-4 text-purple-500" />
                       <span className="font-medium text-sm capitalize">{meal.difficulty}</span>
                     </div>
                     <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-gray-200">
-                      <Star className="w-4 h-4 text-yellow-500" />
+                      <Star className="w-4 h-4 text-pink-500" />
                       <span className="font-medium text-sm capitalize">{meal.meal_type}</span>
                     </div>
                   </div>
                   <button
                     onClick={() => setShowInstructionsModal(false)}
-                    className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-medium transition-colors duration-200"
+                    className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-6 py-2.5 rounded-lg font-medium transition-all duration-200"
                   >
                     Got it!
                   </button>
