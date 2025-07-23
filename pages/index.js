@@ -459,13 +459,7 @@ export default function Home() {
                                   }`}>
                                     {time.label}
                                   </div>
-                                  <div className={`text-xs ${
-                                    cookingTime === time.value ? 'text-orange-600' : 'text-gray-500'
-                                  }`}>
-                                    {time.value === 'quick' ? 'Under 30 min' : 
-                                     time.value === 'regular' ? '30-60 min' : 
-                                     'Over 60 min'}
-                                  </div>
+
                                 </div>
                               </div>
                               
