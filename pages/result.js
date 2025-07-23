@@ -22,42 +22,53 @@ import {
 export default function Result() {
   const router = useRouter()
   const [meal, setMeal] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [showInstructionsModal, setShowInstructionsModal] = useState(false)
   const [savedMeals, setSavedMeals] = useState([])
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('savedMeals') || '[]')
-    setSavedMeals(saved)
+    const loadData = async () => {
+      setLoading(true)
+      
+      const saved = JSON.parse(localStorage.getItem('savedMeals') || '[]')
+      setSavedMeals(saved)
 
-    // Get meal data from URL params or localStorage
-    let mealData = null
-    if (router.query.meal) {
-      try {
-        mealData = JSON.parse(decodeURIComponent(router.query.meal))
-      } catch (e) {
-        console.error('Error parsing meal data:', e)
-      }
-    }
-    
-    if (!mealData) {
-      const stored = localStorage.getItem('currentMeal')
-      if (stored) {
+      // Get meal data from URL params or localStorage
+      let mealData = null
+      if (router.query.meal) {
         try {
-          mealData = JSON.parse(stored)
+          mealData = JSON.parse(decodeURIComponent(router.query.meal))
         } catch (e) {
-          console.error('Error parsing stored meal:', e)
+          console.error('Error parsing meal data:', e)
         }
       }
+      
+      if (!mealData) {
+        const stored = localStorage.getItem('currentMeal')
+        if (stored) {
+          try {
+            mealData = JSON.parse(stored)
+          } catch (e) {
+            console.error('Error parsing stored meal:', e)
+          }
+        }
+      }
+
+      if (mealData) {
+        setMeal(mealData)
+        console.log('Loaded meal:', mealData.name)
+        console.log('Ingredients count:', mealData.ingredients?.length)
+        console.log('Instructions count:', mealData.instructions?.length)
+      }
+      
+      // Simulate loading time for better UX
+      setTimeout(() => {
+        setLoading(false)
+      }, 800)
     }
 
-    if (mealData) {
-      setMeal(mealData)
-      console.log('Loaded meal:', mealData.name)
-      console.log('Ingredients count:', mealData.ingredients?.length)
-      console.log('Instructions count:', mealData.instructions?.length)
-    }
-    // Removed redirect to show wireframe instead
+    loadData()
   }, [router.query.meal, router])
 
   const toggleSaveMeal = () => {
@@ -100,6 +111,7 @@ export default function Result() {
 
   const getNewSuggestion = async () => {
     setGenerating(true)
+    setLoading(true) // Show loading schema while getting new meal
     try {
       console.log('🔍 Getting new suggestion...')
       let suggestions = []
@@ -131,86 +143,182 @@ export default function Result() {
       console.error('Error getting new suggestion:', error)
     } finally {
       setGenerating(false)
+      // Simulate loading time for better UX
+      setTimeout(() => {
+        setLoading(false)
+      }, 600)
     }
   }
 
-  // Show schema immediately if no meal data
-  if (!meal) {
+  // Show loading schema while loading
+  if (loading) {
     return (
-      <div className="min-h-screen bg-white p-4 sm:p-6">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6">
         <div className="max-w-4xl mx-auto">
-          {/* Header wireframe */}
-          <div className="flex items-center justify-between mb-6 p-4 border-2 border-dashed border-gray-400 rounded-lg">
-            <div className="w-8 h-8 border-2 border-gray-400 rounded-full flex items-center justify-center">
-              <div className="w-4 h-4 border border-gray-400"></div>
+          {/* Header skeleton with shimmer */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="relative h-10 w-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full overflow-hidden">
+              <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
             </div>
             <div className="flex gap-2">
-              <div className="w-8 h-8 border-2 border-gray-400 rounded-full"></div>
-              <div className="w-8 h-8 border-2 border-gray-400 rounded-full"></div>
+              <div className="relative h-10 w-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full overflow-hidden" style={{ animationDelay: '0.1s' }}>
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+              </div>
+              <div className="relative h-10 w-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full overflow-hidden" style={{ animationDelay: '0.2s' }}>
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+              </div>
             </div>
           </div>
           
-          {/* Hero section wireframe */}
-          <div className="border-2 border-dashed border-gray-400 rounded-3xl p-6 sm:p-8 mb-6">
+          {/* Hero section skeleton */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 mb-6 overflow-hidden">
             <div className="text-center mb-6">
-              <div className="h-8 border-2 border-gray-400 rounded w-3/4 mx-auto mb-3"></div>
-              <div className="h-4 border border-gray-400 rounded w-1/2 mx-auto"></div>
+              <div className="h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-3/4 mx-auto mb-3 overflow-hidden" style={{ animationDelay: '0.3s' }}>
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+              </div>
+              <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-1/2 mx-auto overflow-hidden" style={{ animationDelay: '0.5s' }}>
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+              </div>
             </div>
             
-            {/* Stats wireframe */}
+            {/* Stats skeleton */}
             <div className="grid grid-cols-4 gap-2">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-16 border-2 border-dashed border-gray-400 rounded-lg flex flex-col items-center justify-center">
-                  <div className="w-6 h-6 border border-gray-400 rounded mb-1"></div>
-                  <div className="h-3 border border-gray-400 rounded w-12"></div>
+                <div key={i} className="relative h-16 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg overflow-hidden" style={{ animationDelay: `${0.7 + i * 0.1}s` }}>
+                  <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
                 </div>
               ))}
             </div>
           </div>
           
-          {/* Ingredients wireframe */}
-          <div className="border-2 border-dashed border-gray-400 rounded-3xl p-6 sm:p-8 mb-6">
+          {/* Ingredients skeleton */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 mb-6 overflow-hidden">
             <div className="flex items-center justify-between mb-4">
-              <div className="h-6 border-2 border-gray-400 rounded w-24"></div>
-              <div className="h-8 w-24 border-2 border-gray-400 rounded"></div>
+              <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-24 overflow-hidden" style={{ animationDelay: '1.1s' }}>
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+              </div>
+              <div className="h-8 w-24 bg-gradient-to-r from-gray-200 to-gray-300 rounded overflow-hidden" style={{ animationDelay: '1.2s' }}>
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+              </div>
             </div>
             
             <div className="space-y-2">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-12 border-2 border-dashed border-gray-400 rounded-lg flex items-center px-3">
-                  <div className="w-3 h-3 border border-gray-400 rounded-full mr-3"></div>
-                  <div className="h-4 border border-gray-400 rounded flex-1"></div>
+                <div key={i} className="relative h-12 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg overflow-hidden" style={{ animationDelay: `${1.4 + i * 0.1}s` }}>
+                  <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
                 </div>
               ))}
             </div>
           </div>
           
-          {/* Video tutorial wireframe */}
-          <div className="border-2 border-dashed border-gray-400 rounded-3xl p-6 sm:p-8 mb-6">
+          {/* Video tutorial skeleton */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 mb-6 overflow-hidden">
             <div className="flex items-center justify-between mb-4">
-              <div className="h-6 border-2 border-gray-400 rounded w-28"></div>
-              <div className="h-6 w-20 border-2 border-gray-400 rounded-full"></div>
+              <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-28 overflow-hidden" style={{ animationDelay: '2.0s' }}>
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+              </div>
+              <div className="h-6 w-20 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full overflow-hidden" style={{ animationDelay: '2.1s' }}>
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+              </div>
             </div>
             
-            <div className="h-48 border-2 border-dashed border-gray-400 rounded-xl flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-16 h-16 border-2 border-gray-400 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <div className="w-6 h-6 border border-gray-400"></div>
-                </div>
-                <div className="h-4 border border-gray-400 rounded w-32 mx-auto mb-1"></div>
-                <div className="h-3 border border-gray-400 rounded w-24 mx-auto"></div>
+            <div className="relative h-48 bg-gradient-to-r from-gray-200 to-gray-300 rounded-xl overflow-hidden" style={{ animationDelay: '2.3s' }}>
+              <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+            </div>
+          </div>
+          
+          {/* Floating button skeleton */}
+          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2">
+            <div className="relative h-14 w-64 bg-gradient-to-r from-gray-200 to-gray-300 rounded-2xl overflow-hidden" style={{ animationDelay: '2.5s' }}>
+              <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show empty schema if no meal data
+  if (!meal) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6">
+        <div className="max-w-4xl mx-auto">
+          {/* Header skeleton */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="relative h-10 w-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full overflow-hidden">
+              <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+            </div>
+            <div className="flex gap-2">
+              <div className="relative h-10 w-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full overflow-hidden" style={{ animationDelay: '0.1s' }}>
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+              </div>
+              <div className="relative h-10 w-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full overflow-hidden" style={{ animationDelay: '0.2s' }}>
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
               </div>
             </div>
           </div>
           
-          {/* Floating button wireframe */}
-          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2">
-            <div className="h-14 w-64 border-2 border-dashed border-gray-400 rounded-2xl flex items-center justify-center">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border border-gray-400"></div>
-                <div className="h-4 border border-gray-400 rounded w-32"></div>
-                <div className="w-4 h-4 border border-gray-400"></div>
+          {/* Hero section skeleton */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 mb-6 overflow-hidden">
+            <div className="text-center mb-6">
+              <div className="h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-3/4 mx-auto mb-3 overflow-hidden" style={{ animationDelay: '0.3s' }}>
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
               </div>
+              <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-1/2 mx-auto overflow-hidden" style={{ animationDelay: '0.5s' }}>
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+              </div>
+            </div>
+            
+            {/* Stats skeleton */}
+            <div className="grid grid-cols-4 gap-2">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="relative h-16 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg overflow-hidden" style={{ animationDelay: `${0.7 + i * 0.1}s` }}>
+                  <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Ingredients skeleton */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 mb-6 overflow-hidden">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-24 overflow-hidden" style={{ animationDelay: '1.1s' }}>
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+              </div>
+              <div className="h-8 w-24 bg-gradient-to-r from-gray-200 to-gray-300 rounded overflow-hidden" style={{ animationDelay: '1.2s' }}>
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="relative h-12 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg overflow-hidden" style={{ animationDelay: `${1.4 + i * 0.1}s` }}>
+                  <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Video tutorial skeleton */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100 mb-6 overflow-hidden">
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-6 bg-gradient-to-r from-gray-200 to-gray-300 rounded w-28 overflow-hidden" style={{ animationDelay: '2.0s' }}>
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+              </div>
+              <div className="h-6 w-20 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full overflow-hidden" style={{ animationDelay: '2.1s' }}>
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+              </div>
+            </div>
+            
+            <div className="relative h-48 bg-gradient-to-r from-gray-200 to-gray-300 rounded-xl overflow-hidden" style={{ animationDelay: '2.3s' }}>
+              <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+            </div>
+          </div>
+          
+          {/* Floating button skeleton */}
+          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2">
+            <div className="relative h-14 w-64 bg-gradient-to-r from-gray-200 to-gray-300 rounded-2xl overflow-hidden" style={{ animationDelay: '2.5s' }}>
+              <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
             </div>
           </div>
         </div>
