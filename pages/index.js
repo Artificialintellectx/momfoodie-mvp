@@ -233,7 +233,19 @@ export default function Home() {
       }
 
       if (suggestions.length === 0) {
-        alert('No meals found with your criteria. Try different filters!')
+        // Redirect to no-results page with the selected criteria
+        const params = new URLSearchParams()
+        if (dietaryPreference && dietaryPreference !== 'any') params.append('dietaryPreference', dietaryPreference)
+        if (mealType) params.append('mealType', mealType)
+        if (cookingTime) params.append('cookingTime', cookingTime)
+        if (showIngredientMode && selectedIngredients.length > 0) {
+          params.append('ingredients', selectedIngredients.join(','))
+        }
+        
+        const queryString = params.toString()
+        const redirectUrl = queryString ? `/no-results?${queryString}` : '/no-results'
+        
+        router.push(redirectUrl)
         setLoading(false)
         return
       }
