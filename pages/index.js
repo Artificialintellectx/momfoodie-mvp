@@ -51,6 +51,11 @@ export default function Home() {
   }, [])
 
   const getSuggestion = async () => {
+    if (showIngredientMode && selectedIngredients.length === 0) {
+      alert('Please select at least one ingredient')
+      return
+    }
+    
     setLoading(true)
     try {
       console.log('🔍 Querying Supabase for meals...')

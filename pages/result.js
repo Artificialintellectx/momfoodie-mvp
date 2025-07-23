@@ -328,6 +328,26 @@ export default function Result() {
 
   const isSaved = savedMeals.find(m => m.id === meal.id)
 
+  // Safety check for meal data
+  if (!meal || !meal.name) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Recipe Not Found</h2>
+            <p className="text-gray-600 mb-6">The recipe you&apos;re looking for couldn&apos;t be loaded.</p>
+            <button
+              onClick={() => router.push('/')}
+              className="btn-primary"
+            >
+              Go Back Home
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-pattern relative overflow-hidden">
       {/* Animated Background Elements */}
@@ -439,7 +459,7 @@ export default function Result() {
               </button>
             </div>
             
-            {meal.ingredients && meal.ingredients.length > 0 ? (
+            {meal.ingredients && Array.isArray(meal.ingredients) && meal.ingredients.length > 0 ? (
               <div className="grid gap-2">
                 {meal.ingredients.map((ingredient, index) => (
                   <div
@@ -461,7 +481,7 @@ export default function Result() {
         </div>
 
         {/* Coming Soon: Video Tutorial Section */}
-        <div>
+        <div className="mt-6">
           <div className="card">
             <div className="flex items-center justify-between mb-4">
               <h2 className="heading-sm text-gray-800 flex items-center gap-2">
@@ -603,7 +623,7 @@ export default function Result() {
 
               {/* Clean Content */}
               <div className="p-6 overflow-y-auto max-h-[calc(85vh-140px)]">
-                {meal.instructions && meal.instructions.length > 0 ? (
+                {meal.instructions && Array.isArray(meal.instructions) && meal.instructions.length > 0 ? (
                   <div className="space-y-4">
                     {meal.instructions.map((instruction, index) => (
                       <div 

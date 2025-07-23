@@ -180,17 +180,17 @@ export default function Admin() {
   const validateForm = () => {
     const errors = []
     
-    if (!formData.name.trim()) errors.push('Recipe name is required')
-    if (!formData.description.trim()) errors.push('Description is required')
+    if (!formData.name?.trim()) errors.push('Recipe name is required')
+    if (!formData.description?.trim()) errors.push('Description is required')
     if (!formData.meal_type) errors.push('Meal type is required')
     if (!formData.cooking_time) errors.push('Cooking time is required')
-    if (!formData.prep_time) errors.push('Prep time is required')
+    if (!formData.prep_time?.trim()) errors.push('Prep time is required')
     
-    if (formData.ingredients.length === 0 || formData.ingredients.every(i => !i.trim())) {
+    if (!formData.ingredients?.length || !Array.isArray(formData.ingredients) || formData.ingredients.every(i => !i.trim())) {
       errors.push('At least one ingredient is required')
     }
     
-    if (formData.instructions.length === 0 || formData.instructions.every(i => !i.trim())) {
+    if (!formData.instructions?.length || !Array.isArray(formData.instructions) || formData.instructions.every(i => !i.trim())) {
       errors.push('At least one instruction is required')
     }
 
