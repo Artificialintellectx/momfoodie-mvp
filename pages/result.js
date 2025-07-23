@@ -253,7 +253,7 @@ export default function Result() {
                 onClick={() => setShowInstructionsModal(true)}
                 className="btn-primary px-3 py-1.5 flex items-center gap-1.5 text-xs font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                <Play className="w-3 h-3" />
+                <BookOpen className="w-3 h-3" />
                 Instructions
                 <ArrowRight className="w-2.5 h-2.5" />
               </button>
@@ -278,6 +278,32 @@ export default function Result() {
                 <p className="text-gray-600 text-sm">No ingredients available for this recipe.</p>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Coming Soon: Video Tutorial Section */}
+        <div className="animate-slide-in-up" style={{ animationDelay: '0.35s' }}>
+          <div className="card">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="heading-sm text-gray-800 flex items-center gap-2">
+                <div className="w-6 h-6 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Play className="w-3 h-3 text-gray-600" />
+                </div>
+                Video Tutorial
+              </h2>
+              
+              <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs font-medium">
+                Coming Soon
+              </span>
+            </div>
+            
+            <div className="glass-dark rounded-lg p-4 text-center border border-gray-200">
+              <div className="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <Play className="w-5 h-5 text-gray-500" />
+              </div>
+              <h3 className="text-gray-700 font-medium mb-1 text-sm">Video Tutorials</h3>
+              <p className="text-gray-500 text-xs">Watch expert chefs prepare this recipe</p>
+            </div>
           </div>
         </div>
 

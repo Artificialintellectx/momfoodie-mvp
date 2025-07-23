@@ -258,23 +258,35 @@ export default function Home() {
         
         {/* Hero Section */}
         <div className="text-center mb-12 sm:mb-16 animate-slide-in-up">
-          <div className="flex items-center justify-center gap-4 sm:gap-6 mb-8 sm:mb-10">
-            <div className="relative">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-3xl flex items-center justify-center shadow-strong animate-pulse-glow">
-                <ChefHat className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
+          <div className="flex flex-col items-center gap-6 mb-8 sm:mb-10">
+            {/* Modern Logo Icon */}
+            <div className="relative group">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-br from-orange-400 via-orange-500 to-yellow-500 rounded-[2rem] flex items-center justify-center shadow-strong animate-pulse-glow group-hover:scale-105 transition-transform duration-300">
+                <div className="relative">
+                  <Utensils className="w-12 h-12 sm:w-14 sm:h-14 text-white drop-shadow-lg" />
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-red-400 to-pink-500 rounded-full flex items-center justify-center shadow-medium">
+                    <Heart className="w-3 h-3 text-white animate-bounce-light" />
+                  </div>
+                </div>
               </div>
-              <div className="absolute -top-3 -right-3 w-8 h-8 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center shadow-medium">
-                <Heart className="w-4 h-4 text-white animate-bounce-light" />
-              </div>
+              {/* Floating elements for fun */}
+              <div className="absolute -top-2 -left-2 w-4 h-4 bg-yellow-300 rounded-full opacity-80 animate-float"></div>
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-orange-300 rounded-full opacity-70 animate-float" style={{ animationDelay: '1s' }}></div>
             </div>
-            <div>
-              <h1 className="heading-xl text-gradient">
+            
+            {/* Modern Typography */}
+            <div className="text-center">
+              <h1 className="text-4xl sm:text-5xl font-black bg-gradient-to-r from-orange-600 via-orange-500 to-yellow-500 bg-clip-text text-transparent mb-2 tracking-tight">
                 MomFudy
               </h1>
-              <p className="text-gray-700 text-lg sm:text-xl font-medium">Your Smart Kitchen Assistant</p>
+              <p className="text-gray-600 text-lg sm:text-xl font-medium">Your Smart Kitchen Assistant</p>
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+                <span className="text-sm text-gray-500 font-medium">Never wonder what to cook again</span>
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+              </div>
             </div>
           </div>
-
         </div>
 
         {/* Mode Toggle */}
@@ -521,27 +533,38 @@ export default function Home() {
           <p className="text-gray-500 text-sm mt-4">Beta version - Your feedback helps us improve!</p>
         </div>
 
-        {/* Floating Get Meal Suggestion Button */}
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
-          <button
-            onClick={getSuggestion}
-            disabled={loading}
-            className="btn-primary px-8 py-3 flex items-center justify-center gap-3 group shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 min-w-[200px]"
-          >
-            {loading ? (
-              <>
-                <div className="loading-spinner w-4 h-4"></div>
-                <span className="text-sm whitespace-nowrap">Finding Perfect Meal...</span>
-              </>
-            ) : (
-              <>
-                <Flame className="w-4 h-4" />
-                <span className="text-sm whitespace-nowrap">Get Meal Suggestion</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </>
-            )}
-          </button>
-        </div>
+                    {/* Floating Get Meal Suggestion Button */}
+            <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40 animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
+              <button
+                onClick={getSuggestion}
+                disabled={loading}
+                className="relative px-10 py-4 flex items-center justify-center gap-3 group transition-all duration-300 transform hover:scale-105 min-w-[280px] bg-gradient-to-r from-orange-500 via-orange-600 to-yellow-500 hover:from-orange-600 hover:via-orange-700 hover:to-yellow-600 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-orange-500/25 border-2 border-orange-400/20"
+              >
+                {/* Animated background glow */}
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"></div>
+                
+                {/* Pulsing ring effect */}
+                <div className="absolute inset-0 rounded-2xl border-2 border-orange-300/30 animate-pulse"></div>
+                
+                {loading ? (
+                  <>
+                    <div className="loading-spinner w-5 h-5 border-2 border-white/30 border-t-white"></div>
+                    <span className="text-base whitespace-nowrap font-semibold">Finding Perfect Meal...</span>
+                  </>
+                ) : (
+                  <>
+                    <Flame className="w-5 h-5 animate-pulse" />
+                    <span className="text-base whitespace-nowrap font-semibold">Get Meal Suggestion</span>
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
+                  </>
+                )}
+              </button>
+              
+              {/* Attention-grabbing dots */}
+              <div className="absolute -top-2 -left-2 w-3 h-3 bg-yellow-400 rounded-full animate-bounce"></div>
+              <div className="absolute -top-2 -right-2 w-3 h-3 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+            </div>
       </div>
     </div>
   )
