@@ -402,7 +402,7 @@ export default function Home() {
             <>
               {!showIngredientMode ? (
                 <div className="card mb-8 sm:mb-12">
-                  <div className="space-y-8">
+                  <div className="space-y-16">
                     {/* Meal Type - Enhanced Prominence */}
                     <div className="relative animate-slide-in-up" style={{ animationDelay: '0.5s' }}>
                       {/* Attention-grabbing header */}
@@ -412,7 +412,7 @@ export default function Home() {
                             <ChefHat className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                           </div>
                           <h3 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent animate-pulse" style={{ animationDuration: '2s' }}>
-                            What type of meal are you looking for?
+                            What is your meal preference?
                           </h3>
                         </div>
                         <p className="text-gray-600 text-xs sm:text-sm font-medium px-2">
@@ -623,7 +623,7 @@ export default function Home() {
                     </h3>
                   </div>
 
-                  <div className="space-y-8">
+                  <div className="space-y-16">
                     {/* Available Ingredients */}
                     <div>
                       <label className="block text-lg font-semibold text-gray-700 mb-6">Select the ingredients you have:</label>
