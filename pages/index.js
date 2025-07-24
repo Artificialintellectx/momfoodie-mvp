@@ -67,13 +67,26 @@ export default function Home() {
         if (mealType) query.eq('meal_type', mealType)
         if (cookingTime) query.eq('cooking_time', cookingTime)
         if (dietaryPreference) query.eq('dietary_preference', dietaryPreference)
-        const { data, error } = await query.limit(10)
+        const { data, error } = await query.limit(50) // Get more meals to filter from
 
         if (error) {
           console.log('❌ Supabase error:', error.message)
         } else if (data && data.length > 0) {
           console.log(`✅ Found ${data.length} meals from Supabase`)
-          suggestions = data
+          
+          // Apply ingredient filtering for Supabase results if in ingredient mode
+          if (showIngredientMode && selectedIngredients.length > 0) {
+            suggestions = data.filter(meal => 
+              selectedIngredients.some(ingredient =>
+                meal.ingredients.some(mealIngredient =>
+                  mealIngredient.toLowerCase().includes(ingredient.toLowerCase())
+                )
+              )
+            )
+            console.log(`🔍 After ingredient filtering: ${suggestions.length} meals`)
+          } else {
+            suggestions = data
+          }
         } else {
           console.log('⚠️ No meals found in Supabase, using fallback')
         }
