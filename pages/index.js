@@ -533,7 +533,7 @@ export default function Home() {
                           </h3>
                         </div>
                         <p className="text-gray-600 text-xs sm:text-sm font-medium px-2">
-                          We'll find meals that match your dietary needs and preferences!
+                          We&apos;ll find meals that match your dietary needs and preferences!
                         </p>
                       </div>
                       
