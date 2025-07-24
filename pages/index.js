@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { supabase } from '../lib/supabase'
 import { fallbackMeals, mealTypes, cookingTimes, dietaryPreferences, commonIngredients } from '../lib/data'
+import { analytics } from '../lib/analytics'
 import { 
   ChefHat, 
   Heart, 
@@ -57,12 +58,29 @@ export default function Home() {
     const currentMealType = getMealTypeByTime()
     setMealType(currentMealType)
     
+    // Track page visit and session start
+    analytics.trackPageVisit('home', navigator.userAgent)
+    analytics.trackSessionStart()
+    
     // Simulate page loading
     const timer = setTimeout(() => {
       setPageLoading(false)
     }, 1500)
     
     return () => clearTimeout(timer)
+  }, [])
+
+  // Track session end when user leaves the page
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      analytics.trackSessionEnd()
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      analytics.trackSessionEnd()
+    }
   }, [])
 
   useEffect(() => {
@@ -75,6 +93,16 @@ export default function Home() {
       alert('Please select at least one ingredient')
       return
     }
+    
+    // Track suggestion button click
+    const buttonType = showIngredientMode ? 'What Can I Make' : 'Get Meal Suggestion'
+    const searchCriteria = {
+      mealType,
+      cookingTime,
+      dietaryPreference,
+      selectedIngredients: showIngredientMode ? selectedIngredients : []
+    }
+    analytics.trackSuggestionClick(buttonType, searchCriteria)
     
     setLoading(true)
     try {
@@ -520,68 +548,7 @@ export default function Home() {
 
                     </div>
 
-                    {/* Dietary Preferences - Enhanced Prominence */}
-                    <div className="relative animate-slide-in-up" style={{ animationDelay: '0.7s' }}>
-                      {/* Attention-grabbing header */}
-                      <div className="text-center mb-4 sm:mb-6">
-                        <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-400 to-teal-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg animate-pulse">
-                            <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                          </div>
-                          <h3 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent animate-pulse" style={{ animationDuration: '2s' }}>
-                            Any dietary preferences?
-                          </h3>
-                        </div>
-                        <p className="text-gray-600 text-xs sm:text-sm font-medium px-2">
-                          We&apos;ll find meals that match your dietary needs and preferences!
-                        </p>
-                      </div>
-                      
-                      {/* Enhanced dietary preferences options */}
-                      <div className="flex justify-center">
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 w-full max-w-4xl">
-                          {dietaryPreferences.map((preference) => (
-                            <button
-                              key={preference.value}
-                              onClick={() => setDietaryPreference(dietaryPreference === preference.value ? '' : preference.value)}
-                              className={`relative rounded-xl p-3 transition-all duration-300 text-center ${
-                                dietaryPreference === preference.value 
-                                  ? 'bg-gradient-to-br from-indigo-100 to-purple-100 border-2 border-indigo-300 shadow-lg transform scale-105' 
-                                  : 'bg-white border-2 border-gray-100 hover:border-indigo-200 hover:shadow-md'
-                              }`}
-                            >
-                              <div className="flex flex-col items-center space-y-1">
-                                <div className={`text-2xl ${dietaryPreference === preference.value ? 'transform scale-110' : ''}`}>
-                                  {preference.emoji}
-                                </div>
-                                <span className={`text-xs font-semibold ${
-                                  dietaryPreference === preference.value ? 'text-indigo-800' : 'text-gray-700'
-                                }`}>
-                                  {preference.label}
-                                </span>
-                              </div>
-                              {dietaryPreference === preference.value && (
-                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 rounded-full flex items-center justify-center">
-                                  <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                                </div>
-                              )}
-                              {/* Trending indicator for traditional option */}
-                              {preference.value === 'traditional' && (
-                                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg animate-pulse">
-                                  🔥 HOT
-                                </div>
-                              )}
-                              {/* Popular indicator for rice-based option */}
-                              {preference.value === 'rice_based' && (
-                                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg animate-pulse">
-                                  ⭐ POPULAR
-                                </div>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+
 
                     {/* Get Meal Suggestion Button */}
                     <div className="flex justify-center mt-12">

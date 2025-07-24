@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { supabase } from '../lib/supabase'
 import { fallbackMeals } from '../lib/data'
+import { analytics } from '../lib/analytics'
 import { 
   ChefHat, 
   Heart, 
@@ -19,7 +20,8 @@ import {
   Flame,
   Sparkles,
   RefreshCw,
-  Home
+  Home,
+  CheckCircle2
 } from 'lucide-react'
 
 export default function Result() {
@@ -30,8 +32,14 @@ export default function Result() {
   const [showInstructionsModal, setShowInstructionsModal] = useState(false)
   const [savedMeals, setSavedMeals] = useState([])
   const [showExhaustionModal, setShowExhaustionModal] = useState(false)
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false)
+  const [rating, setRating] = useState(0)
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
 
   useEffect(() => {
+    // Track page visit
+    analytics.trackPageVisit('result', navigator.userAgent)
+    
     const loadData = async () => {
       setLoading(true)
       
@@ -64,6 +72,8 @@ export default function Result() {
         console.log('Loaded meal:', mealData.name)
         console.log('Ingredients count:', mealData.ingredients?.length)
         console.log('Instructions count:', mealData.instructions?.length)
+        
+
       }
       
       // Simulate loading time for better UX
@@ -330,6 +340,10 @@ export default function Result() {
         const updatedShownMeals = [...shownMeals, newMeal.id]
         localStorage.setItem('shownMeals', JSON.stringify(updatedShownMeals))
         
+        // Track "Try Another" button click
+        const searchCriteria = JSON.parse(localStorage.getItem('searchCriteria') || '{}')
+        analytics.trackSuggestionClick('Try Another', searchCriteria)
+        
         console.log(`🎯 New meal selected: ${newMeal.name}`)
         console.log(`📊 Total shown meals: ${updatedShownMeals.length}`)
       } else {
@@ -346,6 +360,54 @@ export default function Result() {
         setLoading(false)
       }, 600)
     }
+  }
+
+  // Feedback functions
+  const handleRating = (selectedRating) => {
+    setRating(selectedRating)
+  }
+
+  const submitFeedback = async () => {
+    if (!meal || rating === 0) return
+
+    try {
+      // Save feedback to Supabase
+      const { error } = await supabase
+        .from('user_feedback')
+        .insert({
+          meal_id: meal.id,
+          meal_name: meal.name,
+          rating: rating,
+          feedback_type: 'recipe_rating',
+          user_agent: navigator.userAgent,
+          created_at: new Date().toISOString()
+        })
+
+      if (error) {
+        console.error('Error saving feedback:', error)
+      } else {
+        console.log('✅ Feedback submitted successfully')
+        setFeedbackSubmitted(true)
+        
+        // Track feedback submission
+        analytics.trackSuggestionClick('Feedback Submitted', { rating, mealName: meal.name })
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error)
+    }
+
+    // Close modal after a short delay
+    setTimeout(() => {
+      setShowFeedbackModal(false)
+      setRating(0)
+      setFeedbackSubmitted(false)
+    }, 1500)
+  }
+
+  const openFeedbackModal = () => {
+    setShowFeedbackModal(true)
+    setRating(0)
+    setFeedbackSubmitted(false)
   }
 
   // Show loading schema while loading
@@ -554,7 +616,7 @@ export default function Result() {
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-yellow-300/30 to-orange-300/30 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-4xl">
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 py-8 sm:py-12 pb-24 max-w-4xl">
         
         {/* Clean Transparent Header */}
         <div className="flex items-center justify-between mb-6 animate-slide-in-up">
@@ -678,91 +740,65 @@ export default function Result() {
           </div>
         </div>
 
-        {/* Coming Soon: Video Tutorial Section */}
+        {/* Feedback Section */}
         <div className="mt-6">
           <div className="card">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="heading-sm text-gray-800 flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-medium">
-                  <Play className="w-4 h-4 text-white" />
-                </div>
-                Video Tutorial
-              </h2>
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">Was this recipe helpful?</h3>
+              <p className="text-sm text-gray-600 mb-4">Rate this recipe to help us improve our suggestions</p>
               
-              <div className="flex items-center gap-2">
-                <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-sm">
-                  Coming Soon
-                </span>
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+              {/* Star Rating */}
+              <div className="flex justify-center items-center gap-1 mb-4">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => handleRating(star)}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
+                      star <= rating
+                        ? 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white shadow-lg scale-110'
+                        : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:scale-105'
+                    }`}
+                  >
+                    <Star className={`w-4 h-4 ${star <= rating ? 'fill-current' : ''}`} />
+                  </button>
+                ))}
               </div>
-            </div>
-            
-            <div className="relative overflow-hidden glass-dark rounded-xl p-6 border border-purple-100">
-              {/* Background pattern */}
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-pink-50 opacity-50"></div>
-              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-200 to-pink-200 rounded-full -translate-y-10 translate-x-10 opacity-30"></div>
-              <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-br from-pink-200 to-purple-200 rounded-full translate-y-8 -translate-x-8 opacity-30"></div>
               
-              <div className="relative z-10">
-                {/* Video preview mockup */}
-                <div className="relative mx-auto mb-4 w-full max-w-xs">
-                  <div className="aspect-video bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg shadow-lg overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20"></div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <Play className="w-8 h-8 text-white ml-1" />
-                      </div>
-                    </div>
-                    {/* Video controls mockup */}
-                    <div className="absolute bottom-2 left-2 right-2 h-1 bg-white/20 rounded-full">
-                      <div className="h-1 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full w-1/3"></div>
-                    </div>
-                  </div>
-                  
-                  {/* Floating chef icon */}
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-orange-400 to-yellow-500 rounded-full flex items-center justify-center shadow-medium">
-                    <div className="w-4 h-4 text-white">👨‍🍳</div>
-                  </div>
+              {/* Rating Labels */}
+              {rating > 0 && (
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-gray-700">
+                    {rating === 1 && 'Poor'}
+                    {rating === 2 && 'Fair'}
+                    {rating === 3 && 'Good'}
+                    {rating === 4 && 'Very Good'}
+                    {rating === 5 && 'Excellent!'}
+                  </p>
                 </div>
-                
-                {/* Content */}
-                <div className="text-center">
-                  <h3 className="text-gray-800 font-bold mb-2 text-lg">Professional Video Tutorials</h3>
-                  <p className="text-gray-600 text-sm mb-4">Watch expert Nigerian chefs prepare this recipe step-by-step with detailed instructions</p>
-                  
-                  {/* Feature highlights */}
-                  <div className="grid grid-cols-3 gap-3 mb-4">
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="w-8 h-8 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg flex items-center justify-center">
-                        <div className="w-3 h-3 text-purple-600">🎥</div>
-                      </div>
-                      <span className="text-xs text-gray-600 font-medium">HD Quality</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="w-8 h-8 bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg flex items-center justify-center">
-                        <div className="w-3 h-3 text-pink-600">👨‍🍳</div>
-                      </div>
-                      <span className="text-xs text-gray-600 font-medium">Expert Chefs</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="w-8 h-8 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg flex items-center justify-center">
-                        <div className="w-3 h-3 text-purple-600">📝</div>
-                      </div>
-                      <span className="text-xs text-gray-600 font-medium">Step-by-Step</span>
-                    </div>
-                  </div>
-                  
-                  {/* Call to action */}
-                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-3 border border-purple-200">
-                    <p className="text-xs text-gray-700 font-medium">Be the first to know when video tutorials launch!</p>
-                  </div>
-                </div>
-              </div>
+              )}
+              
+              {/* Submit Button */}
+              <button
+                onClick={submitFeedback}
+                disabled={rating === 0}
+                className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
+                  rating === 0
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
+                }`}
+              >
+                {feedbackSubmitted ? (
+                  <span className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Thank you!
+                  </span>
+                ) : (
+                  'Submit Rating'
+                )}
+              </button>
             </div>
           </div>
         </div>
-
-
 
         {/* Floating Get Another Recipe Button */}
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
