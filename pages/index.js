@@ -599,7 +599,27 @@ export default function Home() {
                             >
                               <div className="flex flex-col items-center space-y-1">
                                 <div className={`text-2xl ${selectedIngredients.includes(ingredient) ? 'transform scale-110' : ''}`}>
-                                  🥬
+                                  {ingredient === 'Rice' ? '🍚' :
+                                   ingredient === 'Plantain' ? '🍌' :
+                                   ingredient === 'Yam' ? '🍠' :
+                                   ingredient === 'Tomatoes' ? '🍅' :
+                                   ingredient === 'Onions' ? '🧅' :
+                                   ingredient === 'Pepper' ? '🌶️' :
+                                   ingredient === 'Beans' ? '🫘' :
+                                   ingredient === 'Chicken' ? '🍗' :
+                                   ingredient === 'Beef' ? '🥩' :
+                                   ingredient === 'Fish' ? '🐟' :
+                                   ingredient === 'Eggs' ? '🥚' :
+                                   ingredient === 'Spinach' ? '🥬' :
+                                   ingredient === 'Palm oil' ? '🫒' :
+                                   ingredient === 'Vegetable oil' ? '🫗' :
+                                   ingredient === 'Garlic' ? '🧄' :
+                                   ingredient === 'Ginger' ? '🫚' :
+                                   ingredient === 'Okra' ? '🥗' :
+                                   ingredient === 'Sweet potato' ? '🍠' :
+                                   ingredient === 'Carrots' ? '🥕' :
+                                   ingredient === 'Green beans' ? '🫛' :
+                                   ingredient === 'Bread' ? '🍞' : '🥬'}
                                 </div>
                                 <span className={`text-xs font-semibold ${
                                   selectedIngredients.includes(ingredient) ? 'text-indigo-800' : 'text-gray-700'
