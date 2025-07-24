@@ -224,32 +224,6 @@ export default function AdminNew() {
     loadBlacklistedIPs()
   }, [])
 
-  // Load analytics when period changes
-  useEffect(() => {
-    if (activeTab === 'analytics') {
-      loadAnalytics()
-    }
-  }, [analyticsPeriod, activeTab, loadAnalytics])
-
-  // Data loading functions
-  const loadRecipes = async () => {
-    setLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from('meals')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setMeals(data || [])
-    } catch (error) {
-      console.error('Error loading recipes:', error)
-      setMessage({ type: 'error', text: 'Failed to load recipes' })
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const loadAnalytics = useCallback(async () => {
     setAnalyticsLoading(true)
     try {
@@ -322,6 +296,32 @@ export default function AdminNew() {
       setAnalyticsLoading(false)
     }
   }, [analyticsPeriod])
+
+  // Load analytics when period changes (must come after loadAnalytics definition)
+  useEffect(() => {
+    if (activeTab === 'analytics') {
+      loadAnalytics()
+    }
+  }, [analyticsPeriod, activeTab, loadAnalytics])
+
+  // Data loading functions
+  const loadRecipes = async () => {
+    setLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('meals')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setMeals(data || [])
+    } catch (error) {
+      console.error('Error loading recipes:', error)
+      setMessage({ type: 'error', text: 'Failed to load recipes' })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const loadBlacklistedIPs = async () => {
     setBlacklistLoading(true)
