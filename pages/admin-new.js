@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { 
   ChefHat, Plus, Save, Edit, Trash2, Eye, Search, Clock, Users, Zap, 
@@ -113,12 +113,32 @@ export default function AdminNew() {
     loadBlacklistedIPs()
   }, [])
 
+  const loadAnalytics = useCallback(async () => {
+    setAnalyticsLoading(true)
+    try {
+      const [visits, suggestions, averageTime, returnUsage, feedback] = await Promise.all([
+        analyticsDashboard.getWebsiteVisits(analyticsPeriod),
+        analyticsDashboard.getSuggestionClicks(analyticsPeriod),
+        analyticsDashboard.getAverageTimeSpent(analyticsPeriod),
+        analyticsDashboard.getReturnUsage(analyticsPeriod),
+        analyticsDashboard.getUserFeedback(analyticsPeriod)
+      ])
+
+      setAnalyticsData({ visits, suggestions, averageTime, returnUsage, feedback })
+    } catch (error) {
+      console.error('Error loading analytics:', error)
+      setMessage({ type: 'error', text: 'Failed to load analytics data' })
+    } finally {
+      setAnalyticsLoading(false)
+    }
+  }, [analyticsPeriod])
+
   // Load analytics when period changes
   useEffect(() => {
     if (activeTab === 'analytics') {
       loadAnalytics()
     }
-  }, [analyticsPeriod])
+  }, [analyticsPeriod, activeTab, loadAnalytics])
 
   // Data loading functions
   const loadRecipes = async () => {
@@ -136,26 +156,6 @@ export default function AdminNew() {
       setMessage({ type: 'error', text: 'Failed to load recipes' })
     } finally {
       setLoading(false)
-    }
-  }
-
-  const loadAnalytics = async () => {
-    setAnalyticsLoading(true)
-    try {
-      const [visits, suggestions, averageTime, returnUsage, feedback] = await Promise.all([
-        analyticsDashboard.getWebsiteVisits(analyticsPeriod),
-        analyticsDashboard.getSuggestionClicks(analyticsPeriod),
-        analyticsDashboard.getAverageTimeSpent(analyticsPeriod),
-        analyticsDashboard.getReturnUsage(analyticsPeriod),
-        analyticsDashboard.getUserFeedback(analyticsPeriod)
-      ])
-
-      setAnalyticsData({ visits, suggestions, averageTime, returnUsage, feedback })
-    } catch (error) {
-      console.error('Error loading analytics:', error)
-      setMessage({ type: 'error', text: 'Failed to load analytics data' })
-    } finally {
-      setAnalyticsLoading(false)
     }
   }
 

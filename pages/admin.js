@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { 
   ChefHat, Plus, Save, Edit, Trash2, Eye, Search, Clock, Users, Zap, 
@@ -229,7 +229,7 @@ export default function AdminNew() {
     if (activeTab === 'analytics') {
       loadAnalytics()
     }
-  }, [analyticsPeriod])
+  }, [analyticsPeriod, activeTab, loadAnalytics])
 
   // Data loading functions
   const loadRecipes = async () => {
@@ -250,7 +250,7 @@ export default function AdminNew() {
     }
   }
 
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     setAnalyticsLoading(true)
     try {
       console.log('🔄 Loading analytics data for period:', analyticsPeriod)
@@ -321,7 +321,7 @@ export default function AdminNew() {
     } finally {
       setAnalyticsLoading(false)
     }
-  }
+  }, [analyticsPeriod])
 
   const loadBlacklistedIPs = async () => {
     setBlacklistLoading(true)
@@ -1049,7 +1049,7 @@ export default function AdminNew() {
               </p>
               <div className="text-sm text-yellow-600">
                 <p>• Visit the homepage to generate some test data</p>
-                <p>• Click "Get Meal Suggestion" to track interactions</p>
+                <p>• Click &quot;Get Meal Suggestion&quot; to track interactions</p>
                 <p>• Check back here to see the analytics</p>
               </div>
             </div>
