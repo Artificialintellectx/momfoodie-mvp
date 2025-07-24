@@ -24,7 +24,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [pageLoading, setPageLoading] = useState(true)
   const [showIngredientMode, setShowIngredientMode] = useState(false)
-  const [mealType, setMealType] = useState('breakfast')
+  const [mealType, setMealType] = useState('')
   const [cookingTime, setCookingTime] = useState('quick')
   const [dietaryPreference, setDietaryPreference] = useState('any')
   const [savedMeals, setSavedMeals] = useState([])
@@ -35,7 +35,28 @@ export default function Home() {
     'Spinach', 'Carrots', 'Potatoes', 'Yam', 'Plantain'
   ])
 
+  // Function to get meal type based on Lagos time
+  const getMealTypeByTime = () => {
+    const lagosTime = new Date().toLocaleString("en-US", {
+      timeZone: "Africa/Lagos"
+    })
+    const lagosDate = new Date(lagosTime)
+    const hour = lagosDate.getHours()
+    
+    if (hour >= 5 && hour < 11) {
+      return 'breakfast'
+    } else if (hour >= 11 && hour < 17) {
+      return 'lunch'
+    } else {
+      return 'dinner'
+    }
+  }
+
   useEffect(() => {
+    // Set meal type based on Lagos time
+    const currentMealType = getMealTypeByTime()
+    setMealType(currentMealType)
+    
     // Simulate page loading
     const timer = setTimeout(() => {
       setPageLoading(false)
@@ -382,9 +403,24 @@ export default function Home() {
               {!showIngredientMode ? (
                 <div className="card mb-8 sm:mb-12">
                   <div className="space-y-8">
-                    {/* Meal Type */}
-                    <div>
-                      <label className="block text-lg font-semibold text-gray-700 mb-6">What type of meal are you looking for?</label>
+                    {/* Meal Type - Enhanced Prominence */}
+                    <div className="relative animate-slide-in-up" style={{ animationDelay: '0.5s' }}>
+                      {/* Attention-grabbing header */}
+                      <div className="text-center mb-4 sm:mb-6">
+                        <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg animate-pulse">
+                            <ChefHat className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                          </div>
+                          <h3 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent animate-pulse" style={{ animationDuration: '2s' }}>
+                            What type of meal are you looking for?
+                          </h3>
+                        </div>
+                        <p className="text-gray-600 text-xs sm:text-sm font-medium px-2">
+                          Choose the perfect meal for your current mood and time of day!
+                        </p>
+                      </div>
+                      
+                      {/* Enhanced meal type options */}
                       <div className="flex justify-center">
                         <div className="grid grid-cols-3 gap-4 w-full max-w-md">
                           {mealTypes.map((type) => (
@@ -484,9 +520,24 @@ export default function Home() {
 
                     </div>
 
-                    {/* Dietary Preferences */}
-                    <div>
-                      <label className="block text-lg font-semibold text-gray-700 mb-6">Any dietary preferences?</label>
+                    {/* Dietary Preferences - Enhanced Prominence */}
+                    <div className="relative animate-slide-in-up" style={{ animationDelay: '0.7s' }}>
+                      {/* Attention-grabbing header */}
+                      <div className="text-center mb-4 sm:mb-6">
+                        <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-400 to-teal-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg animate-pulse">
+                            <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                          </div>
+                          <h3 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent animate-pulse" style={{ animationDuration: '2s' }}>
+                            Any dietary preferences?
+                          </h3>
+                        </div>
+                        <p className="text-gray-600 text-xs sm:text-sm font-medium px-2">
+                          We'll find meals that match your dietary needs and preferences!
+                        </p>
+                      </div>
+                      
+                      {/* Enhanced dietary preferences options */}
                       <div className="flex justify-center">
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 w-full max-w-4xl">
                           {dietaryPreferences.map((preference) => (
