@@ -24,7 +24,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [pageLoading, setPageLoading] = useState(true)
   const [showIngredientMode, setShowIngredientMode] = useState(false)
-  const [mealType, setMealType] = useState('')
+  const [mealType, setMealType] = useState('breakfast')
   const [cookingTime, setCookingTime] = useState('quick')
   const [dietaryPreference, setDietaryPreference] = useState('any')
   const [savedMeals, setSavedMeals] = useState([])
@@ -381,15 +381,6 @@ export default function Home() {
             <>
               {!showIngredientMode ? (
                 <div className="card mb-8 sm:mb-12">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center">
-                      <ChefHat className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="heading-md text-gray-800">
-                      What are you looking for?
-                    </h3>
-                  </div>
-
                   <div className="space-y-8">
                     {/* Meal Type */}
                     <div>
@@ -407,7 +398,7 @@ export default function Home() {
                               }`}
                             >
                               <div className="flex flex-col items-center space-y-2">
-                                <div className={`text-3xl ${mealType === type.value ? 'transform scale-110' : ''}`}>
+                                <div className={`text-3xl ${mealType === type.value ? 'transform scale-110 animate-bounce' : ''}`}>
                                   {type.emoji}
                                 </div>
                                 <span className={`text-sm font-semibold ${
