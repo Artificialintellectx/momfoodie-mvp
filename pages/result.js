@@ -19,8 +19,6 @@ import {
   Zap,
   Flame,
   Sparkles,
-  RefreshCw,
-  Home,
   CheckCircle2
 } from 'lucide-react'
 
@@ -31,7 +29,6 @@ export default function Result() {
   const [generating, setGenerating] = useState(false)
   const [showInstructionsModal, setShowInstructionsModal] = useState(false)
   const [savedMeals, setSavedMeals] = useState([])
-  const [showExhaustionModal, setShowExhaustionModal] = useState(false)
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
   const [rating, setRating] = useState(0)
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
@@ -96,20 +93,16 @@ export default function Result() {
     localStorage.setItem('savedMeals', JSON.stringify(updatedSavedMeals))
   }
 
-  const showExhaustionMessage = () => {
-    setShowExhaustionModal(true)
-  }
-
-  const resetShownMeals = () => {
-    localStorage.setItem('shownMeals', JSON.stringify([]))
-    setShowExhaustionModal(false)
-    getNewSuggestion()
-  }
-
   const goToHomepage = () => {
     // Clear stored data and go to homepage
     localStorage.removeItem('searchCriteria')
-    localStorage.removeItem('shownMeals')
+    localStorage.removeItem('currentMeal')
+    // Clear all filter-specific shown meals keys
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('shownMeals_')) {
+        localStorage.removeItem(key)
+      }
+    })
     router.push('/')
   }
 
@@ -146,12 +139,10 @@ export default function Result() {
     try {
       console.log('🔍 Getting new suggestion...')
       
-      // Get stored search criteria and shown meals
+      // Get stored search criteria
       const searchCriteria = JSON.parse(localStorage.getItem('searchCriteria') || '{}')
-      const shownMeals = JSON.parse(localStorage.getItem('shownMeals') || '[]')
       
       console.log('📋 Search criteria:', searchCriteria)
-      console.log('👀 Already shown meals:', shownMeals)
       
       let suggestions = []
 
@@ -326,30 +317,63 @@ export default function Result() {
         })
       }
 
-      // Filter out already shown meals
+      // Get current filter key to track shown meals per filter combination
+      const currentFilterKey = JSON.stringify({
+        mealType: searchCriteria.mealType,
+        cookingTime: searchCriteria.cookingTime,
+        dietaryPreference: searchCriteria.dietaryPreference,
+        showIngredientMode: searchCriteria.showIngredientMode,
+        selectedIngredients: searchCriteria.selectedIngredients || []
+      })
+
+      // Get shown meals for this specific filter combination
+      const shownMealsKey = `shownMeals_${btoa(currentFilterKey).slice(0, 20)}`
+      const shownMeals = JSON.parse(localStorage.getItem(shownMealsKey) || '[]')
+      
+      console.log(`🎯 Current filter key: ${currentFilterKey}`)
+      console.log(`👀 Already shown meals for this filter: ${shownMeals.length}`)
+
+      // Filter out already shown meals for this filter combination
       const availableMeals = suggestions.filter(meal => !shownMeals.includes(meal.id))
       console.log(`🎯 Available meals (excluding ${shownMeals.length} shown): ${availableMeals.length}`)
 
       if (availableMeals.length > 0) {
+        // Randomly select from available meals
         const randomIndex = Math.floor(Math.random() * availableMeals.length)
         const newMeal = availableMeals[randomIndex]
         setMeal(newMeal)
         localStorage.setItem('currentMeal', JSON.stringify(newMeal))
         
-        // Add to shown meals
+        // Add to shown meals for this filter
         const updatedShownMeals = [...shownMeals, newMeal.id]
-        localStorage.setItem('shownMeals', JSON.stringify(updatedShownMeals))
+        localStorage.setItem(shownMealsKey, JSON.stringify(updatedShownMeals))
         
         // Track "Try Another" button click
-        const searchCriteria = JSON.parse(localStorage.getItem('searchCriteria') || '{}')
         analytics.trackSuggestionClick('Try Another', searchCriteria)
         
         console.log(`🎯 New meal selected: ${newMeal.name}`)
-        console.log(`📊 Total shown meals: ${updatedShownMeals.length}`)
+        console.log(`📊 Total shown meals for this filter: ${updatedShownMeals.length}`)
       } else {
-        // All meals for this preference have been shown
-        console.log('🏁 All meals for this preference have been shown')
-        showExhaustionMessage()
+        // All meals for this filter have been shown - reset and start over
+        console.log('🔄 All meals shown for this filter, resetting...')
+        localStorage.removeItem(shownMealsKey)
+        
+        // Randomly select from all suggestions
+        const randomIndex = Math.floor(Math.random() * suggestions.length)
+        const newMeal = suggestions[randomIndex]
+        setMeal(newMeal)
+        localStorage.setItem('currentMeal', JSON.stringify(newMeal))
+        
+        // Start fresh tracking
+        localStorage.setItem(shownMealsKey, JSON.stringify([newMeal.id]))
+        
+        // Track "Try Another" button click
+        analytics.trackSuggestionClick('Try Another', searchCriteria)
+        
+        console.log(`🎯 Reset and selected: ${newMeal.name}`)
+        
+        // Show exhaustion notification instead of modal
+        alert('🎉 You\'ve seen all recipes for your current preferences! We\'re starting fresh and will be adding more recipes soon. Keep exploring!')
       }
     } catch (error) {
       console.error('Error getting new suggestion:', error)
@@ -906,89 +930,6 @@ export default function Result() {
                     className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-6 py-2.5 rounded-lg font-medium transition-all duration-200"
                   >
                     Got it!
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Exhaustion Modal */}
-        {showExhaustionModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
-            <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl animate-slide-in-up">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-orange-50 to-yellow-50 border-b border-orange-200 p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-xl flex items-center justify-center">
-                      <ChefHat className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold text-gray-900">All Recipes Shown! 🎉</h3>
-                      <p className="text-gray-600">You&apos;ve seen all available recipes for your preference</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowExhaustionModal(false)}
-                    className="w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors duration-200"
-                  >
-                    <span className="text-gray-600 text-xl font-light">×</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-6">
-                <div className="text-center mb-6">
-                  <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Sparkles className="w-10 h-10 text-green-500" />
-                  </div>
-                  <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                    Congratulations! 🎊
-                  </h4>
-                  <p className="text-gray-600 leading-relaxed">
-                    You&apos;ve explored all the recipes that match your current preferences. 
-                    We&apos;re constantly adding new recipes to our platform!
-                  </p>
-                </div>
-
-                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 mb-6">
-                  <h5 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-indigo-500" />
-                    What would you like to do next?
-                  </h5>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
-                      <span>Start over with the same preferences</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                      <span>Try different dietary preferences</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-pink-400 rounded-full"></div>
-                      <span>Explore other meal types</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    onClick={resetShownMeals}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-semibold hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
-                  >
-                    <RefreshCw className="w-5 h-5" />
-                    Start Over
-                  </button>
-                  <button
-                    onClick={goToHomepage}
-                    className="flex-1 px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 flex items-center justify-center gap-2"
-                  >
-                    <Home className="w-5 h-5" />
-                    Try Different Filters
                   </button>
                 </div>
               </div>

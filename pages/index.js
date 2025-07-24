@@ -179,7 +179,7 @@ export default function Home() {
                 )
                 if (hasMeat) matches = false
               } else if (userPref === 'lacto_vegetarian') {
-                // Lacto-vegetarian can have dairy but not meat/fish
+                // Lacto-vegetarian can have dairy but not meat or fish
                 const hasMeatOrFish = meal.ingredients.some(ingredient => 
                   ingredient.toLowerCase().includes('chicken') || 
                   ingredient.toLowerCase().includes('beef') ||
@@ -188,7 +188,7 @@ export default function Home() {
                 )
                 if (hasMeatOrFish) matches = false
               } else if (userPref === 'gluten_free') {
-                // Gluten-free should not contain wheat, barley, rye
+                // Gluten-free meals should avoid wheat, barley, rye
                 const hasGluten = meal.ingredients.some(ingredient => 
                   ingredient.toLowerCase().includes('wheat') || 
                   ingredient.toLowerCase().includes('barley') ||
@@ -228,7 +228,7 @@ export default function Home() {
                 )
                 if (!hasProtein) matches = false
               } else if (userPref === 'soft_foods') {
-                // Soft foods are easy to chew and digest
+                // Soft foods for easy chewing/swallowing
                 const isSoftFood = meal.name.toLowerCase().includes('porridge') ||
                   meal.name.toLowerCase().includes('soup') ||
                   meal.name.toLowerCase().includes('moi moi') ||
@@ -239,7 +239,7 @@ export default function Home() {
                   )
                 if (!isSoftFood) matches = false
               } else if (userPref === 'high_fiber') {
-                // High-fiber meals contain fiber-rich ingredients
+                // High-fiber meals should contain fiber-rich ingredients
                 const hasFiber = meal.ingredients.some(ingredient => 
                   ingredient.toLowerCase().includes('beans') ||
                   ingredient.toLowerCase().includes('vegetables') ||
@@ -293,31 +293,65 @@ export default function Home() {
         })
       }
 
+      // If no suggestions found, show a user-friendly message instead of redirecting
       if (suggestions.length === 0) {
-        // Redirect to no-results page with the selected criteria
-        const params = new URLSearchParams()
-        if (dietaryPreference && dietaryPreference !== 'any') params.append('dietaryPreference', dietaryPreference)
-        if (mealType) params.append('mealType', mealType)
-        if (cookingTime) params.append('cookingTime', cookingTime)
-        if (showIngredientMode && selectedIngredients.length > 0) {
-          params.append('ingredients', selectedIngredients.join(','))
-        }
-        
-        const queryString = params.toString()
-        const redirectUrl = queryString ? `/no-results?${queryString}` : '/no-results'
-        
-        router.push(redirectUrl)
+        alert('No recipes found for your current preferences. Try adjusting your filters or ingredients!')
         setLoading(false)
         return
       }
 
-      const randomIndex = Math.floor(Math.random() * suggestions.length)
-      const suggestion = suggestions[randomIndex]
-      console.log(`🎯 Selected meal: ${suggestion.name} (ID: ${suggestion.id})`)
-      console.log(`📝 Description: ${suggestion.description}`)
+      // Get current filter key to track shown meals per filter combination
+      const currentFilterKey = JSON.stringify({
+        mealType,
+        cookingTime,
+        dietaryPreference,
+        showIngredientMode,
+        selectedIngredients: showIngredientMode ? selectedIngredients : []
+      })
+
+      // Get shown meals for this specific filter combination
+      const shownMealsKey = `shownMeals_${btoa(currentFilterKey).slice(0, 20)}`
+      const shownMeals = JSON.parse(localStorage.getItem(shownMealsKey) || '[]')
+      
+      console.log(`🎯 Current filter key: ${currentFilterKey}`)
+      console.log(`👀 Already shown meals for this filter: ${shownMeals.length}`)
+
+      // Filter out already shown meals for this filter combination
+      const availableMeals = suggestions.filter(meal => !shownMeals.includes(meal.id))
+      console.log(`🎯 Available meals (excluding ${shownMeals.length} shown): ${availableMeals.length}`)
+
+      let selectedMeal
+
+      if (availableMeals.length > 0) {
+        // Randomly select from available meals
+        const randomIndex = Math.floor(Math.random() * availableMeals.length)
+        selectedMeal = availableMeals[randomIndex]
+        
+        // Add to shown meals for this filter
+        const updatedShownMeals = [...shownMeals, selectedMeal.id]
+        localStorage.setItem(shownMealsKey, JSON.stringify(updatedShownMeals))
+        
+        console.log(`🎯 Selected meal: ${selectedMeal.name} (ID: ${selectedMeal.id})`)
+        console.log(`📊 Total shown meals for this filter: ${updatedShownMeals.length}`)
+      } else {
+        // All meals for this filter have been shown - reset and start over
+        console.log('🔄 All meals shown for this filter, resetting...')
+        localStorage.removeItem(shownMealsKey)
+        
+        // Randomly select from all suggestions
+        const randomIndex = Math.floor(Math.random() * suggestions.length)
+        selectedMeal = suggestions[randomIndex]
+        
+        // Start fresh tracking
+        localStorage.setItem(shownMealsKey, JSON.stringify([selectedMeal.id]))
+        
+        console.log(`🎯 Reset and selected: ${selectedMeal.name} (ID: ${selectedMeal.id})`)
+      }
+      
+      console.log(`📝 Description: ${selectedMeal.description}`)
       
       // Store the meal and search criteria in localStorage
-      localStorage.setItem('currentMeal', JSON.stringify(suggestion))
+      localStorage.setItem('currentMeal', JSON.stringify(selectedMeal))
       localStorage.setItem('searchCriteria', JSON.stringify({
         dietaryPreference,
         mealType,
@@ -325,10 +359,9 @@ export default function Home() {
         showIngredientMode,
         selectedIngredients: showIngredientMode ? selectedIngredients : []
       }))
-      localStorage.setItem('shownMeals', JSON.stringify([suggestion.id])) // Track shown meals
       
       // Redirect to results page with meal data
-      const mealParam = encodeURIComponent(JSON.stringify(suggestion))
+      const mealParam = encodeURIComponent(JSON.stringify(selectedMeal))
       router.push(`/result?meal=${mealParam}`)
 
     } catch (error) {
