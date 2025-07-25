@@ -839,7 +839,8 @@ export default function Result() {
           {(() => {
             console.log('🎨 Rendering Previous Recipe button with count:', previousMeals.length)
             console.log('🎨 previousMeals in render:', previousMeals.map(m => m.name))
-            return previousMeals.length > 0 && (
+            // Only show Previous Recipe button if there are 2 or more meals in history (i.e., from 2nd suggestion onwards)
+            return previousMeals.length >= 2 && (
               <div className="relative group flex-1 min-w-0">
                 <button
                   onClick={() => {
