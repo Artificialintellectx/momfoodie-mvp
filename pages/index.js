@@ -29,11 +29,7 @@ export default function Home() {
   const [cookingTime, setCookingTime] = useState('quick')
   const [savedMeals, setSavedMeals] = useState([])
   const [selectedIngredients, setSelectedIngredients] = useState([])
-  const [availableIngredients] = useState([
-    'Rice', 'Beans', 'Tomatoes', 'Onions', 'Garlic', 'Ginger', 
-    'Pepper', 'Oil', 'Salt', 'Chicken', 'Fish', 'Beef', 
-    'Spinach', 'Carrots', 'Potatoes', 'Yam', 'Plantain'
-  ])
+  const [availableIngredients] = useState(commonIngredients)
 
   // Function to get meal type based on Lagos time
   const getMealTypeByTime = () => {
@@ -514,7 +510,15 @@ export default function Home() {
                                    ingredient === 'Sweet potato' ? '🍠' :
                                    ingredient === 'Carrots' ? '🥕' :
                                    ingredient === 'Green beans' ? '🫛' :
-                                   ingredient === 'Bread' ? '🍞' : '🥬'}
+                                   ingredient === 'Bread' ? '🍞' :
+                                   ingredient === 'Egg' ? '🥚' :
+                                   ingredient === 'Irish potatoes' ? '🥔' :
+                                   ingredient === 'Garri' ? '🫓' :
+                                   ingredient === 'Semovita' ? '🫓' :
+                                   ingredient === 'Wheat' ? '🌾' :
+                                   ingredient === 'Starch' ? '🫓' :
+                                   ingredient === 'Spaghetti' ? '🍝' :
+                                   ingredient === 'Noodles' ? '🍜' : '🥬'}
                                 </div>
                                 <span className={`text-xs font-semibold ${
                                   selectedIngredients.includes(ingredient) ? 'text-indigo-800' : 'text-gray-700'

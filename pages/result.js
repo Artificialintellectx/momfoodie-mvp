@@ -20,7 +20,8 @@ import {
   Sparkles,
   CheckCircle2,
   Info,
-  History
+  History,
+  Utensils
 } from 'lucide-react'
 
 export default function Result() {
@@ -493,6 +494,314 @@ export default function Result() {
     setFeedbackSubmitted(false)
   }
 
+  // Combo mapping function to match meal names with their combinations
+  const getMealCombo = (mealName) => {
+    const comboMap = {
+      "Fisherman Soup": {
+        with: "Pounded yam, fufu, eba, garri, rice, or boiled yam",
+        drinks: "Palm wine, zobo, fresh juice, or cold water",
+        sides: "Fried plantain, roasted fish"
+      },
+      "Okra Soup": {
+        with: "Pounded yam, amala, eba, fufu, rice, or boiled plantain",
+        drinks: "Palm wine, kunu, zobo",
+        sides: "Fried meat, roasted fish"
+      },
+      "Vegetable Soup": {
+        with: "Pounded yam, eba, fufu, amala, rice",
+        drinks: "Palm wine, fresh juice, zobo",
+        sides: "Assorted meat, stockfish"
+      },
+      "Ogbono Soup": {
+        with: "Pounded yam, eba, fufu, amala, rice",
+        drinks: "Palm wine, zobo, kunu",
+        sides: "Assorted meat, dried fish"
+      },
+      "Ofe Ugba (Oil Bean Soup)": {
+        with: "Pounded yam, eba, rice",
+        drinks: "Palm wine, fresh juice",
+        sides: "Stockfish, dried fish, kpomo"
+      },
+      "Owo Soup and Eba": {
+        with: "Complete meal - traditionally served together",
+        drinks: "Palm wine, zobo, water",
+        sides: "Assorted meat, fish"
+      },
+      "Egusi Soup with Pounded Yam": {
+        with: "Complete meal - traditionally served together",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Assorted meat, stockfish, dried fish"
+      },
+      "Roasted Ripe Plantain with Ugba Sauce": {
+        with: "Groundnuts, coconut, palm wine",
+        drinks: "Palm wine, zobo, fresh coconut water",
+        sides: "Roasted fish, peppered snail"
+      },
+      "Roasted Plantain (Boli)": {
+        with: "Groundnuts, pepper sauce, palm oil sauce",
+        drinks: "Zobo, coconut water, soft drinks",
+        sides: "Roasted fish, suya"
+      },
+      "Plantain Porridge": {
+        with: "Fried fish, boiled eggs",
+        drinks: "Zobo, fresh juice, tea",
+        sides: "Peppered meat, roasted fish"
+      },
+      "Boiled Plantain and Pepper Sauce": {
+        with: "Fried eggs, corned beef, sardines",
+        drinks: "Tea, coffee, fresh juice",
+        sides: "Fried fish, scrambled eggs"
+      },
+      "Yellow Plantain Porridge": {
+        with: "Fried fish, boiled eggs, meat",
+        drinks: "Zobo, fresh juice",
+        sides: "Peppered meat"
+      },
+      "Plantain, Beans and Dried Fish": {
+        with: "Complete meal - well-balanced",
+        drinks: "Zobo, palm wine, fresh juice",
+        sides: "Additional protein if desired"
+      },
+      "Ewa Dodo": {
+        with: "Complete meal - beans and plantain",
+        drinks: "Zobo, fresh juice, soft drinks",
+        sides: "Bread, rice, fried fish"
+      },
+      "Ewa Agoyin": {
+        with: "Agege bread, rice, fried plantain",
+        drinks: "Soft drinks, zobo, fresh juice",
+        sides: "Fried fish, boiled eggs"
+      },
+      "Vegan Beans Porridge": {
+        with: "Bread, fried plantain",
+        drinks: "Zobo, fresh juice, coconut water",
+        sides: "Roasted groundnuts"
+      },
+      "Light Coconut Rice": {
+        with: "Grilled chicken, fried fish, salad",
+        drinks: "Fresh juice, soft drinks, water",
+        sides: "Coleslaw, cucumber salad"
+      },
+      "Vegan Jollof Rice": {
+        with: "Fried plantain, salad, coleslaw",
+        drinks: "Zobo, fresh juice, soft drinks",
+        sides: "Roasted groundnuts, chin chin"
+      },
+      "White Rice and Fresh Fish Pepper Soup": {
+        with: "Complete meal - rice with soup",
+        drinks: "Fresh juice, soft drinks",
+        sides: "Fried plantain"
+      },
+      "Congee (Chinese Rice Porridge)": {
+        with: "Pickled vegetables, fried fish, boiled eggs",
+        drinks: "Tea, fresh juice",
+        sides: "Crackers, bread"
+      },
+      "Spaghetti Jollof": {
+        with: "Fried chicken, coleslaw, salad",
+        drinks: "Soft drinks, fresh juice",
+        sides: "Fried plantain, boiled eggs"
+      },
+      "Rice and Beans": {
+        with: "Fried plantain, stew, pepper sauce",
+        drinks: "Zobo, fresh juice",
+        sides: "Fried fish, meat"
+      },
+      "White Rice and Vegetable Sauce": {
+        with: "Fried plantain, salad",
+        drinks: "Fresh juice, soft drinks",
+        sides: "Grilled chicken, fish"
+      },
+      "Mixed Seafood Coconut Fried Rice": {
+        with: "Salad, coleslaw",
+        drinks: "Fresh juice, soft drinks, wine",
+        sides: "Spring rolls, plantain chips"
+      },
+      "Fried Rice and Chicken": {
+        with: "Complete meal - rice with protein",
+        drinks: "Soft drinks, fresh juice, wine",
+        sides: "Coleslaw, salad"
+      },
+      "Vegetable Jollof Rice": {
+        with: "Fried plantain, salad, grilled protein",
+        drinks: "Zobo, fresh juice",
+        sides: "Coleslaw, boiled eggs"
+      },
+      "Coconut Rice": {
+        with: "Curry chicken, grilled fish, vegetables",
+        drinks: "Fresh juice, soft drinks",
+        sides: "Salad, fried plantain"
+      },
+      "Ofada Sauce, Fish and Rice": {
+        with: "Complete meal - traditional combination",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Fried plantain"
+      },
+      "Jollof Rice": {
+        with: "Fried chicken, beef, fish, coleslaw",
+        drinks: "Soft drinks, fresh juice, wine",
+        sides: "Fried plantain, salad, moi moi"
+      },
+      "Rice and Stew": {
+        with: "Fried plantain, salad, protein of choice",
+        drinks: "Soft drinks, fresh juice",
+        sides: "Coleslaw, boiled eggs"
+      },
+      "Rice and Palm Oil Sauce": {
+        with: "Fried fish, boiled eggs, vegetables",
+        drinks: "Fresh juice, soft drinks",
+        sides: "Fried plantain"
+      },
+      "Rice and Egg Sauce": {
+        with: "Fried plantain, salad, bread",
+        drinks: "Tea, coffee, fresh juice",
+        sides: "Sausages, corned beef"
+      },
+      "Corned Beef and Rice": {
+        with: "Fried plantain, vegetables, bread",
+        drinks: "Tea, coffee, soft drinks",
+        sides: "Boiled eggs, salad"
+      },
+      "Fish and Yam Chips": {
+        with: "Pepper sauce, salad, coleslaw",
+        drinks: "Soft drinks, fresh juice",
+        sides: "Bread, plantain chips"
+      },
+      "Boiled Yam with Oil-Free Pepper Sauce": {
+        with: "Fried fish, boiled eggs, vegetables",
+        drinks: "Tea, fresh juice",
+        sides: "Avocado, cucumber salad"
+      },
+      "Yam and Egg Sauce": {
+        with: "Bread, fried plantain, salad",
+        drinks: "Tea, coffee, fresh juice",
+        sides: "Sausages, bacon"
+      },
+      "Boil Yam & Fish Sauce": {
+        with: "Vegetables, bread, fried plantain",
+        drinks: "Fresh juice, soft drinks",
+        sides: "Salad, boiled eggs"
+      },
+      "Yam Pepper Soup": {
+        with: "Bread, rice, fried plantain",
+        drinks: "Palm wine, fresh juice",
+        sides: "Roasted fish, assorted meat"
+      },
+      "Garden Egg Sauce and Boiled Yam": {
+        with: "Fried fish, meat, vegetables",
+        drinks: "Palm wine, fresh juice",
+        sides: "Stockfish, dried fish"
+      },
+      "Corn Porridge": {
+        with: "Fried fish, coconut, milk",
+        drinks: "Tea, coffee, fresh juice",
+        sides: "Bread, biscuits"
+      },
+      "Potato Porridge": {
+        with: "Fried fish, vegetables, bread",
+        drinks: "Tea, fresh juice",
+        sides: "Boiled eggs, salad"
+      },
+      "Cornmeal Porridge": {
+        with: "Milk, fruits, nuts, honey",
+        drinks: "Tea, coffee, fresh juice",
+        sides: "Bread, biscuits"
+      },
+      "Okpa": {
+        with: "Pap, tea, bread, soft drinks",
+        drinks: "Kunu, zobo, soft drinks",
+        sides: "Groundnuts, fruits"
+      },
+      "Akara and Akamu (Pap)": {
+        with: "Traditional combination - complete breakfast",
+        drinks: "Tea, coffee (additional)",
+        sides: "Bread, milk"
+      },
+      "Pap (Ogi/Akamu)": {
+        with: "Akara, moi moi, bread, milk",
+        drinks: "Tea, coffee (additional)",
+        sides: "Sugar, honey, fruits"
+      },
+      "Akara and Bread": {
+        with: "Tea, coffee, pap, pepper sauce",
+        drinks: "Tea, coffee, soft drinks",
+        sides: "Butter, jam"
+      },
+      "Air-Fried/Baked Akara": {
+        with: "Pap, bread, tea, pepper sauce",
+        drinks: "Tea, coffee, fresh juice",
+        sides: "Honey, jam"
+      },
+      "Steamed Moi Moi (Oil-Free)": {
+        with: "Pap, bread, rice, tea",
+        drinks: "Tea, coffee, fresh juice",
+        sides: "Pepper sauce, honey"
+      },
+      "Moi Moi": {
+        with: "Pap, bread, rice, ogi",
+        drinks: "Soft drinks, fresh juice",
+        sides: "Pepper sauce"
+      },
+      "Agidi with Akara": {
+        with: "Traditional combination",
+        drinks: "Palm wine, kunu, zobo",
+        sides: "Pepper sauce, palm oil sauce"
+      },
+      "African Salad (Abacha and Ugba)": {
+        with: "Complete meal - traditional combination",
+        drinks: "Palm wine, fresh juice, soft drinks",
+        sides: "Stockfish, kpomo"
+      },
+      "Pap with Fresh Fruits": {
+        with: "Complete healthy meal",
+        drinks: "Fresh juice, water",
+        sides: "Nuts, honey, milk"
+      },
+      "Egg White Scramble": {
+        with: "Bread, toast, vegetables, salad",
+        drinks: "Tea, coffee, fresh juice",
+        sides: "Avocado, tomatoes"
+      },
+      "Bread and Tea": {
+        with: "Butter, jam, honey, eggs",
+        drinks: "Tea, coffee (main combination)",
+        sides: "Fruits, biscuits"
+      },
+      "Indomie and Egg": {
+        with: "Vegetables, sausages, corned beef",
+        drinks: "Soft drinks, fresh juice",
+        sides: "Bread, plantain chips"
+      },
+      "Boiled Eggs with Vegetables": {
+        with: "Bread, toast, salad, rice",
+        drinks: "Tea, coffee, fresh juice",
+        sides: "Avocado, fruits"
+      },
+      "Catfish Pepper Soup": {
+        with: "Rice, yam, plantain, bread",
+        drinks: "Palm wine, fresh juice",
+        sides: "Extra fish, vegetables"
+      },
+      "Goat Meat Pepper Soup": {
+        with: "Rice, yam, plantain, bread",
+        drinks: "Palm wine, beer, fresh juice",
+        sides: "Extra meat portions"
+      },
+      "Tomatoes Stew with Ram Meat": {
+        with: "Rice, yam, bread, fried plantain",
+        drinks: "Soft drinks, fresh juice",
+        sides: "Salad, coleslaw"
+      },
+      "Groundnut Stew with Rice and Spinach": {
+        with: "Complete meal - well-balanced",
+        drinks: "Fresh juice, soft drinks",
+        sides: "Additional vegetables"
+      }
+    }
+    
+    return comboMap[mealName] || null
+  }
+
   // Show loading schema while loading
   if (loading) {
     return (
@@ -777,6 +1086,58 @@ export default function Result() {
                   <p className="text-gray-800 font-bold text-xs capitalize truncate" title={meal.dietary_preference}>{meal.dietary_preference}</p>
                 </div>
               </div>
+
+              {/* Combo Section - Integrated */}
+              {(() => {
+                const mealCombo = getMealCombo(meal.name)
+                return mealCombo && (
+                  <div className="mt-4 pt-4 border-t border-gradient-to-r from-transparent via-gray-200/30 to-transparent">
+                    <div className="flex items-center justify-center gap-2 mb-3">
+                      <div className="w-5 h-5 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-sm">
+                        <Utensils className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-gray-700 text-sm font-semibold">Perfect Pairings</span>
+                    </div>
+                    
+                    <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-gray-200/50">
+                      <div className="space-y-3">
+                        {/* Served With */}
+                        <div className="flex items-start gap-3 group">
+                          <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 ease-out">
+                            <span className="text-white text-lg" style={{ animation: 'bounce 2.5s ease-in-out infinite' }}>🍽️</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-green-700 text-xs font-bold uppercase tracking-wider mb-1">Served With</h4>
+                            <p className="text-gray-700 text-sm leading-relaxed">{mealCombo.with}</p>
+                          </div>
+                        </div>
+                        
+                        {/* Drinks */}
+                        <div className="flex items-start gap-3 group">
+                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-110 group-hover:-rotate-3 transition-all duration-300 ease-out">
+                            <span className="text-white text-lg" style={{ animation: 'pulse 3s ease-in-out infinite' }}>🥤</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-blue-700 text-xs font-bold uppercase tracking-wider mb-1">Drinks</h4>
+                            <p className="text-gray-700 text-sm leading-relaxed">{mealCombo.drinks}</p>
+                          </div>
+                        </div>
+                        
+                        {/* Sides */}
+                        <div className="flex items-start gap-3 group">
+                          <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 ease-out">
+                            <span className="text-white text-lg" style={{ animation: 'spin 4s linear infinite' }}>🥗</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-orange-700 text-xs font-bold uppercase tracking-wider mb-1">Sides</h4>
+                            <p className="text-gray-700 text-sm leading-relaxed">{mealCombo.sides}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           </div>
         </div>
