@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { supabase } from '../lib/supabase'
-import { fallbackMeals } from '../lib/data'
 import { analytics } from '../lib/analytics'
 import { 
   ChefHat, 
@@ -36,6 +35,7 @@ export default function Result() {
   const [rating, setRating] = useState(0)
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
   const [previousMeals, setPreviousMeals] = useState([])
+  const [message, setMessage] = useState({ type: '', text: '' })
 
   useEffect(() => {
     // Track page visit
@@ -81,7 +81,57 @@ export default function Result() {
         console.log('Ingredients count:', mealData.ingredients?.length)
         console.log('Instructions count:', mealData.instructions?.length)
         
-
+        // IMPORTANT: Add the first meal to shownMeals tracking to prevent repetition
+        // Get the search criteria to create the filter key
+        const searchCriteria = JSON.parse(localStorage.getItem('searchCriteria') || '{}')
+        const currentFilterKey = JSON.stringify({
+          mealType: searchCriteria.mealType || 'any',
+          cookingTime: searchCriteria.cookingTime || 'any',
+          showIngredientMode: searchCriteria.showIngredientMode || false,
+          selectedIngredients: searchCriteria.selectedIngredients || []
+        })
+        
+        // Create hash for the filter key
+        const simpleHash = (str) => {
+          let hash = 0
+          for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i)
+            hash = ((hash << 5) - hash) + char
+            hash = hash & hash
+          }
+          return Math.abs(hash).toString(36)
+        }
+        
+        const filterKeyHash = simpleHash(currentFilterKey)
+        const shownMealsKey = `shownMeals_${filterKeyHash}`
+        const shownMeals = JSON.parse(localStorage.getItem(shownMealsKey) || '[]')
+        
+        // Only add if not already in the list (to avoid duplicates)
+        if (!shownMeals.includes(mealData.id)) {
+          const updatedShownMeals = [...shownMeals, mealData.id]
+          localStorage.setItem(shownMealsKey, JSON.stringify(updatedShownMeals))
+          console.log(`🎯 Added first meal to shownMeals tracking: ${mealData.name} (ID: ${mealData.id})`)
+          console.log(`📊 Updated shownMeals for filter:`, updatedShownMeals)
+        } else {
+          console.log(`🎯 First meal already in shownMeals tracking: ${mealData.name} (ID: ${mealData.id})`)
+        }
+        
+        // Load existing previousMeals (don't add current meal here - it will be added when user clicks "Get New Recipe")
+        const currentPreviousMeals = JSON.parse(localStorage.getItem('previousMeals') || '[]')
+        
+        // IMPORTANT: If this is the first meal (no previous meals in localStorage), add it to history
+        // This ensures the first meal is counted in the history
+        if (currentPreviousMeals.length === 0) {
+          const updatedPreviousMeals = [mealData]
+          setPreviousMeals(updatedPreviousMeals)
+          localStorage.setItem('previousMeals', JSON.stringify(updatedPreviousMeals))
+          console.log(`📊 First meal added to previousMeals: ${mealData.name}`)
+          console.log(`📊 Updated previousMeals count: ${updatedPreviousMeals.length}`)
+        } else {
+          setPreviousMeals(currentPreviousMeals)
+          console.log(`📊 Loaded previousMeals count: ${currentPreviousMeals.length}`)
+          console.log(`📊 Current meal is NOT added to previousMeals yet: ${mealData.name}`)
+        }
       }
       
       // Simulate loading time for better UX
@@ -97,6 +147,7 @@ export default function Result() {
   useEffect(() => {
     console.log('🔄 previousMeals state changed:', previousMeals)
     console.log('🔄 previousMeals.length:', previousMeals.length)
+    console.log('🔄 previousMeals names:', previousMeals.map(m => m.name))
   }, [previousMeals])
 
   const toggleSaveMeal = () => {
@@ -139,6 +190,9 @@ export default function Result() {
       // Update state first
       setPreviousMeals(updatedPreviousMeals)
       setMeal(previousMeal)
+      
+      console.log('🔄 State updated - new previousMeals.length will be:', updatedPreviousMeals.length)
+      console.log('🔄 State updated - new previousMeals will be:', updatedPreviousMeals.map(m => m.name))
       
       // Update localStorage
       localStorage.setItem('currentMeal', JSON.stringify(previousMeal))
@@ -221,19 +275,27 @@ export default function Result() {
       
       let suggestions = []
 
-      // Try Supabase first
+      // Only use Supabase - no fallback data
       if (supabase) {
         const query = supabase.from('meals').select('*')
         
-        // Apply the same filters as the original search
-        if (searchCriteria.mealType) query.eq('meal_type', searchCriteria.mealType)
-        if (searchCriteria.cookingTime) query.eq('cooking_time', searchCriteria.cookingTime)
-        if (searchCriteria.dietaryPreference && searchCriteria.dietaryPreference !== 'any') {
-          query.eq('dietary_preference', searchCriteria.dietaryPreference)
+        // Apply the same filters as the original search (only meal type and cooking time)
+        if (searchCriteria.mealType) {
+          console.log(`🍽️ Filtering by meal type: ${searchCriteria.mealType}`)
+          query.eq('meal_type', searchCriteria.mealType)
+        }
+        if (searchCriteria.cookingTime) {
+          console.log(`⏰ Filtering by cooking time: ${searchCriteria.cookingTime}`)
+          query.eq('cooking_time', searchCriteria.cookingTime)
         }
         
-        const { data, error } = await query.limit(50) // Get more meals to filter from
-        if (!error && data && data.length > 0) {
+        const { data, error } = await query.limit(50)
+        
+        if (error) {
+          console.log('❌ Supabase error:', error.message)
+          setMessage({ type: 'error', text: 'Failed to load meals from database' })
+          return
+        } else if (data && data.length > 0) {
           console.log(`✅ Found ${data.length} meals from Supabase`)
           
           // Apply ingredient filtering for Supabase results if in ingredient mode
@@ -250,153 +312,20 @@ export default function Result() {
             suggestions = data
           }
         } else {
-          console.log('⚠️ No meals found in Supabase, using fallback')
+          console.log('⚠️ No meals found in Supabase for the selected criteria')
+          setMessage({ type: 'info', text: 'No meals found for the selected criteria. Try different filters.' })
+          return
         }
+      } else {
+        console.log('❌ Supabase not configured')
+        setMessage({ type: 'error', text: 'Database not configured. Please contact support.' })
+        return
       }
 
-      // Fallback to local data with the same filtering logic
-      if (suggestions.length === 0) {
-        console.log('🔄 Using fallback meals data')
-        suggestions = fallbackMeals.filter(meal => {
-          if (searchCriteria.showIngredientMode && searchCriteria.selectedIngredients?.length > 0) {
-            return searchCriteria.selectedIngredients.some(ingredient =>
-              meal.ingredients.some(mealIngredient =>
-                mealIngredient.toLowerCase().includes(ingredient.toLowerCase())
-              )
-            )
-          } else {
-            let matches = true
-            if (searchCriteria.mealType && meal.meal_type !== searchCriteria.mealType) matches = false
-            if (searchCriteria.cookingTime && meal.cooking_time !== searchCriteria.cookingTime) matches = false
-            if (searchCriteria.dietaryPreference && searchCriteria.dietaryPreference !== 'any') {
-              // Apply the same dietary preference filtering logic
-              const mealPref = meal.dietary_preference
-              const userPref = searchCriteria.dietaryPreference
-              
-              if (userPref === 'halal') {
-                const hasPork = meal.ingredients.some(ingredient => 
-                  ingredient.toLowerCase().includes('pork') || 
-                  ingredient.toLowerCase().includes('bacon') ||
-                  ingredient.toLowerCase().includes('ham')
-                )
-                if (hasPork) matches = false
-              } else if (userPref === 'pescatarian') {
-                const hasMeat = meal.ingredients.some(ingredient => 
-                  ingredient.toLowerCase().includes('chicken') || 
-                  ingredient.toLowerCase().includes('beef') ||
-                  ingredient.toLowerCase().includes('pork') ||
-                  ingredient.toLowerCase().includes('lamb')
-                )
-                if (hasMeat) matches = false
-              } else if (userPref === 'lacto_vegetarian') {
-                const hasMeatOrFish = meal.ingredients.some(ingredient => 
-                  ingredient.toLowerCase().includes('chicken') || 
-                  ingredient.toLowerCase().includes('beef') ||
-                  ingredient.toLowerCase().includes('fish') ||
-                  ingredient.toLowerCase().includes('pork')
-                )
-                if (hasMeatOrFish) matches = false
-              } else if (userPref === 'gluten_free') {
-                const hasGluten = meal.ingredients.some(ingredient => 
-                  ingredient.toLowerCase().includes('wheat') || 
-                  ingredient.toLowerCase().includes('barley') ||
-                  ingredient.toLowerCase().includes('rye') ||
-                  ingredient.toLowerCase().includes('bread') ||
-                  ingredient.toLowerCase().includes('flour')
-                )
-                if (hasGluten) matches = false
-              } else if (userPref === 'low_sodium') {
-                const hasHighSodium = meal.ingredients.some(ingredient => 
-                  ingredient.toLowerCase().includes('seasoning cube') || 
-                  ingredient.toLowerCase().includes('stock cube') ||
-                  ingredient.toLowerCase().includes('bouillon')
-                )
-                if (hasHighSodium) matches = false
-              } else if (userPref === 'low_fat') {
-                const hasHighFat = meal.ingredients.some(ingredient => 
-                  ingredient.toLowerCase().includes('palm oil') || 
-                  ingredient.toLowerCase().includes('coconut oil') ||
-                  ingredient.toLowerCase().includes('butter')
-                )
-                if (hasHighFat) matches = false
-              } else if (userPref === 'high_protein') {
-                const hasProtein = meal.ingredients.some(ingredient => 
-                  ingredient.toLowerCase().includes('chicken') || 
-                  ingredient.toLowerCase().includes('beef') ||
-                  ingredient.toLowerCase().includes('fish') ||
-                  ingredient.toLowerCase().includes('eggs') ||
-                  ingredient.toLowerCase().includes('beans') ||
-                  ingredient.toLowerCase().includes('lentils') ||
-                  ingredient.toLowerCase().includes('tofu') ||
-                  ingredient.toLowerCase().includes('milk') ||
-                  ingredient.toLowerCase().includes('yogurt')
-                )
-                if (!hasProtein) matches = false
-              } else if (userPref === 'soft_foods') {
-                const isSoftFood = meal.name.toLowerCase().includes('porridge') ||
-                  meal.name.toLowerCase().includes('soup') ||
-                  meal.name.toLowerCase().includes('moi moi') ||
-                  meal.name.toLowerCase().includes('yam') ||
-                  meal.ingredients.some(ingredient => 
-                    ingredient.toLowerCase().includes('porridge') ||
-                    ingredient.toLowerCase().includes('soup')
-                  )
-                if (!isSoftFood) matches = false
-              } else if (userPref === 'high_fiber') {
-                const hasFiber = meal.ingredients.some(ingredient => 
-                  ingredient.toLowerCase().includes('beans') ||
-                  ingredient.toLowerCase().includes('vegetables') ||
-                  ingredient.toLowerCase().includes('spinach') ||
-                  ingredient.toLowerCase().includes('okra') ||
-                  ingredient.toLowerCase().includes('plantain') ||
-                  ingredient.toLowerCase().includes('yam')
-                )
-                if (!hasFiber) matches = false
-              } else if (userPref === 'traditional') {
-                const isTraditional = meal.name.toLowerCase().includes('jollof') ||
-                  meal.name.toLowerCase().includes('egusi') ||
-                  meal.name.toLowerCase().includes('amala') ||
-                  meal.name.toLowerCase().includes('eba') ||
-                  meal.name.toLowerCase().includes('akara') ||
-                  meal.name.toLowerCase().includes('moi moi') ||
-                  meal.name.toLowerCase().includes('pepper soup')
-                if (!isTraditional) matches = false
-              } else if (userPref === 'rice_based') {
-                const isRiceBased = meal.name.toLowerCase().includes('rice') ||
-                  meal.name.toLowerCase().includes('jollof') ||
-                  meal.name.toLowerCase().includes('fried rice') ||
-                  meal.ingredients.some(ingredient => 
-                    ingredient.toLowerCase().includes('rice') ||
-                    ingredient.toLowerCase().includes('basmati')
-                  )
-                if (!isRiceBased) matches = false
-              } else if (userPref === 'swallow_based') {
-                const isSwallowBased = meal.name.toLowerCase().includes('amala') ||
-                  meal.name.toLowerCase().includes('eba') ||
-                  meal.name.toLowerCase().includes('pounded yam') ||
-                  meal.name.toLowerCase().includes('fufu') ||
-                  meal.name.toLowerCase().includes('garri') ||
-                  meal.ingredients.some(ingredient => 
-                    ingredient.toLowerCase().includes('yam flour') ||
-                    ingredient.toLowerCase().includes('cassava') ||
-                    ingredient.toLowerCase().includes('garri') ||
-                    ingredient.toLowerCase().includes('pounded yam')
-                  )
-                if (!isSwallowBased) matches = false
-              } else {
-                if (mealPref !== userPref && mealPref !== 'any') matches = false
-              }
-            }
-            return matches
-          }
-        })
-      }
-
-      // Get current filter key to track shown meals per filter combination
+      // Get current filter key to track shown meals per filter combination (only meal type and cooking time)
       const currentFilterKey = JSON.stringify({
         mealType: searchCriteria.mealType || 'any',
         cookingTime: searchCriteria.cookingTime || 'any',
-        dietaryPreference: searchCriteria.dietaryPreference || 'any',
         showIngredientMode: searchCriteria.showIngredientMode || false,
         selectedIngredients: searchCriteria.selectedIngredients || []
       })
@@ -425,11 +354,21 @@ export default function Result() {
       const availableMeals = suggestions.filter(meal => !shownMeals.includes(meal.id))
       console.log(`🎯 Available meals (excluding ${shownMeals.length} shown): ${availableMeals.length}`)
       console.log(`🎯 Available meal IDs:`, availableMeals.map(m => m.id))
+      console.log(`🎯 Available meal names:`, availableMeals.map(m => m.name))
 
-      if (availableMeals.length > 0) {
+      // Also exclude the current meal if it exists to prevent immediate repetition
+      const finalAvailableMeals = meal ? availableMeals.filter(m => m.id !== meal.id) : availableMeals
+      console.log(`🎯 Final available meals (excluding current meal): ${finalAvailableMeals.length}`)
+      console.log(`🎯 Final available meal IDs:`, finalAvailableMeals.map(m => m.id))
+      console.log(`🎯 Final available meal names:`, finalAvailableMeals.map(m => m.name))
+      console.log(`🎯 Current meal being excluded:`, meal ? `${meal.name} (ID: ${meal.id})` : 'None')
+
+      if (finalAvailableMeals.length > 0) {
         // Randomly select from available meals
-        const randomIndex = Math.floor(Math.random() * availableMeals.length)
-        const newMeal = availableMeals[randomIndex]
+        const randomIndex = Math.floor(Math.random() * finalAvailableMeals.length)
+        const newMeal = finalAvailableMeals[randomIndex]
+        console.log(`🎯 Randomly selected meal: ${newMeal.name} (ID: ${newMeal.id}) from index ${randomIndex}`)
+        
         setMeal(newMeal)
         localStorage.setItem('currentMeal', JSON.stringify(newMeal))
         
@@ -442,6 +381,37 @@ export default function Result() {
         
         console.log(`🎯 New meal selected: ${newMeal.name}`)
         console.log(`📊 Total shown meals for this filter: ${updatedShownMeals.length}`)
+        console.log(`📊 Updated shown meal IDs:`, updatedShownMeals)
+        console.log(`📊 Updated shown meal names:`, updatedShownMeals.map(id => {
+          const meal = suggestions.find(m => m.id === id)
+          return meal ? meal.name : `Unknown (ID: ${id})`
+        }))
+      } else if (availableMeals.length > 0) {
+        // If no meals available after excluding current, but we have meals in the original pool,
+        // it means only the current meal is available. Reset the shown meals and start fresh.
+        console.log('🔄 Only current meal available, resetting shown meals...')
+        localStorage.removeItem(shownMealsKey)
+        
+        // Randomly select from all suggestions (excluding current meal)
+        const resetAvailableMeals = suggestions.filter(m => m.id !== meal.id)
+        if (resetAvailableMeals.length > 0) {
+          const randomIndex = Math.floor(Math.random() * resetAvailableMeals.length)
+          const newMeal = resetAvailableMeals[randomIndex]
+          setMeal(newMeal)
+          localStorage.setItem('currentMeal', JSON.stringify(newMeal))
+          
+          // Start fresh tracking
+          localStorage.setItem(shownMealsKey, JSON.stringify([newMeal.id]))
+          
+          // Track "Try Another" button click
+          analytics.trackSuggestionClick('Try Another', searchCriteria)
+          
+          console.log(`🔄 Reset and selected: ${newMeal.name}`)
+        } else {
+          // Only one meal available total, show exhaustion
+          setShowExhaustionModal(true)
+          console.log('⚠️ Only one meal available total, showing exhaustion modal')
+        }
       } else {
         // All meals for this filter have been shown - reset and start over
         console.log('🔄 All meals shown for this filter, resetting...')
@@ -459,7 +429,7 @@ export default function Result() {
         // Track "Try Another" button click
         analytics.trackSuggestionClick('Try Another', searchCriteria)
         
-        console.log(`�� Reset and selected: ${newMeal.name}`)
+        console.log(`🔄 Reset and selected: ${newMeal.name}`)
         
         // Show exhaustion notification instead of modal
         setShowExhaustionModal(true)
@@ -866,32 +836,38 @@ export default function Result() {
         {/* Floating Action Buttons */}
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 flex gap-3 px-2 sm:px-0">
           {/* Previous Recipe Button */}
-          {previousMeals.length > 0 && (
-            <div className="relative group flex-1 min-w-0">
-              <button
-                onClick={() => {
-                  console.log('🔘 Button clicked!')
-                  goToPreviousRecipe()
-                }}
-                className="relative min-w-[120px] w-full px-6 py-3 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-blue-500/25 border-2 border-blue-400/20"
-              >
-                <History className="w-4 h-4 group-hover:rotate-180 transition-transform duration-300" />
-                <span className="text-sm whitespace-nowrap">Previous Recipe</span>
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-blue-500">
-                  <span className="text-xs font-bold text-blue-600">{previousMeals.length}</span>
+          {(() => {
+            console.log('🎨 Rendering Previous Recipe button with count:', previousMeals.length)
+            console.log('🎨 previousMeals in render:', previousMeals.map(m => m.name))
+            return previousMeals.length > 0 && (
+              <div className="relative group flex-1 min-w-0">
+                <button
+                  onClick={() => {
+                    console.log('🔘 Button clicked!')
+                    console.log('🔘 Current previousMeals.length:', previousMeals.length)
+                    console.log('🔘 Current previousMeals:', previousMeals.map(m => m.name))
+                    goToPreviousRecipe()
+                  }}
+                  className="relative min-w-[120px] w-full px-6 py-3 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-blue-500/25 border-2 border-blue-400/20"
+                >
+                  <History className="w-4 h-4 group-hover:rotate-180 transition-transform duration-300" />
+                  <span className="text-sm whitespace-nowrap">Previous Recipe</span>
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-blue-500">
+                    <span className="text-xs font-bold text-blue-600">{previousMeals.length}</span>
+                  </div>
+                </button>
+                
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  <div className="flex items-center gap-1">
+                    <Info className="w-3 h-3" />
+                    <span>Go back to previous recipe</span>
+                  </div>
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                 </div>
-              </button>
-              
-              {/* Tooltip */}
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                <div className="flex items-center gap-1">
-                  <Info className="w-3 h-3" />
-                  <span>Go back to previous recipe</span>
-                </div>
-                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
               </div>
-            </div>
-          )}
+            )
+          })()}
           
           {/* Get Another Recipe Button */}
           <div className="flex-1 min-w-0">
