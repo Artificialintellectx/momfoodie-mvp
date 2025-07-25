@@ -307,6 +307,14 @@ export default function AdminNew() {
   const loadRecipes = async () => {
     setLoading(true)
     try {
+      if (!supabase) {
+        console.log('📊 Supabase not configured. Using fallback data.')
+        // Use fallback data when Supabase is not configured
+        setMeals([])
+        setMessage({ type: 'info', text: 'Using fallback data - Supabase not configured' })
+        return
+      }
+      
       const { data, error } = await supabase
         .from('meals')
         .select('*')
@@ -455,6 +463,11 @@ export default function AdminNew() {
 
       console.log('Saving recipe data:', recipeData)
 
+      if (!supabase) {
+        setMessage({ type: 'error', text: 'Cannot save recipe - Supabase not configured' })
+        return
+      }
+
       if (editingRecipe) {
         const { error } = await supabase
           .from('meals')
@@ -499,6 +512,11 @@ export default function AdminNew() {
     if (!confirm('Are you sure you want to delete this recipe?')) return
 
     try {
+      if (!supabase) {
+        setMessage({ type: 'error', text: 'Cannot delete recipe - Supabase not configured' })
+        return
+      }
+
       const { error } = await supabase
         .from('meals')
         .delete()
@@ -1022,6 +1040,14 @@ export default function AdminNew() {
               if (confirm('Are you sure you want to reset all analytics data? This cannot be undone.')) {
                 try {
                   console.log('🗑️ Resetting analytics data...')
+                  
+                  if (!supabase) {
+                    setMessage({ 
+                      type: 'error', 
+                      text: 'Cannot reset analytics - Supabase not configured' 
+                    })
+                    return
+                  }
                   
                   // Clear all analytics tables - delete all records
                   const { error: visitsError } = await supabase.from('website_visits').delete().gte('id', 1)
