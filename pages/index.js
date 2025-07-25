@@ -450,7 +450,7 @@ export default function Home() {
             >
               <CircleCheck className="w-4 h-4 inline mr-2" />
               <span className="hidden sm:inline">What Can I Make?</span>
-              <span className="sm:hidden">Ingredients</span>
+              <span className="sm:hidden">My ingredients</span>
             </button>
           </div>
         </div>

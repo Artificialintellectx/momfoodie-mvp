@@ -19,7 +19,9 @@ import {
   Zap,
   Flame,
   Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  Info,
+  History
 } from 'lucide-react'
 
 export default function Result() {
@@ -29,9 +31,11 @@ export default function Result() {
   const [generating, setGenerating] = useState(false)
   const [showInstructionsModal, setShowInstructionsModal] = useState(false)
   const [savedMeals, setSavedMeals] = useState([])
+  const [showExhaustionModal, setShowExhaustionModal] = useState(false)
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
   const [rating, setRating] = useState(0)
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
+  const [previousMeals, setPreviousMeals] = useState([])
 
   useEffect(() => {
     // Track page visit
@@ -42,6 +46,13 @@ export default function Result() {
       
       const saved = JSON.parse(localStorage.getItem('savedMeals') || '[]')
       setSavedMeals(saved)
+
+      // Load previous meals from localStorage
+      const storedPreviousMeals = JSON.parse(localStorage.getItem('previousMeals') || '[]')
+      setPreviousMeals(storedPreviousMeals)
+      console.log('📊 Loaded previousMeals from localStorage:', storedPreviousMeals)
+      console.log('📊 previousMeals.length after loading:', storedPreviousMeals.length)
+      console.log('📊 previousMeals state will be set to:', storedPreviousMeals)
 
       // Get meal data from URL params or localStorage
       let mealData = null
@@ -82,6 +93,12 @@ export default function Result() {
     loadData()
   }, [router.query.meal, router])
 
+  // Debug useEffect to track previousMeals state changes
+  useEffect(() => {
+    console.log('🔄 previousMeals state changed:', previousMeals)
+    console.log('🔄 previousMeals.length:', previousMeals.length)
+  }, [previousMeals])
+
   const toggleSaveMeal = () => {
     if (!meal) return
     
@@ -97,6 +114,7 @@ export default function Result() {
     // Clear stored data and go to homepage
     localStorage.removeItem('searchCriteria')
     localStorage.removeItem('currentMeal')
+    localStorage.removeItem('previousMeals')
     // Clear all filter-specific shown meals keys
     Object.keys(localStorage).forEach(key => {
       if (key.startsWith('shownMeals_')) {
@@ -104,6 +122,51 @@ export default function Result() {
       }
     })
     router.push('/')
+  }
+
+  const goToPreviousRecipe = () => {
+    console.log('🔍 goToPreviousRecipe called')
+    console.log('📊 Current previousMeals:', previousMeals)
+    console.log('📊 previousMeals.length:', previousMeals.length)
+    
+    if (previousMeals.length > 0) {
+      const previousMeal = previousMeals[previousMeals.length - 1]
+      const updatedPreviousMeals = previousMeals.slice(0, -1)
+      
+      console.log('🔄 Going back to:', previousMeal.name)
+      console.log('📊 Updated previousMeals will be:', updatedPreviousMeals)
+      
+      // Update state first
+      setPreviousMeals(updatedPreviousMeals)
+      setMeal(previousMeal)
+      
+      // Update localStorage
+      localStorage.setItem('currentMeal', JSON.stringify(previousMeal))
+      localStorage.setItem('previousMeals', JSON.stringify(updatedPreviousMeals))
+      
+      // Update URL with previous meal data
+      const mealParam = encodeURIComponent(JSON.stringify(previousMeal))
+      router.replace(`/result?meal=${mealParam}`, undefined, { shallow: true })
+      
+      console.log('✅ Successfully went back to previous recipe:', previousMeal.name)
+    } else {
+      console.log('❌ No previous meals available')
+    }
+  }
+
+  const showExhaustionMessage = () => {
+    setShowExhaustionModal(true)
+  }
+
+  const resetShownMeals = () => {
+    // Clear all filter-specific shown meals keys
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('shownMeals_')) {
+        localStorage.removeItem(key)
+      }
+    })
+    setShowExhaustionModal(false)
+    getNewSuggestion()
   }
 
   const shareMeal = async () => {
@@ -138,6 +201,18 @@ export default function Result() {
     setLoading(true) // Show loading schema while getting new meal
     try {
       console.log('🔍 Getting new suggestion...')
+      
+      // Save current meal to previous meals if it exists
+      if (meal) {
+        const updatedPreviousMeals = [...previousMeals, meal]
+        setPreviousMeals(updatedPreviousMeals)
+        localStorage.setItem('previousMeals', JSON.stringify(updatedPreviousMeals))
+        console.log('💾 Saved current meal to previous meals:', meal.name)
+        console.log('📊 Updated previousMeals array:', updatedPreviousMeals)
+        console.log('📊 New previousMeals.length:', updatedPreviousMeals.length)
+      } else {
+        console.log('⚠️ No current meal to save to previous meals')
+      }
       
       // Get stored search criteria
       const searchCriteria = JSON.parse(localStorage.getItem('searchCriteria') || '{}')
@@ -319,23 +394,37 @@ export default function Result() {
 
       // Get current filter key to track shown meals per filter combination
       const currentFilterKey = JSON.stringify({
-        mealType: searchCriteria.mealType,
-        cookingTime: searchCriteria.cookingTime,
-        dietaryPreference: searchCriteria.dietaryPreference,
-        showIngredientMode: searchCriteria.showIngredientMode,
+        mealType: searchCriteria.mealType || 'any',
+        cookingTime: searchCriteria.cookingTime || 'any',
+        dietaryPreference: searchCriteria.dietaryPreference || 'any',
+        showIngredientMode: searchCriteria.showIngredientMode || false,
         selectedIngredients: searchCriteria.selectedIngredients || []
       })
 
-      // Get shown meals for this specific filter combination
-      const shownMealsKey = `shownMeals_${btoa(currentFilterKey).slice(0, 20)}`
+      // Create a more reliable key for localStorage using a simple hash
+      const simpleHash = (str) => {
+        let hash = 0
+        for (let i = 0; i < str.length; i++) {
+          const char = str.charCodeAt(i)
+          hash = ((hash << 5) - hash) + char
+          hash = hash & hash // Convert to 32-bit integer
+        }
+        return Math.abs(hash).toString(36)
+      }
+      
+      const filterKeyHash = simpleHash(currentFilterKey)
+      const shownMealsKey = `shownMeals_${filterKeyHash}`
       const shownMeals = JSON.parse(localStorage.getItem(shownMealsKey) || '[]')
       
       console.log(`🎯 Current filter key: ${currentFilterKey}`)
+      console.log(`🔑 Filter key hash: ${filterKeyHash}`)
       console.log(`👀 Already shown meals for this filter: ${shownMeals.length}`)
+      console.log(`👀 Shown meal IDs:`, shownMeals)
 
       // Filter out already shown meals for this filter combination
       const availableMeals = suggestions.filter(meal => !shownMeals.includes(meal.id))
       console.log(`🎯 Available meals (excluding ${shownMeals.length} shown): ${availableMeals.length}`)
+      console.log(`🎯 Available meal IDs:`, availableMeals.map(m => m.id))
 
       if (availableMeals.length > 0) {
         // Randomly select from available meals
@@ -370,10 +459,10 @@ export default function Result() {
         // Track "Try Another" button click
         analytics.trackSuggestionClick('Try Another', searchCriteria)
         
-        console.log(`🎯 Reset and selected: ${newMeal.name}`)
+        console.log(`�� Reset and selected: ${newMeal.name}`)
         
         // Show exhaustion notification instead of modal
-        alert('🎉 You\'ve seen all recipes for your current preferences! We\'re starting fresh and will be adding more recipes soon. Keep exploring!')
+        setShowExhaustionModal(true)
       }
     } catch (error) {
       console.error('Error getting new suggestion:', error)
@@ -726,21 +815,12 @@ export default function Result() {
         <div>
           <div className="card">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="heading-sm text-gray-800 flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center shadow-lg">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center shadow-lg">
                   <List className="w-4 h-4 text-white" />
                 </div>
                 Ingredients
               </h2>
-              
-              <button
-                onClick={() => setShowInstructionsModal(true)}
-                className="btn-primary px-3 py-1.5 flex items-center gap-1.5 text-xs font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <BookOpen className="w-3 h-3" />
-                Instructions
-                <ArrowRight className="w-2.5 h-2.5" />
-              </button>
             </div>
             
             {meal.ingredients && Array.isArray(meal.ingredients) && meal.ingredients.length > 0 ? (
@@ -761,6 +841,25 @@ export default function Result() {
                 <p className="text-gray-600 text-sm">No ingredients available for this recipe.</p>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* How to Cook Section */}
+        <div className="mt-6">
+          <div className="card">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">How to Cook</h2>
+              <p className="text-gray-600">Follow these steps to make this delicious recipe</p>
+            </div>
+            
+            <button
+              onClick={() => setShowInstructionsModal(true)}
+              className="w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-3"
+            >
+              <BookOpen className="w-6 h-6" />
+              <span className="text-lg">View Cooking Steps</span>
+              <ArrowRight className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
@@ -824,8 +923,37 @@ export default function Result() {
           </div>
         </div>
 
-        {/* Floating Get Another Recipe Button */}
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+        {/* Floating Action Buttons */}
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 flex gap-3">
+          {/* Previous Recipe Button */}
+          {previousMeals.length > 0 && (
+            <div className="relative group">
+              <button
+                onClick={() => {
+                  console.log('🔘 Button clicked!')
+                  goToPreviousRecipe()
+                }}
+                className="relative px-6 py-3 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-blue-500/25 border-2 border-blue-400/20"
+              >
+                <History className="w-4 h-4 group-hover:rotate-180 transition-transform duration-300" />
+                <span className="text-sm whitespace-nowrap">Previous Recipe</span>
+                <div className="absolute -top-2 -right-2 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-blue-500">
+                  <span className="text-xs font-bold text-blue-600">{previousMeals.length}</span>
+                </div>
+              </button>
+              
+              {/* Tooltip */}
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                <div className="flex items-center gap-1">
+                  <Info className="w-3 h-3" />
+                  <span>Go back to previous recipe</span>
+                </div>
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+              </div>
+            </div>
+          )}
+          
+          {/* Get Another Recipe Button */}
           <button
             onClick={getNewSuggestion}
             disabled={generating}
@@ -867,7 +995,7 @@ export default function Result() {
                     </div>
                     <div>
                       <h3 className="text-2xl font-bold text-gray-900">{meal.name}</h3>
-                      <p className="text-gray-600">Cooking Instructions</p>
+                      <p className="text-gray-600">How to Cook</p>
                     </div>
                   </div>
                   <button
@@ -930,6 +1058,89 @@ export default function Result() {
                     className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-6 py-2.5 rounded-lg font-medium transition-all duration-200"
                   >
                     Got it!
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Exhaustion Modal */}
+        {showExhaustionModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl animate-slide-in-up">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-orange-50 to-yellow-50 border-b border-orange-200 p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-xl flex items-center justify-center">
+                      <ChefHat className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900">All Recipes Shown! 🎉</h3>
+                      <p className="text-gray-600">You&apos;ve seen all available recipes for your preference</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowExhaustionModal(false)}
+                    className="w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors duration-200"
+                  >
+                    <span className="text-gray-600 text-xl font-light">×</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                <div className="text-center mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Sparkles className="w-10 h-10 text-green-500" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                    Congratulations! 🎊
+                  </h4>
+                  <p className="text-gray-600 leading-relaxed">
+                    You&apos;ve explored all the recipes that match your current preferences. 
+                    We&apos;re constantly adding new recipes to our platform!
+                  </p>
+                </div>
+
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 mb-6">
+                  <h5 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-indigo-500" />
+                    What would you like to do next?
+                  </h5>
+                  <div className="space-y-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
+                      <span>Start over with the same preferences</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                      <span>Try different dietary preferences</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-pink-400 rounded-full"></div>
+                      <span>Explore other meal types</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={resetShownMeals}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-semibold hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    Start Over
+                  </button>
+                  <button
+                    onClick={goToHomepage}
+                    className="flex-1 px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    <ChefHat className="w-5 h-5" />
+                    Try Different Filters
                   </button>
                 </div>
               </div>

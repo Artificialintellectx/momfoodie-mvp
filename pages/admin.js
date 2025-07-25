@@ -218,7 +218,6 @@ export default function AdminNew() {
   // Load data on component mount
   useEffect(() => {
     loadRecipes()
-    loadAnalytics()
     getCurrentIP()
     checkDeviceMarked()
     loadBlacklistedIPs()
@@ -557,6 +556,25 @@ export default function AdminNew() {
       return groups
     }
     
+    if (groupBy === 'cooking_time') {
+      const groups = {}
+      filteredRecipes.forEach(recipe => {
+        const cookingTime = recipe.cooking_time || 'regular'
+        // Convert cooking time to readable labels
+        const cookingTimeLabels = {
+          'quick': 'Quick (Under 30 min)',
+          'regular': 'Regular (30-60 min)',
+          'slow': 'Slow (Over 60 min)'
+        }
+        const label = cookingTimeLabels[cookingTime] || cookingTime
+        if (!groups[label]) {
+          groups[label] = []
+        }
+        groups[label].push(recipe)
+      })
+      return groups
+    }
+
     if (groupBy === 'dietary_preference') {
       const groups = {}
       filteredRecipes.forEach(recipe => {
@@ -566,6 +584,29 @@ export default function AdminNew() {
           groups[dietaryLabel] = []
         }
         groups[dietaryLabel].push(recipe)
+      })
+      return groups
+    }
+    
+    if (groupBy === 'meal_cooking') {
+      const groups = {}
+      const cookingTimeLabels = {
+        'quick': 'Quick (Under 30 min)',
+        'regular': 'Regular (30-60 min)',
+        'slow': 'Slow (Over 60 min)'
+      }
+      filteredRecipes.forEach(recipe => {
+        const mealType = recipe.meal_type || 'Unknown'
+        const cookingTime = recipe.cooking_time || 'regular'
+        const cookingTimeLabel = cookingTimeLabels[cookingTime] || cookingTime
+        
+        if (!groups[mealType]) {
+          groups[mealType] = {}
+        }
+        if (!groups[mealType][cookingTimeLabel]) {
+          groups[mealType][cookingTimeLabel] = []
+        }
+        groups[mealType][cookingTimeLabel].push(recipe)
       })
       return groups
     }
@@ -721,7 +762,7 @@ export default function AdminNew() {
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-gray-700">Group by:</span>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setGroupBy('none')}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
@@ -743,6 +784,16 @@ export default function AdminNew() {
               Meal Type
             </button>
             <button
+              onClick={() => setGroupBy('cooking_time')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                groupBy === 'cooking_time'
+                  ? 'bg-yellow-500 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Cooking Time
+            </button>
+            <button
               onClick={() => setGroupBy('dietary_preference')}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                 groupBy === 'dietary_preference'
@@ -751,6 +802,16 @@ export default function AdminNew() {
               }`}
             >
               Dietary Preference
+            </button>
+            <button
+              onClick={() => setGroupBy('meal_cooking')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                groupBy === 'meal_cooking'
+                  ? 'bg-indigo-500 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Meal Type + Cooking Time
             </button>
             <button
               onClick={() => setGroupBy('nested')}
@@ -834,17 +895,19 @@ export default function AdminNew() {
           </div>
         ) : (
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6' : 'divide-y divide-gray-200'}>
-            {groupBy === 'nested' ? (
+            {groupBy === 'nested' || groupBy === 'meal_cooking' ? (
               // Nested grouping display
-              Object.entries(groupedRecipes).map(([mealType, dietaryGroups]) => (
+              Object.entries(groupedRecipes).map(([mealType, subGroups]) => (
                 <div key={mealType} className={viewMode === 'grid' ? 'col-span-full' : 'p-6'}>
                   <h4 className="text-lg font-semibold text-gray-800 mb-4 bg-blue-50 px-3 py-2 rounded-lg">
-                    {mealType} ({Object.values(dietaryGroups).flat().length} recipes)
+                    {mealType} ({Object.values(subGroups).flat().length} recipes)
                   </h4>
-                  {Object.entries(dietaryGroups).map(([dietary, recipes]) => (
-                    <div key={dietary} className={viewMode === 'grid' ? 'mb-6' : 'ml-4 mb-4'}>
-                      <h5 className="text-md font-medium text-gray-700 mb-2 bg-green-50 px-2 py-1 rounded">
-                        {dietary} ({recipes.length} recipes)
+                  {Object.entries(subGroups).map(([subGroup, recipes]) => (
+                    <div key={subGroup} className={viewMode === 'grid' ? 'mb-6' : 'ml-4 mb-4'}>
+                      <h5 className={`text-md font-medium text-gray-700 mb-2 px-2 py-1 rounded ${
+                        groupBy === 'meal_cooking' ? 'bg-yellow-50' : 'bg-green-50'
+                      }`}>
+                        {subGroup} ({recipes.length} recipes)
                       </h5>
                       <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
                         {recipes.map((recipe) => (
@@ -865,7 +928,9 @@ export default function AdminNew() {
               // Regular grouping display
               Object.entries(groupedRecipes).map(([groupName, recipes]) => (
                 <div key={groupName} className={viewMode === 'grid' ? 'col-span-full' : 'p-6'}>
-                  <h4 className="text-lg font-semibold text-gray-800 mb-4 bg-blue-50 px-3 py-2 rounded-lg">
+                  <h4 className={`text-lg font-semibold text-gray-800 mb-4 px-3 py-2 rounded-lg ${
+                    groupBy === 'cooking_time' ? 'bg-yellow-50' : 'bg-blue-50'
+                  }`}>
                     {groupName} ({recipes.length} recipes)
                   </h4>
                   <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
