@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { supabase } from '../lib/supabase'
-import { fallbackMeals, mealTypes, cookingTimes, dietaryPreferences, commonIngredients } from '../lib/data'
+import { mealTypes, cookingTimes, commonIngredients } from '../lib/data'
 import { analytics } from '../lib/analytics'
 import { 
   ChefHat, 
@@ -27,7 +27,6 @@ export default function Home() {
   const [showIngredientMode, setShowIngredientMode] = useState(false)
   const [mealType, setMealType] = useState('')
   const [cookingTime, setCookingTime] = useState('quick')
-  const [dietaryPreference, setDietaryPreference] = useState('any')
   const [savedMeals, setSavedMeals] = useState([])
   const [selectedIngredients, setSelectedIngredients] = useState([])
   const [availableIngredients] = useState([
@@ -99,7 +98,6 @@ export default function Home() {
     const searchCriteria = {
       mealType,
       cookingTime,
-      dietaryPreference,
       selectedIngredients: showIngredientMode ? selectedIngredients : []
     }
     analytics.trackSuggestionClick(buttonType, searchCriteria)
@@ -107,21 +105,30 @@ export default function Home() {
     setLoading(true)
     try {
       console.log('🔍 Querying Supabase for meals...')
+      console.log('📋 Search criteria:', { mealType, cookingTime })
       let suggestions = []
 
-      // Always try Supabase first if available
+      // Only use Supabase - no fallback data
       if (supabase) {
         console.log('🔍 Querying Supabase for meals...')
         const query = supabase.from('meals').select('*')
-        if (mealType) query.eq('meal_type', mealType)
-        if (cookingTime) query.eq('cooking_time', cookingTime)
-        if (dietaryPreference) query.eq('dietary_preference', dietaryPreference)
-        const { data, error } = await query.limit(50) // Get more meals to filter from
+        if (mealType) {
+          console.log(`🍽️ Filtering by meal type: ${mealType}`)
+          query.eq('meal_type', mealType)
+        }
+        if (cookingTime) {
+          console.log(`⏰ Filtering by cooking time: ${cookingTime}`)
+          query.eq('cooking_time', cookingTime)
+        }
+        const { data, error } = await query.limit(50)
 
         if (error) {
           console.log('❌ Supabase error:', error.message)
+          // setMessage({ type: 'error', text: 'Failed to load meals from database' }) // This line was removed
+          return
         } else if (data && data.length > 0) {
           console.log(`✅ Found ${data.length} meals from Supabase`)
+          console.log('📋 Supabase meals:', data.map(m => `${m.name} (${m.meal_type}, ${m.dietary_preference})`))
           
           // Apply ingredient filtering for Supabase results if in ingredient mode
           if (showIngredientMode && selectedIngredients.length > 0) {
@@ -135,168 +142,16 @@ export default function Home() {
             console.log(`🔍 After ingredient filtering: ${suggestions.length} meals`)
           } else {
             suggestions = data
+            console.log(`✅ Using ${suggestions.length} Supabase meals`)
           }
         } else {
-          console.log('⚠️ No meals found in Supabase, using fallback')
+          console.log('⚠️ No meals found in Supabase for the selected criteria')
+          // setMessage({ type: 'info', text: 'No meals found for the selected criteria. Try different filters.' }) // This line was removed
+          return
         }
-      }
-
-      // Fallback to local data if no Supabase or no results
-      if (suggestions.length === 0) {
-        console.log('🔄 Using fallback meals data')
-        suggestions = fallbackMeals.filter(meal => {
-          if (showIngredientMode) {
-            return selectedIngredients.some(ingredient =>
-              meal.ingredients.some(mealIngredient =>
-                mealIngredient.toLowerCase().includes(ingredient.toLowerCase())
-              )
-            )
-          } else {
-            let matches = true
-            if (mealType && meal.meal_type !== mealType) matches = false
-            if (cookingTime && meal.cooking_time !== cookingTime) matches = false
-            if (dietaryPreference && dietaryPreference !== 'any') {
-              // Enhanced dietary preference filtering
-              const mealPref = meal.dietary_preference
-              const userPref = dietaryPreference
-              
-              // Handle special dietary preference logic
-              if (userPref === 'halal') {
-                // Halal meals should not contain pork or alcohol
-                const hasPork = meal.ingredients.some(ingredient => 
-                  ingredient.toLowerCase().includes('pork') || 
-                  ingredient.toLowerCase().includes('bacon') ||
-                  ingredient.toLowerCase().includes('ham')
-                )
-                if (hasPork) matches = false
-              } else if (userPref === 'pescatarian') {
-                // Pescatarian can have fish but not other meat
-                const hasMeat = meal.ingredients.some(ingredient => 
-                  ingredient.toLowerCase().includes('chicken') || 
-                  ingredient.toLowerCase().includes('beef') ||
-                  ingredient.toLowerCase().includes('pork') ||
-                  ingredient.toLowerCase().includes('lamb')
-                )
-                if (hasMeat) matches = false
-              } else if (userPref === 'lacto_vegetarian') {
-                // Lacto-vegetarian can have dairy but not meat or fish
-                const hasMeatOrFish = meal.ingredients.some(ingredient => 
-                  ingredient.toLowerCase().includes('chicken') || 
-                  ingredient.toLowerCase().includes('beef') ||
-                  ingredient.toLowerCase().includes('fish') ||
-                  ingredient.toLowerCase().includes('pork')
-                )
-                if (hasMeatOrFish) matches = false
-              } else if (userPref === 'gluten_free') {
-                // Gluten-free meals should avoid wheat, barley, rye
-                const hasGluten = meal.ingredients.some(ingredient => 
-                  ingredient.toLowerCase().includes('wheat') || 
-                  ingredient.toLowerCase().includes('barley') ||
-                  ingredient.toLowerCase().includes('rye') ||
-                  ingredient.toLowerCase().includes('bread') ||
-                  ingredient.toLowerCase().includes('flour')
-                )
-                if (hasGluten) matches = false
-              } else if (userPref === 'low_sodium') {
-                // Low-sodium meals should avoid high-salt ingredients
-                const hasHighSodium = meal.ingredients.some(ingredient => 
-                  ingredient.toLowerCase().includes('seasoning cube') || 
-                  ingredient.toLowerCase().includes('stock cube') ||
-                  ingredient.toLowerCase().includes('bouillon')
-                )
-                if (hasHighSodium) matches = false
-              } else if (userPref === 'low_fat') {
-                // Low-fat meals should avoid high-fat ingredients
-                const hasHighFat = meal.ingredients.some(ingredient => 
-                  ingredient.toLowerCase().includes('palm oil') || 
-                  ingredient.toLowerCase().includes('coconut oil') ||
-                  ingredient.toLowerCase().includes('butter')
-                )
-                if (hasHighFat) matches = false
-              } else if (userPref === 'high_protein') {
-                // High-protein meals should contain protein-rich ingredients
-                const hasProtein = meal.ingredients.some(ingredient => 
-                  ingredient.toLowerCase().includes('chicken') || 
-                  ingredient.toLowerCase().includes('beef') ||
-                  ingredient.toLowerCase().includes('fish') ||
-                  ingredient.toLowerCase().includes('eggs') ||
-                  ingredient.toLowerCase().includes('beans') ||
-                  ingredient.toLowerCase().includes('lentils') ||
-                  ingredient.toLowerCase().includes('tofu') ||
-                  ingredient.toLowerCase().includes('milk') ||
-                  ingredient.toLowerCase().includes('yogurt')
-                )
-                if (!hasProtein) matches = false
-              } else if (userPref === 'soft_foods') {
-                // Soft foods for easy chewing/swallowing
-                const isSoftFood = meal.name.toLowerCase().includes('porridge') ||
-                  meal.name.toLowerCase().includes('soup') ||
-                  meal.name.toLowerCase().includes('moi moi') ||
-                  meal.name.toLowerCase().includes('yam') ||
-                  meal.ingredients.some(ingredient => 
-                    ingredient.toLowerCase().includes('porridge') ||
-                    ingredient.toLowerCase().includes('soup')
-                  )
-                if (!isSoftFood) matches = false
-              } else if (userPref === 'high_fiber') {
-                // High-fiber meals should contain fiber-rich ingredients
-                const hasFiber = meal.ingredients.some(ingredient => 
-                  ingredient.toLowerCase().includes('beans') ||
-                  ingredient.toLowerCase().includes('vegetables') ||
-                  ingredient.toLowerCase().includes('spinach') ||
-                  ingredient.toLowerCase().includes('okra') ||
-                  ingredient.toLowerCase().includes('plantain') ||
-                  ingredient.toLowerCase().includes('yam')
-                )
-                if (!hasFiber) matches = false
-              } else if (userPref === 'traditional') {
-                // Traditional Nigerian dishes
-                const isTraditional = meal.name.toLowerCase().includes('jollof') ||
-                  meal.name.toLowerCase().includes('egusi') ||
-                  meal.name.toLowerCase().includes('amala') ||
-                  meal.name.toLowerCase().includes('eba') ||
-                  meal.name.toLowerCase().includes('akara') ||
-                  meal.name.toLowerCase().includes('moi moi') ||
-                  meal.name.toLowerCase().includes('pepper soup')
-                if (!isTraditional) matches = false
-              } else if (userPref === 'rice_based') {
-                // Rice-based meals
-                const isRiceBased = meal.name.toLowerCase().includes('rice') ||
-                  meal.name.toLowerCase().includes('jollof') ||
-                  meal.name.toLowerCase().includes('fried rice') ||
-                  meal.ingredients.some(ingredient => 
-                    ingredient.toLowerCase().includes('rice') ||
-                    ingredient.toLowerCase().includes('basmati')
-                  )
-                if (!isRiceBased) matches = false
-              } else if (userPref === 'swallow_based') {
-                // Swallow-based meals (starchy accompaniments)
-                const isSwallowBased = meal.name.toLowerCase().includes('amala') ||
-                  meal.name.toLowerCase().includes('eba') ||
-                  meal.name.toLowerCase().includes('pounded yam') ||
-                  meal.name.toLowerCase().includes('fufu') ||
-                  meal.name.toLowerCase().includes('garri') ||
-                  meal.ingredients.some(ingredient => 
-                    ingredient.toLowerCase().includes('yam flour') ||
-                    ingredient.toLowerCase().includes('cassava') ||
-                    ingredient.toLowerCase().includes('garri') ||
-                    ingredient.toLowerCase().includes('pounded yam')
-                  )
-                if (!isSwallowBased) matches = false
-              } else {
-                // Standard dietary preference matching
-                if (mealPref !== userPref && mealPref !== 'any') matches = false
-              }
-            }
-            return matches
-          }
-        })
-      }
-
-      // If no suggestions found, show a user-friendly message instead of redirecting
-      if (suggestions.length === 0) {
-        alert('No recipes found for your current preferences. Try adjusting your filters or ingredients!')
-        setLoading(false)
+      } else {
+        console.log('❌ Supabase not configured')
+        // setMessage({ type: 'error', text: 'Database not configured. Please contact support.' }) // This line was removed
         return
       }
 
@@ -304,7 +159,6 @@ export default function Home() {
       const currentFilterKey = JSON.stringify({
         mealType,
         cookingTime,
-        dietaryPreference,
         showIngredientMode,
         selectedIngredients: showIngredientMode ? selectedIngredients : []
       })
@@ -353,7 +207,6 @@ export default function Home() {
       // Store the meal and search criteria in localStorage
       localStorage.setItem('currentMeal', JSON.stringify(selectedMeal))
       localStorage.setItem('searchCriteria', JSON.stringify({
-        dietaryPreference,
         mealType,
         cookingTime,
         showIngredientMode,
