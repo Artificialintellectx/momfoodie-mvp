@@ -863,81 +863,21 @@ export default function Result() {
           </div>
         </div>
 
-        {/* Feedback Section */}
-        <div className="mt-6">
-          <div className="card">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-gray-800 mb-3">Was this recipe helpful?</h3>
-              <p className="text-sm text-gray-600 mb-4">Rate this recipe to help us improve our suggestions</p>
-              
-              {/* Star Rating */}
-              <div className="flex justify-center items-center gap-1 mb-4">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    onClick={() => handleRating(star)}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
-                      star <= rating
-                        ? 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white shadow-lg scale-110'
-                        : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:scale-105'
-                    }`}
-                  >
-                    <Star className={`w-4 h-4 ${star <= rating ? 'fill-current' : ''}`} />
-                  </button>
-                ))}
-              </div>
-              
-              {/* Rating Labels */}
-              {rating > 0 && (
-                <div className="mb-4">
-                  <p className="text-sm font-medium text-gray-700">
-                    {rating === 1 && 'Poor'}
-                    {rating === 2 && 'Fair'}
-                    {rating === 3 && 'Good'}
-                    {rating === 4 && 'Very Good'}
-                    {rating === 5 && 'Excellent!'}
-                  </p>
-                </div>
-              )}
-              
-              {/* Submit Button */}
-              <button
-                onClick={submitFeedback}
-                disabled={rating === 0}
-                className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  rating === 0
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
-                }`}
-              >
-                {feedbackSubmitted ? (
-                  <span className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4" />
-                    Thank you!
-                  </span>
-                ) : (
-                  'Submit Rating'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* Floating Action Buttons */}
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 flex gap-3">
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 flex gap-3 px-2 sm:px-0">
           {/* Previous Recipe Button */}
           {previousMeals.length > 0 && (
-            <div className="relative group">
+            <div className="relative group flex-1 min-w-0">
               <button
                 onClick={() => {
                   console.log('🔘 Button clicked!')
                   goToPreviousRecipe()
                 }}
-                className="relative px-6 py-3 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-blue-500/25 border-2 border-blue-400/20"
+                className="relative min-w-[120px] w-full px-6 py-3 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-blue-500/25 border-2 border-blue-400/20"
               >
                 <History className="w-4 h-4 group-hover:rotate-180 transition-transform duration-300" />
                 <span className="text-sm whitespace-nowrap">Previous Recipe</span>
-                <div className="absolute -top-2 -right-2 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-blue-500">
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-blue-500">
                   <span className="text-xs font-bold text-blue-600">{previousMeals.length}</span>
                 </div>
               </button>
@@ -954,30 +894,30 @@ export default function Result() {
           )}
           
           {/* Get Another Recipe Button */}
-          <button
-            onClick={getNewSuggestion}
-            disabled={generating}
-            className="relative px-8 py-3 flex items-center justify-center gap-3 group transition-all duration-300 hover:scale-105 min-w-[200px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-purple-500/25 border-2 border-indigo-400/20"
-          >
-            {/* Animated background glow */}
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"></div>
-            
-            {/* Pulsing ring effect */}
-            <div className="absolute inset-0 rounded-2xl border-2 border-purple-300/30 animate-pulse"></div>
-            
-            {generating ? (
-              <>
-                <div className="loading-spinner w-4 h-4 border-2 border-white/30 border-t-white"></div>
-                <span className="text-sm whitespace-nowrap">Finding Another Meal...</span>
-              </>
-            ) : (
-              <>
-                <Flame className="w-4 h-4 animate-pulse" />
-                <span className="text-sm whitespace-nowrap">Get Another Recipe</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform duration-300" />
-              </>
-            )}
-          </button>
+          <div className="flex-1 min-w-0">
+            <button
+              onClick={getNewSuggestion}
+              disabled={generating}
+              className="relative w-full px-4 sm:px-8 py-3 flex items-center justify-between gap-3 group transition-all duration-300 hover:scale-105 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-purple-500/25 border-2 border-indigo-400/20"
+            >
+              {/* Animated background glow */}
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"></div>
+              {/* Pulsing ring effect */}
+              <div className="absolute inset-0 rounded-2xl border-2 border-purple-300/30 animate-pulse"></div>
+              {generating ? (
+                <>
+                  <div className="loading-spinner w-4 h-4 border-2 border-white/30 border-t-white"></div>
+                  <span className="text-sm whitespace-nowrap min-w-0 truncate">Finding Another Meal...</span>
+                </>
+              ) : (
+                <>
+                  <Flame className="w-4 h-4 animate-pulse flex-shrink-0" />
+                  <span className="text-sm whitespace-nowrap min-w-0 truncate">Get Another Recipe</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform duration-300 flex-shrink-0" />
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
 
@@ -1034,6 +974,59 @@ export default function Result() {
                     <p className="text-gray-600 text-lg">No instructions available for this recipe.</p>
                   </div>
                 )}
+
+                {/* Rating Section - moved here for mobile visibility */}
+                <div className="mt-8 text-center">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Was this recipe helpful?</h3>
+                  <p className="text-sm text-gray-600 mb-4">Rate this recipe to help us improve our suggestions</p>
+                  {/* Star Rating */}
+                  <div className="flex justify-center items-center gap-1 mb-4">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        onClick={() => handleRating(star)}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
+                          star <= rating
+                            ? 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white shadow-lg scale-110'
+                            : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:scale-105'
+                        }`}
+                      >
+                        <Star className={`w-4 h-4 ${star <= rating ? 'fill-current' : ''}`} />
+                      </button>
+                    ))}
+                  </div>
+                  {/* Rating Labels */}
+                  {rating > 0 && (
+                    <div className="mb-4">
+                      <p className="text-sm font-medium text-gray-700">
+                        {rating === 1 && 'Poor'}
+                        {rating === 2 && 'Fair'}
+                        {rating === 3 && 'Good'}
+                        {rating === 4 && 'Very Good'}
+                        {rating === 5 && 'Excellent!'}
+                      </p>
+                    </div>
+                  )}
+                  {/* Submit Button */}
+                  <button
+                    onClick={submitFeedback}
+                    disabled={rating === 0}
+                    className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
+                      rating === 0
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105'
+                    }`}
+                  >
+                    {feedbackSubmitted ? (
+                      <span className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4" />
+                        Thank you!
+                      </span>
+                    ) : (
+                      'Submit Rating'
+                    )}
+                  </button>
+                </div>
               </div>
 
               {/* Clean Footer */}
