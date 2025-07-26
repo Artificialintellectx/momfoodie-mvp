@@ -108,14 +108,22 @@ export default function Home() {
       if (supabase) {
         console.log('🔍 Querying Supabase for meals...')
         const query = supabase.from('meals').select('*')
-        if (mealType) {
-          console.log(`🍽️ Filtering by meal type: ${mealType}`)
-          query.eq('meal_type', mealType)
+        
+        // Only apply meal type and cooking time filters if NOT in ingredient mode
+        if (!showIngredientMode) {
+          if (mealType) {
+            console.log(`🍽️ Filtering by meal type: ${mealType}`)
+            query.eq('meal_type', mealType)
+          }
+          if (cookingTime) {
+            console.log(`⏰ Filtering by cooking time: ${cookingTime}`)
+            query.eq('cooking_time', cookingTime)
+          }
+          console.log(`🔍 Complete query filters: meal_type=${mealType}, cooking_time=${cookingTime}`)
+        } else {
+          console.log('🔍 Ingredient mode: No meal type or cooking time filters applied')
         }
-        if (cookingTime) {
-          console.log(`⏰ Filtering by cooking time: ${cookingTime}`)
-          query.eq('cooking_time', cookingTime)
-        }
+        
         const { data, error } = await query.limit(50)
 
         if (error) {
@@ -130,12 +138,21 @@ export default function Home() {
           if (showIngredientMode && selectedIngredients.length > 0) {
             suggestions = data.filter(meal => 
               selectedIngredients.some(ingredient =>
+                // Check if ingredient appears in meal name OR in ingredients list
+                meal.name.toLowerCase().includes(ingredient.toLowerCase()) ||
                 meal.ingredients.some(mealIngredient =>
                   mealIngredient.toLowerCase().includes(ingredient.toLowerCase())
                 )
               )
             )
             console.log(`🔍 After ingredient filtering: ${suggestions.length} meals`)
+            
+            // Check if no meals match the ingredient criteria
+            if (suggestions.length === 0) {
+              console.log('❌ No meals found containing the selected ingredients')
+              alert(`No meals found containing "${selectedIngredients.join(', ')}". Try selecting different ingredients.`)
+              return
+            }
           } else {
             suggestions = data
             console.log(`✅ Using ${suggestions.length} Supabase meals`)

@@ -280,14 +280,19 @@ export default function Result() {
       if (supabase) {
         const query = supabase.from('meals').select('*')
         
-        // Apply the same filters as the original search (only meal type and cooking time)
-        if (searchCriteria.mealType) {
-          console.log(`🍽️ Filtering by meal type: ${searchCriteria.mealType}`)
-          query.eq('meal_type', searchCriteria.mealType)
-        }
-        if (searchCriteria.cookingTime) {
-          console.log(`⏰ Filtering by cooking time: ${searchCriteria.cookingTime}`)
-          query.eq('cooking_time', searchCriteria.cookingTime)
+        // Only apply meal type and cooking time filters if NOT in ingredient mode
+        if (!searchCriteria.showIngredientMode) {
+          if (searchCriteria.mealType) {
+            console.log(`🍽️ Filtering by meal type: ${searchCriteria.mealType}`)
+            query.eq('meal_type', searchCriteria.mealType)
+          }
+          if (searchCriteria.cookingTime) {
+            console.log(`⏰ Filtering by cooking time: ${searchCriteria.cookingTime}`)
+            query.eq('cooking_time', searchCriteria.cookingTime)
+          }
+          console.log(`🔍 Complete query filters: meal_type=${searchCriteria.mealType}, cooking_time=${searchCriteria.cookingTime}`)
+        } else {
+          console.log('🔍 Ingredient mode: No meal type or cooking time filters applied')
         }
         
         const { data, error } = await query.limit(50)
@@ -303,12 +308,21 @@ export default function Result() {
           if (searchCriteria.showIngredientMode && searchCriteria.selectedIngredients?.length > 0) {
             suggestions = data.filter(meal => 
               searchCriteria.selectedIngredients.some(ingredient =>
+                // Check if ingredient appears in meal name OR in ingredients list
+                meal.name.toLowerCase().includes(ingredient.toLowerCase()) ||
                 meal.ingredients.some(mealIngredient =>
                   mealIngredient.toLowerCase().includes(ingredient.toLowerCase())
                 )
               )
             )
             console.log(`🔍 After ingredient filtering: ${suggestions.length} meals`)
+            
+            // Check if no meals match the ingredient criteria
+            if (suggestions.length === 0) {
+              console.log('❌ No meals found containing the selected ingredients')
+              setMessage({ type: 'info', text: `No meals found containing "${searchCriteria.selectedIngredients.join(', ')}". Try selecting different ingredients.` })
+              return
+            }
           } else {
             suggestions = data
           }
