@@ -106,12 +106,11 @@ export default function AdminNew() {
 
   // Load data on component mount
   useEffect(() => {
-    loadRecipes()
     loadAnalytics()
     getCurrentIP()
     checkDeviceMarked()
     loadBlacklistedIPs()
-  }, [])
+  }, [loadAnalytics])
 
   const loadAnalytics = useCallback(async () => {
     setAnalyticsLoading(true)

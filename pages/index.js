@@ -924,7 +924,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-gray-800">Complete Your Selection</h3>
-                  <p className="text-sm text-gray-600">Let's find the perfect meal for you</p>
+                  <p className="text-sm text-gray-600">Let&apos;s find the perfect meal for you</p>
                 </div>
               </div>
             </div>

@@ -125,8 +125,8 @@ export default function NoResults() {
           <div className="mb-8">
             <p className="text-gray-600 text-lg leading-relaxed mb-4">
               {ingredients 
-                ? `We're sorry, but we don't have any recipes that use your selected ingredients yet.`
-                : `We're sorry, but we don't have any recipes that match your dietary preference yet.`
+                ? `We&apos;re sorry, but we don&apos;t have any recipes that use your selected ingredients yet.`
+                : `We&apos;re sorry, but we don&apos;t have any recipes that match your dietary preference yet.`
               }
             </p>
             <p className="text-gray-600 text-base leading-relaxed">
