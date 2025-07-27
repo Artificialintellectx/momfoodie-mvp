@@ -374,29 +374,88 @@ export default function Result() {
             })
             
             // Filter out meals with no matches and sort by score (highest first)
+            // Adaptive threshold system based on number of selected ingredients
+            const getThresholdForIngredients = (ingredientCount) => {
+              if (ingredientCount === 1) {
+                return { primary: 0, fallback: 1, final: 1 } // Show any meal with the ingredient
+              } else if (ingredientCount === 2) {
+                return { primary: 100, fallback: 1, final: 1 } // 100% or at least 1 ingredient
+              } else if (ingredientCount === 4) {
+                return { primary: 70, fallback: 2, final: 1 } // 70% or at least 2, else at least 1
+              } else if (ingredientCount >= 5 && ingredientCount <= 6) {
+                return { primary: 70, fallback: 3, final: 2 } // 70% or at least 3, else at least 2
+              } else if (ingredientCount > 6 && ingredientCount <= 10) {
+                return { primary: 70, fallback: 4, final: 2 } // 70% or at least 4, else at least 2
+              } else if (ingredientCount > 10 && ingredientCount <= 15) {
+                return { primary: 70, fallback: 5, final: 2 } // 70% or at least 5, else at least 2
+              } else {
+                return { primary: 70, fallback: 6, final: 2 } // 70% or at least 6, else at least 2
+              }
+            }
+
+            const thresholds = getThresholdForIngredients(searchCriteria.selectedIngredients.length)
+            console.log(`🎯 Adaptive thresholds for ${searchCriteria.selectedIngredients.length} ingredients: Primary ${thresholds.primary}%, Fallback ${thresholds.fallback}, Final ${thresholds.final} ingredients`)
+
+            // First try with primary threshold
             suggestions = scoredMeals
-              .filter(meal => meal.ingredientScore > 0 && !meal.excluded && meal.matchPercentage >= 70)
+              .filter(meal => meal.ingredientScore > 0 && !meal.excluded && meal.matchPercentage >= thresholds.primary)
               .sort((a, b) => {
-                // First sort by score (highest first)
                 if (b.ingredientScore !== a.ingredientScore) {
                   return b.ingredientScore - a.ingredientScore
                 }
-                // Then by match percentage (highest first)
                 return b.matchPercentage - a.matchPercentage
               })
-            
-            console.log(`🔍 After smart ingredient filtering (70% threshold): ${suggestions.length} meals`)
-            console.log(`📊 Top 3 suggestions:`, suggestions.slice(0, 3).map(m => 
+
+            console.log(`🔍 After primary filtering (${thresholds.primary}% threshold): ${suggestions.length} meals`)
+
+            // If no results with primary threshold, try fallback threshold
+            if (suggestions.length === 0) {
+              console.log(`🔄 No results with ${thresholds.primary}% threshold, trying fallback: at least ${thresholds.fallback} ingredients`)
+              
+              suggestions = scoredMeals
+                .filter(meal => meal.ingredientScore > 0 && !meal.excluded && meal.matchedIngredients.length >= thresholds.fallback)
+                .sort((a, b) => {
+                  if (b.ingredientScore !== a.ingredientScore) {
+                    return b.ingredientScore - a.ingredientScore
+                  }
+                  return b.matchPercentage - a.matchPercentage
+                })
+
+              console.log(`🔍 After fallback filtering (at least ${thresholds.fallback} ingredients): ${suggestions.length} meals`)
+            }
+
+            // If still no results, try final threshold
+            if (suggestions.length === 0) {
+              console.log(`🔄 No results with fallback threshold, trying final: at least ${thresholds.final} ingredients`)
+              
+              suggestions = scoredMeals
+                .filter(meal => meal.ingredientScore > 0 && !meal.excluded && meal.matchedIngredients.length >= thresholds.final)
+                .sort((a, b) => {
+                  if (b.ingredientScore !== a.ingredientScore) {
+                    return b.ingredientScore - a.ingredientScore
+                  }
+                  return b.matchPercentage - a.matchPercentage
+                })
+
+              console.log(`🔍 After final filtering (at least ${thresholds.final} ingredients): ${suggestions.length} meals`)
+            }
+
+            console.log(`📊 Final suggestions:`, suggestions.slice(0, 3).map(m => 
               `${m.name} (Score: ${m.ingredientScore}, Matches: ${m.matchedIngredients.join(', ')}, Match %: ${m.matchPercentage}%)`
             ))
             
             // Check if no meals match the ingredient criteria
             if (suggestions.length === 0) {
-              console.log('❌ No meals found containing at least 70% of selected ingredients')
-              setMessage({ type: 'info', text: `No meals found containing at least 70% of "${searchCriteria.selectedIngredients.join(', ')}". Try selecting fewer ingredients or different ones.` })
+              const thresholdInfo = searchCriteria.selectedIngredients.length === 1 
+                ? `the ingredient "${searchCriteria.selectedIngredients[0]}"`
+                : `at least ${thresholds.primary}%, ${thresholds.fallback}, or ${thresholds.final} ingredients`
+              
+              console.log(`❌ No meals found with ${thresholdInfo}`)
+              setMessage({ type: 'info', text: `No meals found containing ${thresholdInfo} of "${searchCriteria.selectedIngredients.join(', ')}". Try selecting different ingredients.` })
               return
             }
-          } else {
+          } else if (!searchCriteria.showIngredientMode) {
+            // Only use all Supabase meals if we're NOT in ingredient mode
             suggestions = data
           }
         } else {
@@ -505,22 +564,30 @@ export default function Result() {
         console.log('🔄 All meals shown for this filter, resetting...')
         localStorage.removeItem(shownMealsKey)
         
-        // Randomly select from all suggestions
-        const randomIndex = Math.floor(Math.random() * suggestions.length)
-        const newMeal = suggestions[randomIndex]
-        setMeal(newMeal)
-        localStorage.setItem('currentMeal', JSON.stringify(newMeal))
-        
-        // Start fresh tracking
-        localStorage.setItem(shownMealsKey, JSON.stringify([newMeal.id]))
-        
-        // Track "Try Another" button click
-        analytics.trackSuggestionClick('Try Another', searchCriteria)
-        
-        console.log(`🔄 Reset and selected: ${newMeal.name}`)
-        
-        // Show exhaustion notification instead of modal
-        setShowExhaustionModal(true)
+        // Check if we have any suggestions to work with
+        if (suggestions.length > 0) {
+          // Randomly select from all suggestions
+          const randomIndex = Math.floor(Math.random() * suggestions.length)
+          const newMeal = suggestions[randomIndex]
+          setMeal(newMeal)
+          localStorage.setItem('currentMeal', JSON.stringify(newMeal))
+          
+          // Start fresh tracking
+          localStorage.setItem(shownMealsKey, JSON.stringify([newMeal.id]))
+          
+          // Track "Try Another" button click
+          analytics.trackSuggestionClick('Try Another', searchCriteria)
+          
+          console.log(`🔄 Reset and selected: ${newMeal.name}`)
+          
+          // Show exhaustion notification instead of modal
+          setShowExhaustionModal(true)
+        } else {
+          // No meals found even after fallback - this shouldn't happen due to our filtering logic
+          console.error('❌ No meals available for selection - this indicates a logic error')
+          setMessage({ type: 'error', text: 'No meals found for your criteria. Please try different ingredients or filters.' })
+          return
+        }
       }
     } catch (error) {
       console.error('Error getting new suggestion:', error)

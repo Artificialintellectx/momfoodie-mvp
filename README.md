@@ -122,97 +122,29 @@ NEXT_PUBLIC_SUPABASE_URL=your_production_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_production_supabase_key
 ```
 
+### Production Cleanup Checklist
+Before deploying to production:
+
+1. **Environment Setup**:
+   - Create `.env.local` file with your Supabase credentials
+   - Ensure all environment variables are properly set
+
+2. **Code Cleanup**:
+   - Remove or comment out debug console.log statements
+   - Test all functionality thoroughly
+   - Ensure no sensitive data is exposed
+
+3. **Performance Optimization**:
+   - Build and test the production build locally
+   - Check for any console errors or warnings
+   - Verify all features work as expected
+
+4. **Security Check**:
+   - Ensure no API keys are hardcoded
+   - Verify Supabase RLS policies are properly configured
+   - Test with different user scenarios
+
 ## 🔧 Development
 
 ### Project Structure
 ```
-momfoodie-mvp/
-├── pages/
-│   ├── _app.js          # App wrapper with global styles
-│   └── index.js         # Main application page
-├── lib/
-│   ├── supabase.js      # Database connection & types
-│   └── data.js          # Fallback meal data
-├── styles/
-│   └── globals.css      # Global styles and components
-├── public/
-│   ├── manifest.json    # PWA configuration
-│   └── favicon.ico      # App icon
-├── database-setup.sql   # Complete database schema
-└── README.md           # This file
-```
-
-## 🎯 Roadmap
-
-### Version 1.1 (Month 2)
-- [ ] User accounts and personalization
-- [ ] Meal planning calendar
-- [ ] Shopping list generation
-- [ ] Enhanced sharing features
-
-### Version 1.2 (Month 3)
-- [ ] Video cooking instructions
-- [ ] Community recipe sharing
-- [ ] Premium subscription features
-- [ ] Advanced dietary filters
-
-### Version 2.0 (Month 6)
-- [ ] Smart-powered personalized suggestions
-- [ ] Voice search ("What should I cook?")
-- [ ] Grocery store integration
-- [ ] Multi-city expansion
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**App doesn't load suggestions**
-- ✅ Check if Supabase credentials are correct
-- ✅ Verify database table exists and has data
-- ✅ App will use fallback suggestions if database fails
-
-**Slow performance**
-- ✅ Check internet connection
-- ✅ Clear browser cache
-- ✅ Ensure you're using a modern browser
-
-**Build errors**
-- ✅ Ensure Node.js 18+ is installed
-- ✅ Delete `node_modules` and run `npm install`
-- ✅ Check for missing environment variables
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 🙏 Acknowledgments
-
-### Inspiration
-- Nigerian home cooks who struggle with meal planning
-- Survey respondents who validated the problem
-- Traditional Nigerian cuisine and its rich flavors
-
-### Technology
-- **Supabase** for the amazing backend platform
-- **Next.js** team for the excellent React framework
-- **Tailwind CSS** for the utility-first approach
-
----
-
-## 🚀 Ready to Launch!
-
-**MomFoodie MVP is ready for beta testing with your validated target audience.**
-
-### Next Steps:
-1. **Deploy** to Vercel or Netlify
-2. **Set up** Supabase database
-3. **Test** with your 10 survey respondents
-4. **Iterate** based on user feedback
-5. **Scale** through referrals and social media
-
-**Made with ❤️ for Nigerian home cooks who deserve better than 30 minutes of meal indecision!** 🍽️✨
-# Updated: Tue Jul 22 01:27:08 WAT 2025
-# Testing new Vercel deployment - Tue Jul 22 01:38:50 WAT 2025
-# Another test commit - Tue Jul 22 01:41:51 WAT 2025
-# Force trigger - Tue Jul 22 01:44:40 WAT 2025
-# Testing auto-deployment with public repo - Tue Jul 22 01:51:35 WAT 2025

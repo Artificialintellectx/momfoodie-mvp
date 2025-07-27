@@ -100,28 +100,28 @@ export default function Home() {
     
     setLoading(true)
     try {
-      console.log('🔍 Querying Supabase for meals...')
-      console.log('📋 Search criteria:', { mealType, cookingTime })
+      // console.log('🔍 Querying Supabase for meals...')
+      // console.log('📋 Search criteria:', { mealType, cookingTime })
       let suggestions = []
 
       // Only use Supabase - no fallback data
       if (supabase) {
-        console.log('🔍 Querying Supabase for meals...')
+        // console.log('🔍 Querying Supabase for meals...')
         const query = supabase.from('meals').select('*')
         
         // Only apply meal type and cooking time filters if NOT in ingredient mode
         if (!showIngredientMode) {
           if (mealType) {
-            console.log(`🍽️ Filtering by meal type: ${mealType}`)
+            // console.log(`🍽️ Filtering by meal type: ${mealType}`)
             query.eq('meal_type', mealType)
           }
           if (cookingTime) {
-            console.log(`⏰ Filtering by cooking time: ${cookingTime}`)
+            // console.log(`⏰ Filtering by cooking time: ${cookingTime}`)
             query.eq('cooking_time', cookingTime)
           }
-          console.log(`🔍 Complete query filters: meal_type=${mealType}, cooking_time=${cookingTime}`)
+          // console.log(`🔍 Complete query filters: meal_type=${mealType}, cooking_time=${cookingTime}`)
         } else {
-          console.log('🔍 Ingredient mode: No meal type or cooking time filters applied')
+          // console.log('🔍 Ingredient mode: No meal type or cooking time filters applied')
         }
         
         const { data, error } = await query.limit(50)
@@ -134,8 +134,25 @@ export default function Home() {
           console.log(`✅ Found ${data.length} meals from Supabase`)
           console.log('📋 Supabase meals:', data.map(m => `${m.name} (${m.meal_type}, ${m.dietary_preference})`))
           
+          // Debug: Show meals that contain rice
+          if (showIngredientMode && selectedIngredients.includes('Rice')) {
+            console.log('🍚 Meals that might contain rice:')
+            data.forEach(meal => {
+              const hasRiceInName = meal.name.toLowerCase().includes('rice')
+              const hasRiceInIngredients = meal.ingredients.some(ing => ing.toLowerCase().includes('rice'))
+              if (hasRiceInName || hasRiceInIngredients) {
+                console.log(`  - "${meal.name}" - Rice in name: ${hasRiceInName}, Rice in ingredients: ${hasRiceInIngredients}`)
+                if (hasRiceInIngredients) {
+                  console.log(`    Ingredients containing rice: ${meal.ingredients.filter(ing => ing.toLowerCase().includes('rice')).join(', ')}`)
+                }
+              }
+            })
+          }
+          
           // Apply ingredient filtering for Supabase results if in ingredient mode
           if (showIngredientMode && selectedIngredients.length > 0) {
+            console.log(`🔍 Starting ingredient filtering for: ${selectedIngredients.join(', ')}`)
+            
             // Smart ingredient filtering with scoring
             const scoredMeals = data.map(meal => {
               let score = 0
@@ -150,6 +167,7 @@ export default function Home() {
                 if (meal.name.toLowerCase().includes(ingredientLower)) {
                   score += 3
                   matchedIngredients.push(ingredient)
+                  console.log(`✅ "${ingredient}" found in meal name: "${meal.name}"`)
                 }
                 
                 // Check if ingredient appears in ingredients list (highest score)
@@ -157,8 +175,13 @@ export default function Home() {
                 const optionalIndicators = ['(optional)', '(opt)', 'optional', 'opt']
                 const isOptional = meal.ingredients.some(mealIngredient => {
                   const mealIngredientLower = mealIngredient.toLowerCase()
-                  return mealIngredientLower.includes(ingredientLower) && 
-                         optionalIndicators.some(indicator => mealIngredientLower.includes(indicator))
+                  const ingredientLower = ingredient.toLowerCase()
+                  
+                  // Only check for optional if the ingredient is actually found in this meal ingredient
+                  if (mealIngredientLower.includes(ingredientLower)) {
+                    return optionalIndicators.some(indicator => mealIngredientLower.includes(indicator))
+                  }
+                  return false
                 })
                 
                 if (isOptional) {
@@ -176,6 +199,7 @@ export default function Home() {
                   if (!matchedIngredients.includes(ingredient)) {
                     matchedIngredients.push(ingredient)
                   }
+                  console.log(`✅ "${ingredient}" found in ingredients list: "${meal.name}"`)
                 }
               })
               
@@ -200,38 +224,135 @@ export default function Home() {
                 score += 10
               }
               
-              return {
+              const result = {
                 ...meal,
                 ingredientScore: score,
                 matchedIngredients: matchedIngredients,
                 matchPercentage: (matchedIngredients.length / selectedIngredients.length) * 100
               }
+              
+              if (matchedIngredients.length > 0) {
+                console.log(`📊 "${meal.name}" - Score: ${score}, Matches: ${matchedIngredients.join(', ')}, Match %: ${result.matchPercentage}%`)
+              }
+              
+              return result
             })
             
+            console.log(`📋 Total meals with ingredient matches: ${scoredMeals.filter(m => m.matchedIngredients.length > 0).length}`)
+            
+            // Debug: Show all scored meals
+            console.log('📊 All scored meals:')
+            scoredMeals.forEach(meal => {
+              console.log(`  - "${meal.name}" - Score: ${meal.ingredientScore}, Matches: ${meal.matchedIngredients.join(', ')}, Match %: ${meal.matchPercentage}%, Excluded: ${meal.excluded}`)
+            })
+            
+            // Debug: Show excluded meals
+            const excludedMeals = scoredMeals.filter(m => m.excluded)
+            if (excludedMeals.length > 0) {
+              console.log('❌ Excluded meals:')
+              excludedMeals.forEach(meal => {
+                console.log(`  - "${meal.name}" - Excluded: ${meal.excluded}`)
+              })
+            }
+            
             // Filter out meals with no matches and sort by score (highest first)
+            // Adaptive threshold system based on number of selected ingredients
+            const getThresholdForIngredients = (ingredientCount) => {
+              if (ingredientCount === 1) {
+                return { primary: 0, fallback: 1, final: 1 } // Show any meal with the ingredient
+              } else if (ingredientCount === 2) {
+                return { primary: 100, fallback: 1, final: 1 } // 100% or at least 1 ingredient
+              } else if (ingredientCount === 4) {
+                return { primary: 70, fallback: 2, final: 1 } // 70% or at least 2, else at least 1
+              } else if (ingredientCount >= 5 && ingredientCount <= 6) {
+                return { primary: 70, fallback: 3, final: 2 } // 70% or at least 3, else at least 2
+              } else if (ingredientCount > 6 && ingredientCount <= 10) {
+                return { primary: 70, fallback: 4, final: 2 } // 70% or at least 4, else at least 2
+              } else if (ingredientCount > 10 && ingredientCount <= 15) {
+                return { primary: 70, fallback: 5, final: 2 } // 70% or at least 5, else at least 2
+              } else {
+                return { primary: 70, fallback: 6, final: 2 } // 70% or at least 6, else at least 2
+              }
+            }
+
+            const thresholds = getThresholdForIngredients(selectedIngredients.length)
+            console.log(`🎯 Adaptive thresholds for ${selectedIngredients.length} ingredients: Primary ${thresholds.primary}%, Fallback ${thresholds.fallback}, Final ${thresholds.final} ingredients`)
+
+            // First try with primary threshold
             suggestions = scoredMeals
-              .filter(meal => meal.ingredientScore > 0 && !meal.excluded && meal.matchPercentage >= 70)
+              .filter(meal => meal.ingredientScore > 0 && !meal.excluded && meal.matchPercentage >= thresholds.primary)
               .sort((a, b) => {
-                // First sort by score (highest first)
                 if (b.ingredientScore !== a.ingredientScore) {
                   return b.ingredientScore - a.ingredientScore
                 }
-                // Then by match percentage (highest first)
                 return b.matchPercentage - a.matchPercentage
               })
+
+            console.log(`🔍 After primary filtering (${thresholds.primary}% threshold): ${suggestions.length} meals`)
+            console.log(`🔍 Meals with score > 0: ${scoredMeals.filter(m => m.ingredientScore > 0).length}`)
+            console.log(`🔍 Meals not excluded: ${scoredMeals.filter(m => !m.excluded).length}`)
+            console.log(`🔍 Meals with match % >= ${thresholds.primary}: ${scoredMeals.filter(m => m.matchPercentage >= thresholds.primary).length}`)
             
-            console.log(`🔍 After smart ingredient filtering (70% threshold): ${suggestions.length} meals`)
-            console.log(`📊 Top 3 suggestions:`, suggestions.slice(0, 3).map(m => 
+            // Debug: Show suggestions after primary filtering
+            if (suggestions.length > 0) {
+              console.log('📊 Suggestions after primary filtering:')
+              suggestions.forEach(meal => {
+                console.log(`  - "${meal.name}" - Score: ${meal.ingredientScore}, Match %: ${meal.matchPercentage}%`)
+              })
+            }
+
+            // If no results with primary threshold, try fallback threshold
+            if (suggestions.length === 0) {
+              console.log(`🔄 No results with ${thresholds.primary}% threshold, trying fallback: at least ${thresholds.fallback} ingredients`)
+              
+              suggestions = scoredMeals
+                .filter(meal => meal.ingredientScore > 0 && !meal.excluded && meal.matchedIngredients.length >= thresholds.fallback)
+                .sort((a, b) => {
+                  if (b.ingredientScore !== a.ingredientScore) {
+                    return b.ingredientScore - a.ingredientScore
+                  }
+                  return b.matchPercentage - a.matchPercentage
+                })
+
+              console.log(`🔍 After fallback filtering (at least ${thresholds.fallback} ingredients): ${suggestions.length} meals`)
+            }
+
+            // If still no results, try final threshold
+            if (suggestions.length === 0) {
+              console.log(`🔄 No results with fallback threshold, trying final: at least ${thresholds.final} ingredients`)
+              
+              suggestions = scoredMeals
+                .filter(meal => meal.ingredientScore > 0 && !meal.excluded && meal.matchedIngredients.length >= thresholds.final)
+                .sort((a, b) => {
+                  if (b.ingredientScore !== a.ingredientScore) {
+                    return b.ingredientScore - a.ingredientScore
+                  }
+                  return b.matchPercentage - a.matchPercentage
+                })
+
+              console.log(`🔍 After final filtering (at least ${thresholds.final} ingredients): ${suggestions.length} meals`)
+            }
+            
+            console.log(`📊 Final suggestions:`, suggestions.slice(0, 3).map(m => 
               `${m.name} (Score: ${m.ingredientScore}, Matches: ${m.matchedIngredients.join(', ')}, Match %: ${m.matchPercentage}%)`
             ))
             
+            // Debug: Show suggestions array length and content right before meal selection
+            console.log(`🔍 Suggestions array before meal selection: ${suggestions.length} meals`)
+            console.log(`🔍 First 3 suggestions:`, suggestions.slice(0, 3).map(m => m.name))
+            
             // Check if no meals match the ingredient criteria
             if (suggestions.length === 0) {
-              console.log('❌ No meals found containing at least 70% of selected ingredients')
-              alert(`No meals found containing at least 70% of "${selectedIngredients.join(', ')}". Try selecting fewer ingredients or different ones.`)
+              const thresholdInfo = selectedIngredients.length === 1 
+                ? `the ingredient "${selectedIngredients[0]}"`
+                : `at least ${thresholds.primary}%, ${thresholds.fallback}, or ${thresholds.final} ingredients`
+              
+              console.log(`❌ No meals found with ${thresholdInfo}`)
+              alert(`No meals found containing ${thresholdInfo} of "${selectedIngredients.join(', ')}". Try selecting different ingredients.`)
               return
             }
-          } else {
+          } else if (!showIngredientMode) {
+            // Only use all Supabase meals if we're NOT in ingredient mode
             suggestions = data
             console.log(`✅ Using ${suggestions.length} Supabase meals`)
           }
@@ -260,6 +381,14 @@ export default function Home() {
       
       console.log(`🎯 Current filter key: ${currentFilterKey}`)
       console.log(`👀 Already shown meals for this filter: ${shownMeals.length}`)
+      
+      // Debug: Show suggestions array right before filtering by shown meals
+      console.log(`🔍 Suggestions array before shown meals filter: ${suggestions.length} meals`)
+      console.log(`🔍 Suggestions array type:`, typeof suggestions)
+      console.log(`🔍 Is suggestions an array?`, Array.isArray(suggestions))
+      if (Array.isArray(suggestions) && suggestions.length > 0) {
+        console.log(`🔍 First suggestion:`, suggestions[0].name)
+      }
 
       // Filter out already shown meals for this filter combination
       const availableMeals = suggestions.filter(meal => !shownMeals.includes(meal.id))
@@ -278,7 +407,7 @@ export default function Home() {
         
         console.log(`🎯 Selected meal: ${selectedMeal.name} (ID: ${selectedMeal.id})`)
         console.log(`📊 Total shown meals for this filter: ${updatedShownMeals.length}`)
-      } else {
+      } else if (suggestions.length > 0) {
         // All meals for this filter have been shown - reset and start over
         console.log('🔄 All meals shown for this filter, resetting...')
         localStorage.removeItem(shownMealsKey)
@@ -291,6 +420,18 @@ export default function Home() {
         localStorage.setItem(shownMealsKey, JSON.stringify([selectedMeal.id]))
         
         console.log(`🎯 Reset and selected: ${selectedMeal.name} (ID: ${selectedMeal.id})`)
+      } else {
+        // No meals found even after fallback - this shouldn't happen due to our filtering logic
+        console.error('❌ No meals available for selection - this indicates a logic error')
+        alert('No meals found for your criteria. Please try different ingredients or filters.')
+        return
+      }
+      
+      // Safety check to ensure selectedMeal exists
+      if (!selectedMeal) {
+        console.error('❌ selectedMeal is undefined - this indicates a logic error')
+        alert('Something went wrong. Please try again!')
+        return
       }
       
       console.log(`📝 Description: ${selectedMeal.description}`)
