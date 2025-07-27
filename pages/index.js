@@ -136,16 +136,94 @@ export default function Home() {
           
           // Apply ingredient filtering for Supabase results if in ingredient mode
           if (showIngredientMode && selectedIngredients.length > 0) {
-            suggestions = data.filter(meal => 
-              selectedIngredients.some(ingredient =>
-                // Check if ingredient appears in meal name OR in ingredients list
-                meal.name.toLowerCase().includes(ingredient.toLowerCase()) ||
-                meal.ingredients.some(mealIngredient =>
-                  mealIngredient.toLowerCase().includes(ingredient.toLowerCase())
+            // Smart ingredient filtering with scoring
+            const scoredMeals = data.map(meal => {
+              let score = 0
+              let matchedIngredients = []
+              let excludedByOptional = false
+              
+              // Check each selected ingredient against the meal
+              selectedIngredients.forEach(ingredient => {
+                const ingredientLower = ingredient.toLowerCase()
+                
+                // Check if ingredient appears in meal name (higher score)
+                if (meal.name.toLowerCase().includes(ingredientLower)) {
+                  score += 3
+                  matchedIngredients.push(ingredient)
+                }
+                
+                // Check if ingredient appears in ingredients list (highest score)
+                // But first check if it's marked as optional
+                const optionalIndicators = ['(optional)', '(opt)', 'optional', 'opt']
+                const isOptional = meal.ingredients.some(mealIngredient => {
+                  const mealIngredientLower = mealIngredient.toLowerCase()
+                  return mealIngredientLower.includes(ingredientLower) && 
+                         optionalIndicators.some(indicator => mealIngredientLower.includes(indicator))
+                })
+                
+                if (isOptional) {
+                  // If any selected ingredient is optional, exclude this recipe entirely
+                  excludedByOptional = true
+                  console.log(`❌ Excluding "${meal.name}" - "${ingredient}" is marked as optional`)
+                  return
+                }
+                
+                const ingredientInList = meal.ingredients.some(mealIngredient =>
+                  mealIngredient.toLowerCase().includes(ingredientLower)
                 )
-              )
-            )
-            console.log(`🔍 After ingredient filtering: ${suggestions.length} meals`)
+                if (ingredientInList) {
+                  score += 5
+                  if (!matchedIngredients.includes(ingredient)) {
+                    matchedIngredients.push(ingredient)
+                  }
+                }
+              })
+              
+              // If any ingredient was optional, exclude this recipe
+              if (excludedByOptional) {
+                return {
+                  ...meal,
+                  ingredientScore: 0,
+                  matchedIngredients: [],
+                  matchPercentage: 0,
+                  excluded: true
+                }
+              }
+              
+              // Bonus for recipes that contain multiple selected ingredients
+              if (matchedIngredients.length > 1) {
+                score += matchedIngredients.length * 2
+              }
+              
+              // Bonus for recipes that contain ALL selected ingredients
+              if (matchedIngredients.length === selectedIngredients.length) {
+                score += 10
+              }
+              
+              return {
+                ...meal,
+                ingredientScore: score,
+                matchedIngredients: matchedIngredients,
+                matchPercentage: (matchedIngredients.length / selectedIngredients.length) * 100
+              }
+            })
+            
+            // Filter out meals with no matches and sort by score (highest first)
+            suggestions = scoredMeals
+              .filter(meal => meal.ingredientScore > 0 && !meal.excluded)
+              .sort((a, b) => {
+                // First sort by score (highest first)
+                if (b.ingredientScore !== a.ingredientScore) {
+                  return b.ingredientScore - a.ingredientScore
+                }
+                // Then by match percentage (highest first)
+                return b.matchPercentage - a.matchPercentage
+              })
+            
+            console.log(`🔍 After smart ingredient filtering: ${suggestions.length} meals`)
+            console.log(`📊 Top 3 suggestions:`, suggestions.slice(0, 3).map(m => 
+              `${m.name} (Score: ${m.ingredientScore}, Matches: ${m.matchedIngredients.join(', ')})`
+            ))
             
             // Check if no meals match the ingredient criteria
             if (suggestions.length === 0) {

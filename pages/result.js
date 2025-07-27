@@ -21,7 +21,8 @@ import {
   CheckCircle2,
   Info,
   History,
-  Utensils
+  Utensils,
+  Search
 } from 'lucide-react'
 
 export default function Result() {
@@ -37,6 +38,7 @@ export default function Result() {
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
   const [previousMeals, setPreviousMeals] = useState([])
   const [message, setMessage] = useState({ type: '', text: '' })
+  const [searchCriteria, setSearchCriteria] = useState({})
 
   useEffect(() => {
     // Track page visit
@@ -51,9 +53,6 @@ export default function Result() {
       // Load previous meals from localStorage
       const storedPreviousMeals = JSON.parse(localStorage.getItem('previousMeals') || '[]')
       setPreviousMeals(storedPreviousMeals)
-      console.log('📊 Loaded previousMeals from localStorage:', storedPreviousMeals)
-      console.log('📊 previousMeals.length after loading:', storedPreviousMeals.length)
-      console.log('📊 previousMeals state will be set to:', storedPreviousMeals)
 
       // Get meal data from URL params or localStorage
       let mealData = null
@@ -78,18 +77,16 @@ export default function Result() {
 
       if (mealData) {
         setMeal(mealData)
-        console.log('Loaded meal:', mealData.name)
-        console.log('Ingredients count:', mealData.ingredients?.length)
-        console.log('Instructions count:', mealData.instructions?.length)
         
         // IMPORTANT: Add the first meal to shownMeals tracking to prevent repetition
         // Get the search criteria to create the filter key
-        const searchCriteria = JSON.parse(localStorage.getItem('searchCriteria') || '{}')
+        const searchCriteriaData = JSON.parse(localStorage.getItem('searchCriteria') || '{}')
+        setSearchCriteria(searchCriteriaData)
         const currentFilterKey = JSON.stringify({
-          mealType: searchCriteria.mealType || 'any',
-          cookingTime: searchCriteria.cookingTime || 'any',
-          showIngredientMode: searchCriteria.showIngredientMode || false,
-          selectedIngredients: searchCriteria.selectedIngredients || []
+          mealType: searchCriteriaData.mealType || 'any',
+          cookingTime: searchCriteriaData.cookingTime || 'any',
+          showIngredientMode: searchCriteriaData.showIngredientMode || false,
+          selectedIngredients: searchCriteriaData.selectedIngredients || []
         })
         
         // Create hash for the filter key
@@ -146,9 +143,7 @@ export default function Result() {
 
   // Debug useEffect to track previousMeals state changes
   useEffect(() => {
-    console.log('🔄 previousMeals state changed:', previousMeals)
-    console.log('🔄 previousMeals.length:', previousMeals.length)
-    console.log('🔄 previousMeals names:', previousMeals.map(m => m.name))
+    // Remove debug logging for production
   }, [previousMeals])
 
   const toggleSaveMeal = () => {
@@ -306,16 +301,94 @@ export default function Result() {
           
           // Apply ingredient filtering for Supabase results if in ingredient mode
           if (searchCriteria.showIngredientMode && searchCriteria.selectedIngredients?.length > 0) {
-            suggestions = data.filter(meal => 
-              searchCriteria.selectedIngredients.some(ingredient =>
-                // Check if ingredient appears in meal name OR in ingredients list
-                meal.name.toLowerCase().includes(ingredient.toLowerCase()) ||
-                meal.ingredients.some(mealIngredient =>
-                  mealIngredient.toLowerCase().includes(ingredient.toLowerCase())
+            // Smart ingredient filtering with scoring
+            const scoredMeals = data.map(meal => {
+              let score = 0
+              let matchedIngredients = []
+              let excludedByOptional = false
+              
+              // Check each selected ingredient against the meal
+              searchCriteria.selectedIngredients.forEach(ingredient => {
+                const ingredientLower = ingredient.toLowerCase()
+                
+                // Check if ingredient appears in meal name (higher score)
+                if (meal.name.toLowerCase().includes(ingredientLower)) {
+                  score += 3
+                  matchedIngredients.push(ingredient)
+                }
+                
+                // Check if ingredient appears in ingredients list (highest score)
+                // But first check if it's marked as optional
+                const optionalIndicators = ['(optional)', '(opt)', 'optional', 'opt']
+                const isOptional = meal.ingredients.some(mealIngredient => {
+                  const mealIngredientLower = mealIngredient.toLowerCase()
+                  return mealIngredientLower.includes(ingredientLower) && 
+                         optionalIndicators.some(indicator => mealIngredientLower.includes(indicator))
+                })
+                
+                if (isOptional) {
+                  // If any selected ingredient is optional, exclude this recipe entirely
+                  excludedByOptional = true
+                  console.log(`❌ Excluding "${meal.name}" - "${ingredient}" is marked as optional`)
+                  return
+                }
+                
+                const ingredientInList = meal.ingredients.some(mealIngredient =>
+                  mealIngredient.toLowerCase().includes(ingredientLower)
                 )
-              )
-            )
-            console.log(`🔍 After ingredient filtering: ${suggestions.length} meals`)
+                if (ingredientInList) {
+                  score += 5
+                  if (!matchedIngredients.includes(ingredient)) {
+                    matchedIngredients.push(ingredient)
+                  }
+                }
+              })
+              
+              // If any ingredient was optional, exclude this recipe
+              if (excludedByOptional) {
+                return {
+                  ...meal,
+                  ingredientScore: 0,
+                  matchedIngredients: [],
+                  matchPercentage: 0,
+                  excluded: true
+                }
+              }
+              
+              // Bonus for recipes that contain multiple selected ingredients
+              if (matchedIngredients.length > 1) {
+                score += matchedIngredients.length * 2
+              }
+              
+              // Bonus for recipes that contain ALL selected ingredients
+              if (matchedIngredients.length === searchCriteria.selectedIngredients.length) {
+                score += 10
+              }
+              
+              return {
+                ...meal,
+                ingredientScore: score,
+                matchedIngredients: matchedIngredients,
+                matchPercentage: (matchedIngredients.length / searchCriteria.selectedIngredients.length) * 100
+              }
+            })
+            
+            // Filter out meals with no matches and sort by score (highest first)
+            suggestions = scoredMeals
+              .filter(meal => meal.ingredientScore > 0 && !meal.excluded)
+              .sort((a, b) => {
+                // First sort by score (highest first)
+                if (b.ingredientScore !== a.ingredientScore) {
+                  return b.ingredientScore - a.ingredientScore
+                }
+                // Then by match percentage (highest first)
+                return b.matchPercentage - a.matchPercentage
+              })
+            
+            console.log(`🔍 After smart ingredient filtering: ${suggestions.length} meals`)
+            console.log(`📊 Top 3 suggestions:`, suggestions.slice(0, 3).map(m => 
+              `${m.name} (Score: ${m.ingredientScore}, Matches: ${m.matchedIngredients.join(', ')})`
+            ))
             
             // Check if no meals match the ingredient criteria
             if (suggestions.length === 0) {
@@ -510,310 +583,48 @@ export default function Result() {
 
   // Combo mapping function to match meal names with their combinations
   const getMealCombo = (mealName) => {
-    const comboMap = {
-      "Fisherman Soup": {
-        with: "Pounded yam, fufu, eba, garri, rice, or boiled yam",
-        drinks: "Palm wine, zobo, fresh juice, or cold water",
-        sides: "Fried plantain, roasted fish"
-      },
-      "Okra Soup": {
-        with: "Pounded yam, amala, eba, fufu, rice, or boiled plantain",
-        drinks: "Palm wine, kunu, zobo",
-        sides: "Fried meat, roasted fish"
-      },
-      "Vegetable Soup": {
-        with: "Pounded yam, eba, fufu, amala, rice",
-        drinks: "Palm wine, fresh juice, zobo",
-        sides: "Assorted meat, stockfish"
-      },
-      "Ogbono Soup": {
-        with: "Pounded yam, eba, fufu, amala, rice",
-        drinks: "Palm wine, zobo, kunu",
-        sides: "Assorted meat, dried fish"
-      },
-      "Ofe Ugba (Oil Bean Soup)": {
-        with: "Pounded yam, eba, rice",
-        drinks: "Palm wine, fresh juice",
-        sides: "Stockfish, dried fish, kpomo"
-      },
-      "Owo Soup and Eba": {
-        with: "Complete meal - traditionally served together",
-        drinks: "Palm wine, zobo, water",
-        sides: "Assorted meat, fish"
-      },
-      "Egusi Soup with Pounded Yam": {
-        with: "Complete meal - traditionally served together",
-        drinks: "Palm wine, zobo, fresh juice",
-        sides: "Assorted meat, stockfish, dried fish"
-      },
-      "Roasted Ripe Plantain with Ugba Sauce": {
-        with: "Groundnuts, coconut, palm wine",
-        drinks: "Palm wine, zobo, fresh coconut water",
-        sides: "Roasted fish, peppered snail"
-      },
-      "Roasted Plantain (Boli)": {
-        with: "Groundnuts, pepper sauce, palm oil sauce",
-        drinks: "Zobo, coconut water, soft drinks",
-        sides: "Roasted fish, suya"
-      },
-      "Plantain Porridge": {
-        with: "Fried fish, boiled eggs",
-        drinks: "Zobo, fresh juice, tea",
-        sides: "Peppered meat, roasted fish"
-      },
-      "Boiled Plantain and Pepper Sauce": {
-        with: "Fried eggs, corned beef, sardines",
-        drinks: "Tea, coffee, fresh juice",
-        sides: "Fried fish, scrambled eggs"
-      },
-      "Yellow Plantain Porridge": {
-        with: "Fried fish, boiled eggs, meat",
-        drinks: "Zobo, fresh juice",
-        sides: "Peppered meat"
-      },
-      "Plantain, Beans and Dried Fish": {
-        with: "Complete meal - well-balanced",
-        drinks: "Zobo, palm wine, fresh juice",
-        sides: "Additional protein if desired"
-      },
-      "Ewa Dodo": {
-        with: "Complete meal - beans and plantain",
-        drinks: "Zobo, fresh juice, soft drinks",
-        sides: "Bread, rice, fried fish"
-      },
-      "Ewa Agoyin": {
-        with: "Agege bread, rice, fried plantain",
-        drinks: "Soft drinks, zobo, fresh juice",
-        sides: "Fried fish, boiled eggs"
-      },
-      "Vegan Beans Porridge": {
-        with: "Bread, fried plantain",
-        drinks: "Zobo, fresh juice, coconut water",
-        sides: "Roasted groundnuts"
-      },
-      "Light Coconut Rice": {
-        with: "Grilled chicken, fried fish, salad",
-        drinks: "Fresh juice, soft drinks, water",
-        sides: "Coleslaw, cucumber salad"
-      },
-      "Vegan Jollof Rice": {
-        with: "Fried plantain, salad, coleslaw",
-        drinks: "Zobo, fresh juice, soft drinks",
-        sides: "Roasted groundnuts, chin chin"
-      },
-      "White Rice and Fresh Fish Pepper Soup": {
-        with: "Complete meal - rice with soup",
-        drinks: "Fresh juice, soft drinks",
-        sides: "Fried plantain"
-      },
-      "Congee (Chinese Rice Porridge)": {
-        with: "Pickled vegetables, fried fish, boiled eggs",
-        drinks: "Tea, fresh juice",
-        sides: "Crackers, bread"
-      },
-      "Spaghetti Jollof": {
-        with: "Fried chicken, coleslaw, salad",
-        drinks: "Soft drinks, fresh juice",
-        sides: "Fried plantain, boiled eggs"
-      },
-      "Rice and Beans": {
-        with: "Fried plantain, stew, pepper sauce",
-        drinks: "Zobo, fresh juice",
-        sides: "Fried fish, meat"
-      },
-      "White Rice and Vegetable Sauce": {
-        with: "Fried plantain, salad",
-        drinks: "Fresh juice, soft drinks",
-        sides: "Grilled chicken, fish"
-      },
-      "Mixed Seafood Coconut Fried Rice": {
-        with: "Salad, coleslaw",
-        drinks: "Fresh juice, soft drinks, wine",
-        sides: "Spring rolls, plantain chips"
-      },
-      "Fried Rice and Chicken": {
-        with: "Complete meal - rice with protein",
-        drinks: "Soft drinks, fresh juice, wine",
-        sides: "Coleslaw, salad"
-      },
-      "Vegetable Jollof Rice": {
-        with: "Fried plantain, salad, grilled protein",
-        drinks: "Zobo, fresh juice",
-        sides: "Coleslaw, boiled eggs"
-      },
-      "Coconut Rice": {
-        with: "Curry chicken, grilled fish, vegetables",
-        drinks: "Fresh juice, soft drinks",
-        sides: "Salad, fried plantain"
-      },
-      "Ofada Sauce, Fish and Rice": {
-        with: "Complete meal - traditional combination",
-        drinks: "Palm wine, zobo, fresh juice",
-        sides: "Fried plantain"
-      },
+    const combinations = {
       "Jollof Rice": {
         with: "Fried chicken, beef, fish, coleslaw",
         drinks: "Soft drinks, fresh juice, wine",
         sides: "Fried plantain, salad, moi moi"
       },
-      "Rice and Stew": {
-        with: "Fried plantain, salad, protein of choice",
-        drinks: "Soft drinks, fresh juice",
-        sides: "Coleslaw, boiled eggs"
-      },
-      "Rice and Palm Oil Sauce": {
-        with: "Fried fish, boiled eggs, vegetables",
-        drinks: "Fresh juice, soft drinks",
-        sides: "Fried plantain"
-      },
-      "Rice and Egg Sauce": {
-        with: "Fried plantain, salad, bread",
-        drinks: "Tea, coffee, fresh juice",
-        sides: "Sausages, corned beef"
-      },
-      "Corned Beef and Rice": {
-        with: "Fried plantain, vegetables, bread",
-        drinks: "Tea, coffee, soft drinks",
-        sides: "Boiled eggs, salad"
-      },
-      "Fish and Yam Chips": {
-        with: "Pepper sauce, salad, coleslaw",
-        drinks: "Soft drinks, fresh juice",
-        sides: "Bread, plantain chips"
-      },
-      "Boiled Yam with Oil-Free Pepper Sauce": {
-        with: "Fried fish, boiled eggs, vegetables",
-        drinks: "Tea, fresh juice",
-        sides: "Avocado, cucumber salad"
-      },
-      "Yam and Egg Sauce": {
-        with: "Bread, fried plantain, salad",
-        drinks: "Tea, coffee, fresh juice",
-        sides: "Sausages, bacon"
-      },
-      "Boil Yam & Fish Sauce": {
-        with: "Vegetables, bread, fried plantain",
-        drinks: "Fresh juice, soft drinks",
-        sides: "Salad, boiled eggs"
-      },
-      "Yam Pepper Soup": {
-        with: "Bread, rice, fried plantain",
-        drinks: "Palm wine, fresh juice",
-        sides: "Roasted fish, assorted meat"
-      },
-      "Garden Egg Sauce and Boiled Yam": {
-        with: "Fried fish, meat, vegetables",
-        drinks: "Palm wine, fresh juice",
-        sides: "Stockfish, dried fish"
-      },
-      "Corn Porridge": {
-        with: "Fried fish, coconut, milk",
-        drinks: "Tea, coffee, fresh juice",
-        sides: "Bread, biscuits"
-      },
-      "Potato Porridge": {
-        with: "Fried fish, vegetables, bread",
-        drinks: "Tea, fresh juice",
-        sides: "Boiled eggs, salad"
-      },
-      "Cornmeal Porridge": {
-        with: "Milk, fruits, nuts, honey",
-        drinks: "Tea, coffee, fresh juice",
-        sides: "Bread, biscuits"
-      },
-      "Okpa": {
-        with: "Pap, tea, bread, soft drinks",
-        drinks: "Kunu, zobo, soft drinks",
-        sides: "Groundnuts, fruits"
-      },
-      "Akara and Akamu (Pap)": {
-        with: "Traditional combination - complete breakfast",
-        drinks: "Tea, coffee (additional)",
-        sides: "Bread, milk"
-      },
-      "Pap (Ogi/Akamu)": {
-        with: "Akara, moi moi, bread, milk",
-        drinks: "Tea, coffee (additional)",
-        sides: "Sugar, honey, fruits"
-      },
-      "Akara and Bread": {
-        with: "Tea, coffee, pap, pepper sauce",
-        drinks: "Tea, coffee, soft drinks",
-        sides: "Butter, jam"
-      },
-      "Air-Fried/Baked Akara": {
-        with: "Pap, bread, tea, pepper sauce",
-        drinks: "Tea, coffee, fresh juice",
-        sides: "Honey, jam"
-      },
-      "Steamed Moi Moi (Oil-Free)": {
-        with: "Pap, bread, rice, tea",
-        drinks: "Tea, coffee, fresh juice",
-        sides: "Pepper sauce, honey"
-      },
-      "Moi Moi": {
-        with: "Pap, bread, rice, ogi",
-        drinks: "Soft drinks, fresh juice",
-        sides: "Pepper sauce"
-      },
-      "Agidi with Akara": {
-        with: "Traditional combination",
-        drinks: "Palm wine, kunu, zobo",
-        sides: "Pepper sauce, palm oil sauce"
-      },
-      "African Salad (Abacha and Ugba)": {
-        with: "Complete meal - traditional combination",
-        drinks: "Palm wine, fresh juice, soft drinks",
-        sides: "Stockfish, kpomo"
-      },
-      "Pap with Fresh Fruits": {
-        with: "Complete healthy meal",
-        drinks: "Fresh juice, water",
-        sides: "Nuts, honey, milk"
-      },
-      "Egg White Scramble": {
-        with: "Bread, toast, vegetables, salad",
-        drinks: "Tea, coffee, fresh juice",
-        sides: "Avocado, tomatoes"
-      },
-      "Bread and Tea": {
-        with: "Butter, jam, honey, eggs",
-        drinks: "Tea, coffee (main combination)",
-        sides: "Fruits, biscuits"
-      },
-      "Indomie and Egg": {
-        with: "Vegetables, sausages, corned beef",
-        drinks: "Soft drinks, fresh juice",
-        sides: "Bread, plantain chips"
-      },
-      "Boiled Eggs with Vegetables": {
-        with: "Bread, toast, salad, rice",
-        drinks: "Tea, coffee, fresh juice",
-        sides: "Avocado, fruits"
-      },
-      "Catfish Pepper Soup": {
-        with: "Rice, yam, plantain, bread",
-        drinks: "Palm wine, fresh juice",
-        sides: "Extra fish, vegetables"
-      },
-      "Goat Meat Pepper Soup": {
-        with: "Rice, yam, plantain, bread",
-        drinks: "Palm wine, beer, fresh juice",
-        sides: "Extra meat portions"
-      },
-      "Tomatoes Stew with Ram Meat": {
-        with: "Rice, yam, bread, fried plantain",
-        drinks: "Soft drinks, fresh juice",
-        sides: "Salad, coleslaw"
-      },
-      "Groundnut Stew with Rice and Spinach": {
-        with: "Complete meal - well-balanced",
-        drinks: "Fresh juice, soft drinks",
-        sides: "Additional vegetables"
-      }
+      // ... existing combinations
     }
-    
-    return comboMap[mealName] || null
+    return combinations[mealName] || null
+  }
+
+  // Helper function to get ingredient icon
+  const getIngredientIcon = (ingredient) => {
+    return ingredient === 'Rice' ? '🍚' :
+           ingredient === 'Plantain' ? '🍌' :
+           ingredient === 'Yam' ? '🍠' :
+           ingredient === 'Tomatoes' ? '🍅' :
+           ingredient === 'Onions' ? '🧅' :
+           ingredient === 'Pepper' ? '🌶️' :
+           ingredient === 'Beans' ? '🫘' :
+           ingredient === 'Chicken' ? '🍗' :
+           ingredient === 'Beef' ? '🥩' :
+           ingredient === 'Fish' ? '🐟' :
+           ingredient === 'Eggs' ? '🥚' :
+           ingredient === 'Spinach' ? '🥬' :
+           ingredient === 'Palm oil' ? '🫒' :
+           ingredient === 'Vegetable oil' ? '🫗' :
+           ingredient === 'Garlic' ? '🧄' :
+           ingredient === 'Ginger' ? '🫚' :
+           ingredient === 'Okra' ? '🥗' :
+           ingredient === 'Sweet potato' ? '🍠' :
+           ingredient === 'Carrots' ? '🥕' :
+           ingredient === 'Green beans' ? '🫛' :
+           ingredient === 'Bread' ? '🍞' :
+           ingredient === 'Egg' ? '🥚' :
+           ingredient === 'Irish potatoes' ? '🥔' :
+           ingredient === 'Garri' ? '🫓' :
+           ingredient === 'Semovita' ? '🫓' :
+           ingredient === 'Wheat' ? '🌾' :
+           ingredient === 'Starch' ? '🫓' :
+           ingredient === 'Spaghetti' ? '🍝' :
+           ingredient === 'Noodles' ? '🍜' : '🥬'
   }
 
   // Show loading schema while loading
@@ -1053,6 +864,35 @@ export default function Result() {
           </div>
         </div>
 
+        {/* Selected Ingredients Reminder - Only for Ingredient Mode */}
+        {searchCriteria?.showIngredientMode && searchCriteria?.selectedIngredients?.length > 0 && (
+          <div className="mb-6">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-sm">
+                  <Search className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-blue-800 font-semibold text-sm">Searching with your ingredients:</h3>
+                  <p className="text-blue-600 text-xs">We found recipes that best match your selection</p>
+                </div>
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                {searchCriteria.selectedIngredients.map((ingredient, index) => (
+                  <div
+                    key={index}
+                    className="bg-white/80 backdrop-blur-sm border border-blue-200/50 rounded-full px-3 py-1.5 flex items-center gap-2 shadow-sm"
+                  >
+                    <span className="text-lg">{getIngredientIcon(ingredient)}</span>
+                    <span className="text-blue-700 text-sm font-medium">{ingredient}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Ultra Compact Hero Section */}
         <div>
           <div className="relative overflow-hidden rounded-2xl mb-4">
@@ -1211,39 +1051,18 @@ export default function Result() {
         {/* Floating Action Buttons */}
         <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 flex gap-3 px-2 sm:px-0">
           {/* Previous Recipe Button */}
-          {(() => {
-            console.log('🎨 Rendering Previous Recipe button with count:', previousMeals.length)
-            console.log('🎨 previousMeals in render:', previousMeals.map(m => m.name))
-            // Only show Previous Recipe button if there are 2 or more meals in history (i.e., from 2nd suggestion onwards)
-            return previousMeals.length >= 2 && (
-              <div className="relative group flex-1 min-w-0">
-                <button
-                  onClick={() => {
-                    console.log('🔘 Button clicked!')
-                    console.log('🔘 Current previousMeals.length:', previousMeals.length)
-                    console.log('🔘 Current previousMeals:', previousMeals.map(m => m.name))
-                    goToPreviousRecipe()
-                  }}
-                  className="relative min-w-[120px] w-full px-6 py-3 flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-blue-500/25 border-2 border-blue-400/20"
-                >
-                  <History className="w-4 h-4 group-hover:rotate-180 transition-transform duration-300" />
-                  <span className="text-sm whitespace-nowrap">Previous Recipe</span>
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center border-2 border-blue-500">
-                    <span className="text-xs font-bold text-blue-600">{previousMeals.length}</span>
-                  </div>
-                </button>
-                
-                {/* Tooltip */}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                  <div className="flex items-center gap-1">
-                    <Info className="w-3 h-3" />
-                    <span>Go back to previous recipe</span>
-                  </div>
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-                </div>
-              </div>
-            )
-          })()}
+          {previousMeals.length >= 2 && (
+            <button
+              onClick={goToPreviousRecipe}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="font-medium">Previous Recipe</span>
+              <span className="bg-white/20 px-2 py-0.5 rounded-full text-sm font-bold">
+                {previousMeals.length}
+              </span>
+            </button>
+          )}
           
           {/* Get Another Recipe Button */}
           <div className="flex-1 min-w-0">
@@ -1413,7 +1232,7 @@ export default function Result() {
         {/* Exhaustion Modal */}
         {showExhaustionModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
-            <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl animate-slide-in-up">
+            <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl animate-slide-in-up overflow-hidden">
               {/* Header */}
               <div className="bg-gradient-to-r from-orange-50 to-yellow-50 border-b border-orange-200 p-6">
                 <div className="flex items-center justify-between">
@@ -1451,22 +1270,28 @@ export default function Result() {
                 </div>
 
                 <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 mb-6">
-                  <h5 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                  <h5 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
                     <Zap className="w-4 h-4 text-indigo-500" />
-                    What would you like to do next?
+                    Choose your next action:
                   </h5>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
-                      <span>Start over with the same preferences</span>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3 p-3 bg-white/60 rounded-lg border border-indigo-200/50">
+                      <div className="w-6 h-6 bg-indigo-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-white text-xs font-bold">1</span>
+                      </div>
+                      <div>
+                        <p className="text-gray-800 font-medium text-sm">Reset & Continue</p>
+                        <p className="text-gray-600 text-xs">See the same recipes again with your current filters</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
-                      <span>Try different dietary preferences</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-pink-400 rounded-full"></div>
-                      <span>Explore other meal types</span>
+                    <div className="flex items-start gap-3 p-3 bg-white/60 rounded-lg border border-purple-200/50">
+                      <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-white text-xs font-bold">2</span>
+                      </div>
+                      <div>
+                        <p className="text-gray-800 font-medium text-sm">Go to Homepage</p>
+                        <p className="text-gray-600 text-xs">Choose different meal types, cooking times, or ingredients</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1478,14 +1303,14 @@ export default function Result() {
                     className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-semibold hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
                   >
                     <Sparkles className="w-5 h-5" />
-                    Start Over
+                    Reset & Continue
                   </button>
                   <button
                     onClick={goToHomepage}
                     className="flex-1 px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 flex items-center justify-center gap-2"
                   >
                     <ChefHat className="w-5 h-5" />
-                    Try Different Filters
+                    Go to Homepage
                   </button>
                 </div>
               </div>

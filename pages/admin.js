@@ -995,31 +995,26 @@ export default function AdminNew() {
           </button>
           <button 
             onClick={async () => {
+              setAnalyticsLoading(true)
               try {
-                console.log('🧪 Generating test analytics data...')
                 // Generate test data for both visits and clicks
                 await analytics.trackPageVisit('test_page', navigator.userAgent)
                 await analytics.trackSuggestionClick('test_button', {})
-                console.log('✅ Test data generated!')
-                loadAnalytics() // Reload analytics to show the new data
+                await loadAnalytics()
+                setMessage({ type: 'success', text: 'Test data generated successfully!' })
               } catch (error) {
-                console.warn('Failed to generate test data:', error.message)
+                setMessage({ type: 'error', text: 'Failed to generate test data' })
+              } finally {
+                setAnalyticsLoading(false)
               }
             }}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600"
+            disabled={analyticsLoading}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors disabled:opacity-50"
           >
-            🧪 Test Data
+            <Zap className="w-4 h-4" />
+            Generate Test Data
           </button>
           
-          <button 
-            onClick={() => {
-              analytics.debugAnalyticsState()
-              console.log('🔍 Check the console above for analytics debug info')
-            }}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600"
-          >
-            🔍 Debug Analytics
-          </button>
           <button 
             onClick={() => {
               const currentState = localStorage.getItem('momfoodie_disable_exclusions') === 'true'
@@ -1163,16 +1158,6 @@ export default function AdminNew() {
               </div>
             </div>
           )}
-
-          {/* Debug Section - Remove this in production */}
-          <details className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-            <summary className="cursor-pointer text-sm font-medium text-gray-700 mb-2">
-              🔧 Debug: Raw Analytics Data
-            </summary>
-            <pre className="text-xs bg-white p-3 rounded border overflow-auto max-h-64">
-              {JSON.stringify(analyticsData, null, 2)}
-            </pre>
-          </details>
         </>
       )}
     </div>
