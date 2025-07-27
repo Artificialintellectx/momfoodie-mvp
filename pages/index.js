@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { supabase } from '../lib/supabase'
-import { mealTypes, cookingTimes, commonIngredients } from '../lib/data'
+import { mealTypes, cookingTimes, commonIngredients, leftoverIngredients, leftoverCombinations } from '../lib/data'
 import { analytics } from '../lib/analytics'
 import { 
   ChefHat, 
@@ -11,7 +11,10 @@ import {
   Clock,
   ArrowRight,
   Flame,
-  Search
+  Search,
+  Utensils,
+  Refrigerator,
+  Recycle
 } from 'lucide-react'
 import { HomepageSkeleton } from '../components/SkeletonLoader'
 
@@ -20,11 +23,13 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [pageLoading, setPageLoading] = useState(true)
   const [showIngredientMode, setShowIngredientMode] = useState(false)
+  const [leftoverMode, setLeftoverMode] = useState(false)
   const [mealType, setMealType] = useState('')
   const [cookingTime, setCookingTime] = useState('quick')
   const [savedMeals, setSavedMeals] = useState([])
   const [selectedIngredients, setSelectedIngredients] = useState([])
   const [availableIngredients] = useState(commonIngredients)
+  const [availableLeftoverIngredients] = useState(leftoverIngredients)
   const [showValidationModal, setShowValidationModal] = useState(false)
   const [validationMessage, setValidationMessage] = useState('')
 
@@ -107,11 +112,14 @@ export default function Home() {
     }
     
     // Track suggestion button click
-    const buttonType = showIngredientMode ? 'What Can I Make' : 'Get Meal Suggestion'
+    const buttonType = showIngredientMode 
+      ? (leftoverMode ? 'Transform Leftovers' : 'What Can I Make') 
+      : 'Get Meal Suggestion'
     const searchCriteria = {
       mealType,
       cookingTime,
-      selectedIngredients: showIngredientMode ? selectedIngredients : []
+      selectedIngredients: showIngredientMode ? selectedIngredients : [],
+      leftoverMode: showIngredientMode ? leftoverMode : false
     }
     analytics.trackSuggestionClick(buttonType, searchCriteria)
     
@@ -391,7 +399,8 @@ export default function Home() {
         mealType,
         cookingTime,
         showIngredientMode,
-        selectedIngredients: showIngredientMode ? selectedIngredients : []
+        selectedIngredients: showIngredientMode ? selectedIngredients : [],
+        leftoverMode: showIngredientMode ? leftoverMode : false
       })
 
       // Get shown meals for this specific filter combination
@@ -461,7 +470,8 @@ export default function Home() {
         mealType,
         cookingTime,
         showIngredientMode,
-        selectedIngredients: showIngredientMode ? selectedIngredients : []
+        selectedIngredients: showIngredientMode ? selectedIngredients : [],
+        leftoverMode: showIngredientMode ? leftoverMode : false
       }))
       
       // Redirect to results page with meal data
@@ -746,70 +756,171 @@ export default function Home() {
               ) : (
                 <div className="card mb-8 sm:mb-12">
                   <div className="flex items-center gap-4 mb-8">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
-                      <CircleCheck className="w-6 h-6 text-white" />
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                      leftoverMode 
+                        ? 'bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg shadow-green-500/25' 
+                        : 'bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg shadow-purple-500/25'
+                    }`}>
+                      {leftoverMode ? (
+                        <Refrigerator className="w-6 h-6 text-white" />
+                      ) : (
+                        <CircleCheck className="w-6 h-6 text-white" />
+                      )}
                     </div>
-                    <h3 className="heading-md text-gray-800">
-                      What ingredients do you have?
-                    </h3>
+                    <div>
+                      <h3 className="heading-md text-gray-800">
+                        {leftoverMode ? 'Transform Your Leftovers' : 'What ingredients do you have?'}
+                      </h3>
+                      <p className="text-gray-600 text-sm mt-1">
+                        {leftoverMode 
+                          ? 'Turn yesterday\'s meal into today\'s delicious dish'
+                          : 'Select ingredients to find recipes you can make'
+                        }
+                      </p>
+                    </div>
                   </div>
+
+                  {/* Enhanced Mode Toggle */}
+                  <div className="flex gap-3 mb-8 justify-center">
+                    <button 
+                      onClick={() => {
+                        setLeftoverMode(false)
+                        setSelectedIngredients([])
+                      }}
+                      className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 flex items-center gap-2 relative overflow-hidden group ${
+                        !leftoverMode 
+                          ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/25 transform scale-105' 
+                          : 'bg-white border-2 border-gray-200 text-gray-600 hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-md'
+                      }`}
+                    >
+                      <div className={`absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300 ${!leftoverMode ? 'hidden' : ''}`}></div>
+                      <Utensils className="w-4 h-4 relative z-10" />
+                      <span className="relative z-10">Fresh Ingredients</span>
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setLeftoverMode(true)
+                        setSelectedIngredients([])
+                      }}
+                      className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 flex items-center gap-2 relative overflow-hidden group ${
+                        leftoverMode 
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/25 transform scale-105' 
+                          : 'bg-white border-2 border-gray-200 text-gray-600 hover:border-green-300 hover:bg-green-50 hover:shadow-md'
+                      }`}
+                    >
+                      <div className={`absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300 ${leftoverMode ? 'hidden' : ''}`}></div>
+                      <Recycle className="w-7 h-7 sm:w-8 sm:h-8 relative z-10" />
+                      <span className="relative z-10">Leftovers</span>
+                    </button>
+                  </div>
+
+                  {/* Leftover Mode Special Header */}
+                  {leftoverMode && (
+                    <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
+                          <Recycle className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="text-green-800 font-semibold">Smart Leftover Transformation</h4>
+                          <p className="text-green-600 text-sm">Select what&apos;s in your fridge and we&apos;ll suggest creative ways to use them</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-16">
                     {/* Available Ingredients */}
                     <div>
-                      <label className="block text-lg font-semibold text-gray-700 mb-6">Select the ingredients you have:</label>
+                      <label className="block text-lg font-semibold text-gray-700 mb-6">
+                        {leftoverMode ? 'Select your leftover ingredients:' : 'Select the ingredients you have:'}
+                      </label>
                       <div className="flex justify-center">
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 w-full max-w-4xl">
-                          {availableIngredients.map((ingredient) => (
+                          {(leftoverMode ? availableLeftoverIngredients : availableIngredients).map((ingredient) => (
                             <button
                               key={ingredient}
                               onClick={() => toggleIngredient(ingredient)}
-                              className={`relative rounded-xl p-3 transition-all duration-300 text-center ${
+                              className={`relative rounded-xl p-3 transition-all duration-300 text-center group overflow-hidden ${
                                 selectedIngredients.includes(ingredient)
-                                  ? 'bg-gradient-to-br from-indigo-100 to-purple-100 border-2 border-indigo-300 shadow-lg transform scale-105'
-                                  : 'bg-white border-2 border-gray-100 hover:border-indigo-200 hover:shadow-md'
+                                  ? leftoverMode
+                                    ? 'bg-gradient-to-br from-green-100 to-emerald-100 border-2 border-green-300 shadow-lg transform scale-105'
+                                    : 'bg-gradient-to-br from-indigo-100 to-purple-100 border-2 border-indigo-300 shadow-lg transform scale-105'
+                                  : 'bg-white border-2 border-gray-100 hover:border-gray-200 hover:shadow-md'
                               }`}
                             >
-                              <div className="flex flex-col items-center space-y-1">
-                                <div className={`text-2xl ${selectedIngredients.includes(ingredient) ? 'transform scale-110' : ''}`}>
-                                  {ingredient === 'Rice' ? '🍚' :
-                                   ingredient === 'Plantain' ? '🍌' :
-                                   ingredient === 'Yam' ? '🍠' :
-                                   ingredient === 'Tomatoes' ? '🍅' :
-                                   ingredient === 'Onions' ? '🧅' :
-                                   ingredient === 'Pepper' ? '🌶️' :
-                                   ingredient === 'Beans' ? '🫘' :
-                                   ingredient === 'Chicken' ? '🍗' :
-                                   ingredient === 'Beef' ? '🥩' :
-                                   ingredient === 'Fish' ? '🐟' :
-                                   ingredient === 'Eggs' ? '🥚' :
-                                   ingredient === 'Spinach' ? '🥬' :
-                                   ingredient === 'Palm oil' ? '🫒' :
-                                   ingredient === 'Vegetable oil' ? '🫗' :
-                                   ingredient === 'Garlic' ? '🧄' :
-                                   ingredient === 'Ginger' ? '🫚' :
-                                   ingredient === 'Okra' ? '🥗' :
-                                   ingredient === 'Sweet potato' ? '🍠' :
-                                   ingredient === 'Carrots' ? '🥕' :
-                                   ingredient === 'Green beans' ? '🫛' :
-                                   ingredient === 'Bread' ? '🍞' :
-                                   ingredient === 'Egg' ? '🥚' :
-                                   ingredient === 'Irish potatoes' ? '🥔' :
-                                   ingredient === 'Garri' ? '🫓' :
-                                   ingredient === 'Semovita' ? '🫓' :
-                                   ingredient === 'Wheat' ? '🌾' :
-                                   ingredient === 'Starch' ? '🫓' :
-                                   ingredient === 'Spaghetti' ? '🍝' :
-                                   ingredient === 'Noodles' ? '🍜' : '🥬'}
+                              {/* Background glow effect for selected items */}
+                              {selectedIngredients.includes(ingredient) && (
+                                <div className={`absolute inset-0 rounded-xl opacity-20 ${
+                                  leftoverMode ? 'bg-gradient-to-br from-green-400 to-emerald-400' : 'bg-gradient-to-br from-indigo-400 to-purple-400'
+                                }`}></div>
+                              )}
+                              
+                              <div className="flex flex-col items-center space-y-1 relative z-10">
+                                <div className={`text-2xl transition-all duration-300 flex items-center justify-center ${
+                                  selectedIngredients.includes(ingredient) ? 'transform scale-110' : 'group-hover:scale-105'
+                                }`} style={{ fontSize: '1.5rem', lineHeight: '1' }}>
+                                  {leftoverMode ? 
+                                    // Leftover ingredient icons
+                                    (ingredient === 'Leftover Rice' ? '🍚' :
+                                     ingredient === 'Leftover Beans' ? '🫘' :
+                                     ingredient === 'Leftover Stew' ? '🍲' :
+                                     ingredient === 'Leftover Soup' ? '🥣' :
+                                     ingredient === 'Leftover Meat' ? '🥩' :
+                                     ingredient === 'Leftover Fish' ? '🐟' :
+                                     ingredient === 'Leftover Chicken' ? '🍗' :
+                                     ingredient === 'Leftover Vegetables' ? '🥬' :
+                                     ingredient === 'Leftover Bread' ? '🍞' :
+                                     ingredient === 'Leftover Pasta' ? '🍝' :
+                                     ingredient === 'Leftover Yam' ? '🍠' :
+                                     ingredient === 'Leftover Plantain' ? '🍌' :
+                                     ingredient === 'Leftover Garri' ? '🫓' :
+                                     ingredient === 'Leftover Semovita' ? '🫓' :
+                                     ingredient === 'Leftover Eba' ? '🫓' :
+                                     ingredient === 'Leftover Amala' ? '🫓' : '🍽️') :
+                                    // Regular ingredient icons
+                                    (ingredient === 'Rice' ? '🍚' :
+                                     ingredient === 'Plantain' ? '🍌' :
+                                     ingredient === 'Yam' ? '🍠' :
+                                     ingredient === 'Tomatoes' ? '🍅' :
+                                     ingredient === 'Onions' ? '🧅' :
+                                     ingredient === 'Pepper' ? '🌶️' :
+                                     ingredient === 'Beans' ? '🫘' :
+                                     ingredient === 'Chicken' ? '🍗' :
+                                     ingredient === 'Beef' ? '🥩' :
+                                     ingredient === 'Fish' ? '🐟' :
+                                     ingredient === 'Eggs' ? '🥚' :
+                                     ingredient === 'Spinach' ? '🥬' :
+                                     ingredient === 'Palm oil' ? '🫒' :
+                                     ingredient === 'Vegetable oil' ? '🫗' :
+                                     ingredient === 'Garlic' ? '🧄' :
+                                     ingredient === 'Ginger' ? '🫚' :
+                                     ingredient === 'Okra' ? '🥗' :
+                                     ingredient === 'Sweet potato' ? '🍠' :
+                                     ingredient === 'Carrots' ? '🥕' :
+                                     ingredient === 'Green beans' ? '🫛' :
+                                     ingredient === 'Bread' ? '🍞' :
+                                     ingredient === 'Egg' ? '🥚' :
+                                     ingredient === 'Irish potatoes' ? '🥔' :
+                                     ingredient === 'Garri' ? '🫓' :
+                                     ingredient === 'Semovita' ? '🫓' :
+                                     ingredient === 'Wheat' ? '🌾' :
+                                     ingredient === 'Starch' ? '🫓' :
+                                     ingredient === 'Spaghetti' ? '🍝' :
+                                     ingredient === 'Noodles' ? '🍜' : '🥬')}
                                 </div>
-                                <span className={`text-xs font-semibold ${
-                                  selectedIngredients.includes(ingredient) ? 'text-indigo-800' : 'text-gray-700'
+                                <span className={`text-xs font-semibold transition-colors duration-300 ${
+                                  selectedIngredients.includes(ingredient) 
+                                    ? leftoverMode ? 'text-green-800' : 'text-indigo-800'
+                                    : 'text-gray-700'
                                 }`}>
                                   {ingredient}
                                 </span>
                               </div>
                               {selectedIngredients.includes(ingredient) && (
-                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 rounded-full flex items-center justify-center">
+                                <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full flex items-center justify-center ${
+                                  leftoverMode ? 'bg-green-500' : 'bg-indigo-500'
+                                }`}>
                                   <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
                                 </div>
                               )}
@@ -819,29 +930,45 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* Get Meal Suggestion Button */}
+                    {/* Enhanced Get Meal Suggestion Button */}
                     <div className="flex justify-center mt-12">
                       <button
                         onClick={getSuggestion}
                         disabled={loading || selectedIngredients.length === 0}
-                        className="relative px-10 py-4 flex items-center justify-center gap-3 group transition-all duration-300 transform hover:scale-105 min-w-[280px] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-purple-500/25 border-2 border-indigo-400/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                        className={`relative px-10 py-4 flex items-center justify-center gap-3 group transition-all duration-300 transform hover:scale-105 min-w-[280px] font-bold text-lg rounded-2xl shadow-2xl border-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
+                          leftoverMode
+                            ? 'bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 hover:shadow-green-500/25 border-green-400/20'
+                            : 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 hover:shadow-purple-500/25 border-indigo-400/20'
+                        }`}
                       >
                         {/* Animated background glow */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl"></div>
+                        <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl ${
+                          leftoverMode ? 'bg-gradient-to-r from-green-400 to-emerald-400' : 'bg-gradient-to-r from-indigo-400 to-purple-400'
+                        }`}></div>
                         
                         {/* Pulsing ring effect */}
-                        <div className="absolute inset-0 rounded-2xl border-2 border-purple-300/30 animate-pulse"></div>
+                        <div className={`absolute inset-0 rounded-2xl border-2 animate-pulse ${
+                          leftoverMode ? 'border-green-300/30' : 'border-purple-300/30'
+                        }`}></div>
                         
                         {loading ? (
                           <>
                             <div className="loading-spinner w-5 h-5 border-2 border-white/30 border-t-white"></div>
-                            <span className="text-base whitespace-nowrap font-semibold">Finding Perfect Meal...</span>
+                            <span className="text-base whitespace-nowrap font-semibold text-white">
+                              {leftoverMode ? 'Transforming Leftovers...' : 'Finding Perfect Meal...'}
+                            </span>
                           </>
                         ) : (
                           <>
-                            <Flame className="w-5 h-5 animate-pulse" />
-                            <span className="text-base whitespace-nowrap font-semibold">Get Meal Suggestion</span>
-                            <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
+                            {leftoverMode ? (
+                              <Recycle className="w-7 h-7 sm:w-8 sm:h-8 animate-pulse text-white" />
+                            ) : (
+                              <Flame className="w-5 h-5 animate-pulse text-white" />
+                            )}
+                            <span className="text-base whitespace-nowrap font-semibold text-white">
+                              {leftoverMode ? 'Transform Leftovers' : 'Get Meal Suggestion'}
+                            </span>
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300 text-white" />
                           </>
                         )}
                       </button>

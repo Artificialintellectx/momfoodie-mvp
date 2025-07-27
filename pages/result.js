@@ -22,7 +22,10 @@ import {
   Info,
   History,
   Utensils,
-  Search
+  Search,
+  RefreshCw,
+  Refrigerator,
+  Recycle
 } from 'lucide-react'
 
 export default function Result() {
@@ -86,7 +89,8 @@ export default function Result() {
           mealType: searchCriteriaData.mealType || 'any',
           cookingTime: searchCriteriaData.cookingTime || 'any',
           showIngredientMode: searchCriteriaData.showIngredientMode || false,
-          selectedIngredients: searchCriteriaData.selectedIngredients || []
+          selectedIngredients: searchCriteriaData.selectedIngredients || [],
+          leftoverMode: searchCriteriaData.leftoverMode || false
         })
         
         // Create hash for the filter key
@@ -476,7 +480,8 @@ export default function Result() {
         mealType: searchCriteria.mealType || 'any',
         cookingTime: searchCriteria.cookingTime || 'any',
         showIngredientMode: searchCriteria.showIngredientMode || false,
-        selectedIngredients: searchCriteria.selectedIngredients || []
+        selectedIngredients: searchCriteria.selectedIngredients || [],
+        leftoverMode: searchCriteria.leftoverMode || false
       })
 
       // Create a more reliable key for localStorage using a simple hash
@@ -942,8 +947,15 @@ export default function Result() {
                   <Search className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-blue-800 font-semibold text-sm">Searching with your ingredients:</h3>
-                  <p className="text-blue-600 text-xs">We found recipes that best match your selection</p>
+                  <h3 className="text-blue-800 font-semibold text-sm">
+                    {searchCriteria?.leftoverMode ? 'Transforming your leftovers:' : 'Searching with your ingredients:'}
+                  </h3>
+                  <p className="text-blue-600 text-xs">
+                    {searchCriteria?.leftoverMode 
+                      ? 'We found recipes that transform your leftovers into delicious new meals'
+                      : 'We found recipes that best match your selection'
+                    }
+                  </p>
                 </div>
               </div>
               
@@ -957,6 +969,75 @@ export default function Result() {
                     <span className="text-blue-700 text-sm font-medium">{ingredient}</span>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Leftover Transformation Tips - Only for Leftover Mode */}
+        {searchCriteria?.showIngredientMode && searchCriteria?.leftoverMode && (
+          <div className="mb-6">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200/50 rounded-2xl p-6 shadow-lg">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <Recycle className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-green-800 font-bold text-base">Smart Leftover Transformation</h3>
+                  <p className="text-green-600 text-sm">Creative ways to use your leftovers</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-white/90 backdrop-blur-sm border border-green-200/50 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 group">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-white text-sm">🍚</span>
+                    </div>
+                    <span className="text-green-700 font-semibold text-sm">Leftover Rice</span>
+                  </div>
+                  <p className="text-green-600 text-xs leading-relaxed">Perfect for fried rice, rice porridge, or rice and beans. Add fresh vegetables for extra nutrition!</p>
+                </div>
+                
+                <div className="bg-white/90 backdrop-blur-sm border border-green-200/50 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 group">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-white text-sm">🍲</span>
+                    </div>
+                    <span className="text-green-700 font-semibold text-sm">Leftover Stew</span>
+                  </div>
+                  <p className="text-green-600 text-xs leading-relaxed">Great with new rice, yam, or plantain. Reheat gently to preserve flavors!</p>
+                </div>
+                
+                <div className="bg-white/90 backdrop-blur-sm border border-green-200/50 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 group">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-white text-sm">🥩</span>
+                    </div>
+                    <span className="text-green-700 font-semibold text-sm">Leftover Meat</span>
+                  </div>
+                  <p className="text-green-600 text-xs leading-relaxed">Use in stir-fries, soups, or sandwiches. Shred for easier incorporation!</p>
+                </div>
+                
+                <div className="bg-white/90 backdrop-blur-sm border border-green-200/50 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 group">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-white text-sm">🥬</span>
+                    </div>
+                    <span className="text-green-700 font-semibold text-sm">Leftover Vegetables</span>
+                  </div>
+                  <p className="text-green-600 text-xs leading-relaxed">Perfect for soups, stews, or stir-fries. Add fresh herbs for brightness!</p>
+                </div>
+              </div>
+              
+              {/* Food Safety Tip */}
+              <div className="mt-4 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white text-xs">⚠️</span>
+                  </div>
+                  <p className="text-yellow-800 text-xs font-medium">Food Safety Tip: Use leftovers within 3-4 days and reheat thoroughly before serving.</p>
+                </div>
               </div>
             </div>
           </div>
