@@ -8,15 +8,10 @@ import {
   Heart, 
   Sparkles, 
   CircleCheck, 
-  Zap,
   Clock,
-  Users,
-  Search,
-  Star,
   ArrowRight,
-  Play,
   Flame,
-  Coffee
+  Search
 } from 'lucide-react'
 import { HomepageSkeleton } from '../components/SkeletonLoader'
 
@@ -30,6 +25,8 @@ export default function Home() {
   const [savedMeals, setSavedMeals] = useState([])
   const [selectedIngredients, setSelectedIngredients] = useState([])
   const [availableIngredients] = useState(commonIngredients)
+  const [showValidationModal, setShowValidationModal] = useState(false)
+  const [validationMessage, setValidationMessage] = useState('')
 
   // Function to get meal type based on Lagos time
   const getMealTypeByTime = () => {
@@ -85,8 +82,28 @@ export default function Home() {
 
   const getSuggestion = async () => {
     if (showIngredientMode && selectedIngredients.length === 0) {
-      alert('Please select at least one ingredient')
+      setValidationMessage('Please select at least one ingredient to find recipes you can make.')
+      setShowValidationModal(true)
       return
+    }
+
+    // Validate selections for quick suggestion mode
+    if (!showIngredientMode) {
+      const missingSelections = []
+      
+      if (!mealType) {
+        missingSelections.push('meal preference')
+      }
+      if (!cookingTime) {
+        missingSelections.push('cooking time')
+      }
+      
+      if (missingSelections.length > 0) {
+        const message = `Please select your ${missingSelections.join(' and ')} to get personalized meal suggestions.`
+        setValidationMessage(message)
+        setShowValidationModal(true)
+        return
+      }
     }
     
     // Track suggestion button click
@@ -467,6 +484,14 @@ export default function Home() {
     )
   }
 
+  const handleMealTypeSelection = (type) => {
+    setMealType(type)
+  }
+
+  const handleCookingTimeSelection = (time) => {
+    setCookingTime(time)
+  }
+
   // Show skeleton loader while page is loading
   if (pageLoading) {
     return <HomepageSkeleton />
@@ -574,15 +599,15 @@ export default function Home() {
                           {mealTypes.map((type) => (
                             <button
                               key={type.value}
-                              onClick={() => setMealType(mealType === type.value ? '' : type.value)}
+                              onClick={() => handleMealTypeSelection(type.value)}
                               className={`relative rounded-2xl p-4 transition-all duration-300 text-center ${
                                 mealType === type.value 
                                   ? 'bg-gradient-to-br from-indigo-100 to-purple-100 border-2 border-indigo-300 shadow-lg transform scale-105' 
-                                  : 'bg-white border-2 border-gray-100 hover:border-indigo-200 hover:shadow-md'
+                                  : 'bg-white border-2 border-gray-100 hover:border-indigo-200 hover:shadow-md hover:scale-102'
                               }`}
                             >
                               <div className="flex flex-col items-center space-y-2">
-                                <div className={`text-3xl ${mealType === type.value ? 'transform scale-110 animate-bounce' : ''}`}>
+                                <div className={`text-3xl ${mealType === type.value ? 'transform scale-110 animate-bounce' : 'group-hover:scale-110 transition-transform duration-300'}`}>
                                   {type.emoji}
                                 </div>
                                 <span className={`text-sm font-semibold ${
@@ -625,7 +650,7 @@ export default function Home() {
                           {cookingTimes.map((time) => (
                             <button
                               key={time.value}
-                              onClick={() => setCookingTime(cookingTime === time.value ? '' : time.value)}
+                              onClick={() => handleCookingTimeSelection(time.value)}
                               className={`relative rounded-xl sm:rounded-2xl p-3 sm:p-6 transition-all duration-300 text-center group ${
                                 cookingTime === time.value 
                                   ? 'bg-gradient-to-br from-orange-100 to-red-100 border-2 sm:border-3 border-orange-400 shadow-lg sm:shadow-xl transform scale-105' 
@@ -653,7 +678,7 @@ export default function Home() {
                               
                               {/* Selection indicator */}
                               {cookingTime === time.value && (
-                                <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-4 h-4 sm:w-6 sm:h-6 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                                <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-4 h-4 sm:w-6 sm:h-6 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center shadow-lg">
                                   <div className="w-1.5 h-1.5 sm:w-3 sm:h-3 bg-white rounded-full"></div>
                                 </div>
                               )}
@@ -671,7 +696,26 @@ export default function Home() {
 
 
                     {/* Get Meal Suggestion Button */}
-                    <div className="flex justify-center mt-12">
+                    <div className="flex flex-col items-center mt-12">
+                      {/* Subtle selection status */}
+                      {(mealType || cookingTime) && (
+                        <div className="mb-4 text-center">
+                          <div className="inline-flex items-center gap-2 text-xs text-gray-500">
+                            <span>Ready with:</span>
+                            {mealType && (
+                              <span className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-md font-medium">
+                                {mealTypes.find(t => t.value === mealType)?.label}
+                              </span>
+                            )}
+                            {cookingTime && (
+                              <span className="px-2 py-1 bg-orange-50 text-orange-700 rounded-md font-medium">
+                                {cookingTimes.find(t => t.value === cookingTime)?.label}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
                       <button
                         onClick={getSuggestion}
                         disabled={loading}
@@ -867,6 +911,58 @@ export default function Home() {
           <p className="text-gray-500 text-sm mt-4">Beta version - Your feedback helps us improve!</p>
         </div>
       </div>
+
+      {/* Validation Modal */}
+      {showValidationModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl animate-slide-in-up overflow-hidden">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-orange-50 to-red-50 px-6 py-4 border-b border-orange-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-800">Complete Your Selection</h3>
+                  <p className="text-sm text-gray-600">Let's find the perfect meal for you</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="px-6 py-6">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Search className="w-8 h-8 text-orange-600" />
+                </div>
+                <p className="text-gray-700 text-base leading-relaxed">
+                  {validationMessage}
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowValidationModal(false)}
+                  className="flex-1 px-4 py-3 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl font-medium transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowValidationModal(false)
+                    // Scroll to top to show selection areas
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                  }}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl font-medium transition-all duration-200 transform hover:scale-105"
+                >
+                  Go to Selections
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
