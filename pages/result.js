@@ -1468,6 +1468,62 @@ export default function Result() {
           </div>
         )}
 
+        {/* Leftover Transformation Tips - Coming Soon */}
+        {searchCriteria?.showIngredientMode && searchCriteria?.leftoverMode && (
+          <div className="animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
+            <div className="card mb-8">
+              <div className="relative">
+                {/* Coming Soon Overlay */}
+                <div className="absolute inset-0 bg-white/95 backdrop-blur-sm rounded-2xl z-10 flex items-center justify-center">
+                  <div className="text-center p-8">
+                    <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Recycle className="w-10 h-10 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-800 mb-4">Leftover Transformations</h3>
+                    <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                      Transform your leftovers into delicious new meals! This feature is coming soon and will help you reduce food waste with creative recipes.
+                    </p>
+                    <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-sm font-bold px-6 py-3 rounded-full inline-block">
+                      COMING SOON
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Disabled content */}
+                <div className="opacity-30">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+                      <Recycle className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800">Leftover Transformation Tips</h3>
+                      <p className="text-gray-600">Smart suggestions for your leftover ingredients</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6">
+                      <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                        <span className="text-2xl">🍽️</span>
+                        Served With
+                      </h4>
+                      <p className="text-gray-600 text-sm">Perfect accompaniments for your transformed meal</p>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6">
+                      <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                        <span className="text-2xl">🥤</span>
+                        Drinks
+                      </h4>
+                      <p className="text-gray-600 text-sm">Refreshing beverages to complement your meal</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   )

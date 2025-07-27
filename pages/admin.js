@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { 
   ChefHat, Plus, Save, Edit, Trash2, Eye, Search, Clock, Users, Zap, 
   CheckCircle2, AlertCircle, Star, BarChart3, Home, Settings, TrendingUp,
-  Shield, Users2, FileText, Activity, Target, Heart
+  Shield, Users2, FileText, Activity, Target, Heart, Recycle
 } from 'lucide-react'
 import { analytics, analyticsDashboard } from '../lib/analytics'
 import { supabase } from '../lib/supabase'
@@ -1225,6 +1225,17 @@ export default function AdminNew() {
           </Link>
           
           <Link
+            href="/leftover-transformations"
+            className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <Recycle className="w-5 h-5 text-gray-600" />
+            <div>
+              <p className="font-medium text-gray-800">Leftover Transformations</p>
+              <p className="text-sm text-gray-600">Manage leftover meal transformations</p>
+            </div>
+          </Link>
+
+          <Link
             href="/test-supabase-admin"
             className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
           >
@@ -1234,6 +1245,126 @@ export default function AdminNew() {
               <p className="text-sm text-gray-600">Check Supabase connection</p>
             </div>
           </Link>
+        </div>
+      </div>
+    </div>
+  )
+
+  const LeftoversTab = () => (
+    <div className="space-y-6">
+      {/* Coming Soon Header */}
+      <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-8 text-center">
+        <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Recycle className="w-10 h-10 text-white" />
+        </div>
+        <h3 className="text-2xl font-bold text-gray-800 mb-4">Leftover Transformations</h3>
+        <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+          Transform leftover meals into delicious new dishes! This feature will help users reduce food waste 
+          by providing creative recipes to repurpose their leftovers.
+        </p>
+        <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-sm font-bold px-6 py-3 rounded-full inline-block mb-6">
+          COMING SOON
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          <div className="bg-white rounded-xl p-6 border border-green-200">
+            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <ChefHat className="w-6 h-6 text-green-600" />
+            </div>
+            <h4 className="font-semibold text-gray-800 mb-2">Smart Transformations</h4>
+            <p className="text-sm text-gray-600">
+              AI-powered suggestions to transform leftovers into new meals
+            </p>
+          </div>
+          
+          <div className="bg-white rounded-xl p-6 border border-green-200">
+            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <Clock className="w-6 h-6 text-green-600" />
+            </div>
+            <h4 className="font-semibold text-gray-800 mb-2">Time-Saving</h4>
+            <p className="text-sm text-gray-600">
+              Quick recipes that make the most of your leftover ingredients
+            </p>
+          </div>
+          
+          <div className="bg-white rounded-xl p-6 border border-green-200">
+            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <Heart className="w-6 h-6 text-green-600" />
+            </div>
+            <h4 className="font-semibold text-gray-800 mb-2">Reduce Waste</h4>
+            <p className="text-sm text-gray-600">
+              Help users save money and reduce food waste at home
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Feature Preview */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h4 className="text-lg font-semibold text-gray-800 mb-4">Planned Features</h4>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4 text-green-600" />
+            </div>
+            <div>
+              <p className="font-medium text-gray-800">Dedicated Admin Interface</p>
+              <p className="text-sm text-gray-600">Manage transformation recipes with full CRUD operations</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4 text-green-600" />
+            </div>
+            <div>
+              <p className="font-medium text-gray-800">Smart Ingredient Matching</p>
+              <p className="text-sm text-gray-600">Suggest transformations based on available leftovers</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4 text-green-600" />
+            </div>
+            <div>
+              <p className="font-medium text-gray-800">Step-by-Step Instructions</p>
+              <p className="text-sm text-gray-600">Detailed cooking steps for each transformation</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4 text-green-600" />
+            </div>
+            <div>
+              <p className="font-medium text-gray-800">User Feedback System</p>
+              <p className="text-sm text-gray-600">Rate and review transformation success</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Development Status */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h4 className="text-lg font-semibold text-gray-800 mb-4">Development Status</h4>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-gray-700">Database Schema</span>
+            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">Ready</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-gray-700">Admin Interface</span>
+            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">Ready</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-gray-700">User Interface</span>
+            <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium">In Progress</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-gray-700">Integration</span>
+            <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">Pending</span>
+          </div>
         </div>
       </div>
     </div>
@@ -1300,6 +1431,13 @@ export default function AdminNew() {
             >
               Settings
             </TabButton>
+            <TabButton 
+              active={activeTab === 'leftovers'} 
+              onClick={() => setActiveTab('leftovers')}
+              icon={Recycle}
+            >
+              Leftovers
+            </TabButton>
           </div>
         </div>
 
@@ -1309,6 +1447,7 @@ export default function AdminNew() {
           {activeTab === 'recipes' && <RecipesTab />}
           {activeTab === 'analytics' && <AnalyticsTab />}
           {activeTab === 'settings' && <SettingsTab />}
+          {activeTab === 'leftovers' && <LeftoversTab />}
         </div>
 
         {/* Recipe Form Modal */}
