@@ -262,6 +262,8 @@ export default function Home() {
                 return { primary: 0, fallback: 1, final: 1 } // Show any meal with the ingredient
               } else if (ingredientCount === 2) {
                 return { primary: 100, fallback: 1, final: 1 } // 100% or at least 1 ingredient
+              } else if (ingredientCount === 3) {
+                return { primary: 70, fallback: 2, final: 1 } // 70% or at least 2, else at least 1
               } else if (ingredientCount === 4) {
                 return { primary: 70, fallback: 2, final: 1 } // 70% or at least 2, else at least 1
               } else if (ingredientCount >= 5 && ingredientCount <= 6) {
