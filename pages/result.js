@@ -375,7 +375,7 @@ export default function Result() {
             
             // Filter out meals with no matches and sort by score (highest first)
             suggestions = scoredMeals
-              .filter(meal => meal.ingredientScore > 0 && !meal.excluded)
+              .filter(meal => meal.ingredientScore > 0 && !meal.excluded && meal.matchPercentage >= 70)
               .sort((a, b) => {
                 // First sort by score (highest first)
                 if (b.ingredientScore !== a.ingredientScore) {
@@ -385,15 +385,15 @@ export default function Result() {
                 return b.matchPercentage - a.matchPercentage
               })
             
-            console.log(`🔍 After smart ingredient filtering: ${suggestions.length} meals`)
+            console.log(`🔍 After smart ingredient filtering (70% threshold): ${suggestions.length} meals`)
             console.log(`📊 Top 3 suggestions:`, suggestions.slice(0, 3).map(m => 
-              `${m.name} (Score: ${m.ingredientScore}, Matches: ${m.matchedIngredients.join(', ')})`
+              `${m.name} (Score: ${m.ingredientScore}, Matches: ${m.matchedIngredients.join(', ')}, Match %: ${m.matchPercentage}%)`
             ))
             
             // Check if no meals match the ingredient criteria
             if (suggestions.length === 0) {
-              console.log('❌ No meals found containing the selected ingredients')
-              setMessage({ type: 'info', text: `No meals found containing "${searchCriteria.selectedIngredients.join(', ')}". Try selecting different ingredients.` })
+              console.log('❌ No meals found containing at least 70% of selected ingredients')
+              setMessage({ type: 'info', text: `No meals found containing at least 70% of "${searchCriteria.selectedIngredients.join(', ')}". Try selecting fewer ingredients or different ones.` })
               return
             }
           } else {
