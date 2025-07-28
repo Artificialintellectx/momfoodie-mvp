@@ -1158,6 +1158,137 @@ export default function AdminNew() {
               </div>
             </div>
           )}
+
+          {/* User Feedback Details */}
+          {analyticsData.feedback && analyticsData.feedback.total > 0 && (
+            <div className="bg-white border border-gray-200 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">⭐ User Feedback Details</h3>
+              
+              {/* Feedback Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Star className="w-5 h-5 text-blue-600" />
+                    <span className="font-semibold text-blue-800">Average Rating</span>
+                  </div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {analyticsData.feedback.averageRating || 0}/5
+                  </div>
+                </div>
+                
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FileText className="w-5 h-5 text-green-600" />
+                    <span className="font-semibold text-green-800">Total Feedback</span>
+                  </div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {analyticsData.feedback.total || 0}
+                  </div>
+                </div>
+                
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <ChefHat className="w-5 h-5 text-purple-600" />
+                    <span className="font-semibold text-purple-800">Rated Meals</span>
+                  </div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {analyticsData.feedback.topRatedMeals?.length || 0}
+                  </div>
+                </div>
+              </div>
+
+              {/* Rating Distribution */}
+              {analyticsData.feedback.ratingDistribution && Object.keys(analyticsData.feedback.ratingDistribution).length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-md font-semibold text-gray-800 mb-3">📊 Rating Distribution</h4>
+                  <div className="space-y-2">
+                    {[5, 4, 3, 2, 1].map(rating => {
+                      const count = analyticsData.feedback.ratingDistribution[rating] || 0
+                      const percentage = analyticsData.feedback.total > 0 ? Math.round((count / analyticsData.feedback.total) * 100) : 0
+                      return (
+                        <div key={rating} className="flex items-center gap-3">
+                          <div className="flex items-center gap-2 w-16">
+                            <span className="text-sm font-medium text-gray-600">{rating}★</span>
+                          </div>
+                          <div className="flex-1 bg-gray-200 rounded-full h-3">
+                            <div 
+                              className="bg-yellow-400 h-3 rounded-full transition-all duration-300"
+                              style={{ width: `${percentage}%` }}
+                            ></div>
+                          </div>
+                          <div className="w-16 text-right">
+                            <span className="text-sm font-medium text-gray-600">{count}</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Top Rated Meals */}
+              {analyticsData.feedback.topRatedMeals && analyticsData.feedback.topRatedMeals.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="text-md font-semibold text-gray-800 mb-3">🏆 Top Rated Meals</h4>
+                  <div className="space-y-2">
+                    {analyticsData.feedback.topRatedMeals.slice(0, 5).map((meal, index) => (
+                      <div key={meal.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg font-bold text-gray-400">#{index + 1}</span>
+                          <span className="font-medium text-gray-800">{meal.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Star 
+                                key={i} 
+                                className={`w-4 h-4 ${i < Math.round(meal.average) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+                              />
+                            ))}
+                          </div>
+                          <span className="text-sm font-semibold text-gray-600">
+                            {meal.average}/5 ({meal.count} ratings)
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recent Feedback */}
+              {analyticsData.feedback.recentFeedback && analyticsData.feedback.recentFeedback.length > 0 && (
+                <div>
+                  <h4 className="text-md font-semibold text-gray-800 mb-3">🕒 Recent Feedback</h4>
+                  <div className="space-y-3">
+                    {analyticsData.feedback.recentFeedback.slice(0, 5).map((feedback, index) => (
+                      <div key={feedback.id} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-800">{feedback.meal_name}</span>
+                            <div className="flex items-center gap-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star 
+                                  key={i} 
+                                  className={`w-3 h-3 ${i < feedback.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {new Date(feedback.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        {feedback.comment && (
+                          <p className="text-sm text-gray-600 mt-2">{feedback.comment}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </>
       )}
     </div>

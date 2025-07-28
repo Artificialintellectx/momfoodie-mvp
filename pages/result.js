@@ -663,7 +663,323 @@ export default function Result() {
         drinks: "Soft drinks, fresh juice, wine",
         sides: "Fried plantain, salad, moi moi"
       },
-      // ... existing combinations
+      "Boiled Yam with Palm Oil": {
+        with: "Fried fish, pepper sauce, vegetables, boiled eggs",
+        drinks: "Tea, coffee, fresh juice, zobo",
+        sides: "Cucumber salad, tomatoes, onions, pepper"
+      },
+      "Boiled Yam and Stew": {
+        with: "Fried fish, chicken, beef, boiled eggs",
+        drinks: "Soft drinks, fresh juice, tea",
+        sides: "Fried plantain, salad, coleslaw"
+      },
+      "Fried Yam and Tomato Sauce": {
+        with: "Fried fish, scrambled eggs, sausages",
+        drinks: "Tea, coffee, soft drinks, fresh juice",
+        sides: "Coleslaw, cucumber salad, pepper sauce"
+      },
+      "Fried Plantain and Egg": {
+        with: "Bread, tea, coffee, sausages",
+        drinks: "Tea, coffee, fresh juice, soft drinks",
+        sides: "Baked beans, toast, avocado"
+      },
+      "Fried Plantain and Fish": {
+        with: "Bread, rice, pepper sauce, vegetables",
+        drinks: "Soft drinks, fresh juice, zobo",
+        sides: "Coleslaw, salad, boiled yam"
+      },
+      "Boiled Plantain and Oil": {
+        with: "Fried fish, pepper sauce, salt, onions",
+        drinks: "Tea, fresh juice, zobo",
+        sides: "Boiled eggs, vegetables, pepper"
+      },
+      "Fried Plantain and Pepper Sauce": {
+        with: "Bread, rice, boiled eggs, fish",
+        drinks: "Soft drinks, fresh juice, tea",
+        sides: "Coleslaw, cucumber salad"
+      },
+      "Boiled Plantain and Pepper Soup": {
+        with: "Rice, bread, extra fish/meat in soup",
+        drinks: "Fresh juice, soft drinks, palm wine",
+        sides: "Vegetables, boiled eggs"
+      },
+      "Bread and Egg": {
+        with: "Tea, coffee, butter, jam, sausages",
+        drinks: "Tea, coffee, fresh juice, milk",
+        sides: "Fruits, bacon, baked beans"
+      },
+      "Bread and Egg Sandwich": {
+        with: "Tea, coffee, mayonnaise, lettuce, tomatoes",
+        drinks: "Tea, coffee, soft drinks, fresh juice",
+        sides: "Fruits, crisps, coleslaw"
+      },
+      "Boiled Egg and Bread": {
+        with: "Butter, jam, tea, coffee, salt, pepper",
+        drinks: "Tea, coffee, milk, fresh juice",
+        sides: "Fruits, vegetables, mayonnaise"
+      },
+      "Toast Bread with Jam": {
+        with: "Butter, tea, coffee, milk, fruits",
+        drinks: "Tea, coffee, milk, hot chocolate",
+        sides: "Boiled eggs, cereals, yogurt"
+      },
+      "Bread and Butter with Tea": {
+        with: "Jam, honey, sugar, milk",
+        drinks: "Tea, coffee, milk",
+        sides: "Biscuits, fruits"
+      },
+      "Bread and Mayonnaise": {
+        with: "Boiled eggs, vegetables, lettuce, tomatoes",
+        drinks: "Soft drinks, fresh juice, tea",
+        sides: "Cucumber, carrots, crisps"
+      },
+      "Bread and Sardine": {
+        with: "Tomatoes, onions, pepper, mayonnaise",
+        drinks: "Soft drinks, fresh juice, tea",
+        sides: "Cucumber salad, boiled eggs"
+      },
+      "Bread and Corned Beef": {
+        with: "Tomatoes, onions, mayonnaise, lettuce",
+        drinks: "Tea, coffee, soft drinks",
+        sides: "Boiled eggs, vegetables, crisps"
+      },
+      "Boiled Sweet Potato and Tomato Sauce": {
+        with: "Fried fish, boiled eggs, vegetables",
+        drinks: "Tea, fresh juice, soft drinks",
+        sides: "Coleslaw, cucumber salad, pepper sauce"
+      },
+      "Fried Irish Potato and Egg": {
+        with: "Bread, sausages, baked beans, ketchup",
+        drinks: "Tea, coffee, fresh juice",
+        sides: "Toast, coleslaw, tomatoes"
+      },
+      "Boiled Potato and Palm Oil": {
+        with: "Fried fish, pepper sauce, salt, onions",
+        drinks: "Tea, fresh juice, soft drinks",
+        sides: "Vegetables, boiled eggs, pepper"
+      },
+      "Cereals with Milk": {
+        with: "Milk, sugar, honey, fruits",
+        drinks: "Milk, fresh juice, tea",
+        sides: "Toast, biscuits, yogurt"
+      },
+      "Custard and Milk": {
+        with: "Sugar, honey, fruits, nuts, biscuits",
+        drinks: "Tea, coffee, fresh juice",
+        sides: "Bread, crackers, fruits"
+      },
+      "Pap and Biscuit": {
+        with: "Milk, sugar, honey, akara, moi moi",
+        drinks: "Tea, coffee, fresh juice",
+        sides: "Bread, fruits, groundnuts"
+      },
+      // New 45-60 minute breakfast recipes combinations
+      "Fried Yam with Pepper Sauce": {
+        with: "Fried fish, grilled chicken, boiled eggs, vegetables",
+        drinks: "Soft drinks, fresh juice, zobo, palm wine",
+        sides: "Coleslaw, cucumber salad, fried plantain, bread"
+      },
+      "Pancakes (Nigerian Style)": {
+        with: "Honey, syrup, butter, fruits, eggs, sausages",
+        drinks: "Tea, coffee, fresh juice, milk, hot chocolate",
+        sides: "Bacon, scrambled eggs, fruits, yogurt"
+      },
+      "Fried Rice with Vegetables": {
+        with: "Grilled chicken, beef, fish, coleslaw, salad",
+        drinks: "Soft drinks, fresh juice, wine, zobo",
+        sides: "Fried plantain, spring rolls, chin chin, moi moi"
+      },
+      "Ofada Rice with Ayamase": {
+        with: "Assorted meat, ponmo, stockfish, fried plantain",
+        drinks: "Palm wine, zobo, fresh juice, soft drinks",
+        sides: "Traditional combination - complete meal"
+      },
+      "Boiled Yam with Vegetable Sauce": {
+        with: "Fried fish, grilled chicken, boiled eggs",
+        drinks: "Fresh juice, soft drinks, zobo, tea",
+        sides: "Fried plantain, salad, coleslaw, bread"
+      },
+      "Chicken Pepper Soup with Yam": {
+        with: "Extra chicken pieces, vegetables, bread",
+        drinks: "Palm wine, beer, fresh juice, soft drinks",
+        sides: "Traditional combination - complete meal"
+      },
+      "Palm Nut Soup with Rice (Ofe Akwu)": {
+        with: "Stockfish, dried fish, assorted meat, vegetables",
+        drinks: "Palm wine, fresh juice, zobo",
+        sides: "Traditional combination - complete meal"
+      },
+      "Dried Fish Stew with Yam": {
+        with: "Fresh vegetables, fried plantain, rice",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Garden egg, cucumber salad, bread"
+      },
+      "Snail Pepper Soup": {
+        with: "Rice, yam, plantain, bread, eba",
+        drinks: "Palm wine, beer, fresh juice, zobo",
+        sides: "Extra snails, vegetables, fried plantain"
+      },
+      "Bush Meat Pepper Soup": {
+        with: "Rice, yam, plantain, bread, pounded yam",
+        drinks: "Palm wine, beer, fresh juice",
+        sides: "Extra bush meat, vegetables, roasted plantain"
+      },
+      "Spinach Stew with Rice": {
+        with: "Grilled chicken, fish, beef, fried plantain",
+        drinks: "Soft drinks, fresh juice, zobo",
+        sides: "Coleslaw, salad, boiled eggs, bread"
+      },
+      "Cucumber Soup": {
+        with: "Rice, yam, eba, fufu, bread",
+        drinks: "Fresh juice, soft drinks, zobo",
+        sides: "Fish, meat, vegetables, fried plantain"
+      },
+      "Mixed Meat Stew with Rice": {
+        with: "Complete meal - well-balanced",
+        drinks: "Soft drinks, fresh juice, wine, beer",
+        sides: "Fried plantain, coleslaw, salad, bread"
+      },
+      "Dried Meat Stew (Suya Stew)": {
+        with: "Rice, yam, bread, fried plantain",
+        drinks: "Soft drinks, beer, palm wine, zobo",
+        sides: "Salad, coleslaw, vegetables, extra suya"
+      },
+      "Fresh Fish Stew with Plantain": {
+        with: "Rice, bread, yam, extra vegetables",
+        drinks: "Soft drinks, fresh juice, zobo, palm wine",
+        sides: "Complete combination - traditional pairing"
+      },
+      "Native Rice (Igbo Style)": {
+        with: "Stockfish, dried fish, assorted meat, vegetables",
+        drinks: "Palm wine, fresh juice, zobo",
+        sides: "Fried plantain, ugba, garden egg"
+      },
+      "Yam and Plantain Porridge": {
+        with: "Fried fish, dried fish, vegetables, palm oil",
+        drinks: "Zobo, fresh juice, palm wine",
+        sides: "Stockfish, pepper sauce, garden egg"
+      },
+      "Cocoyam Porridge": {
+        with: "Dried fish, stockfish, vegetables, palm oil",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Pepper sauce, garden egg, ugba"
+      },
+      "Plantain and Beans Porridge": {
+        with: "Dried fish, palm oil, vegetables",
+        drinks: "Zobo, fresh juice, soft drinks",
+        sides: "Complete meal - balanced nutrition"
+      },
+      "Irish Potato Porridge": {
+        with: "Fish, meat, vegetables, tomato sauce",
+        drinks: "Soft drinks, fresh juice, tea",
+        sides: "Bread, salad, coleslaw, boiled eggs"
+      },
+      "Carrot and Fish Stew": {
+        with: "Rice, yam, bread, fried plantain",
+        drinks: "Fresh juice, soft drinks, zobo",
+        sides: "Salad, coleslaw, boiled eggs"
+      },
+      "Cabbage and Meat Stew": {
+        with: "Rice, yam, bread, fried plantain",
+        drinks: "Soft drinks, fresh juice, beer",
+        sides: "Salad, coleslaw, extra vegetables"
+      },
+      "Green Beans and Fish Stew": {
+        with: "Rice, yam, bread, boiled plantain",
+        drinks: "Fresh juice, soft drinks, zobo",
+        sides: "Salad, coleslaw, extra vegetables"
+      },
+      // New 60+ minute elaborate breakfast recipes combinations
+      "Yam Flour Porridge (Elubo)": {
+        with: "Dried fish, stockfish, palm oil, vegetables, pepper",
+        drinks: "Palm wine, zobo, fresh juice, kunu",
+        sides: "Garden egg, ugba, scent leaves, pepper sauce"
+      },
+      "Ukwa (African Breadfruit)": {
+        with: "Dried fish, stockfish, palm oil, onions, pepper",
+        drinks: "Palm wine, zobo, fresh juice, kunu",
+        sides: "Garden egg, ugba, bitter leaf, pepper sauce"
+      },
+      "Water Yam Porridge": {
+        with: "Dried fish, stockfish, palm oil, vegetables, crayfish",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Garden egg, scent leaves, pepper sauce, ugba"
+      },
+      "Coconut Rice with Assorted Meat": {
+        with: "Complete festive meal - special occasion dish",
+        drinks: "Wine, soft drinks, fresh juice, zobo",
+        sides: "Coleslaw, salad, fried plantain, spring rolls"
+      },
+      "Fisherman's Rice": {
+        with: "Complete seafood meal - coastal specialty",
+        drinks: "Wine, beer, fresh juice, soft drinks",
+        sides: "Coleslaw, salad, fried plantain, pepper sauce"
+      },
+      "Moi Moi with Rice and Stew": {
+        with: "Complete traditional meal - triple combination",
+        drinks: "Soft drinks, fresh juice, zobo",
+        sides: "Additional protein, fried plantain, salad"
+      },
+      "Plantain Porridge with Dried Fish": {
+        with: "Complete traditional meal - well-balanced",
+        drinks: "Palm wine, zobo, fresh juice, soft drinks",
+        sides: "Extra dried fish, vegetables, palm oil, pepper"
+      },
+      "Sweet Potato Porridge with Smoked Fish": {
+        with: "Complete nutritious meal",
+        drinks: "Fresh juice, zobo, soft drinks, tea",
+        sides: "Extra smoked fish, vegetables, pepper sauce"
+      },
+      "Breadfruit Porridge with Assorted Meat": {
+        with: "Complete hearty meal - protein-rich",
+        drinks: "Palm wine, beer, fresh juice, zobo",
+        sides: "Extra meat portions, vegetables, pepper sauce"
+      },
+      "Cocoyam Porridge with Stockfish": {
+        with: "Traditional combination - authentic taste",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Extra stockfish, dried fish, vegetables, palm oil"
+      },
+      "Corn and Bean Porridge": {
+        with: "Complete balanced meal - high protein",
+        drinks: "Zobo, fresh juice, soft drinks, kunu",
+        sides: "Dried fish, palm oil, vegetables, pepper sauce"
+      },
+      "Ram Meat Stew with Rice": {
+        with: "Complete special occasion meal - festive dish",
+        drinks: "Wine, beer, soft drinks, fresh juice",
+        sides: "Fried plantain, coleslaw, salad, bread"
+      },
+      "Smoked Turkey Stew with Yam": {
+        with: "Complete premium meal - holiday special",
+        drinks: "Wine, champagne, fresh juice, soft drinks",
+        sides: "Vegetables, salad, fried plantain, bread"
+      },
+      "Crab and Fish Stew": {
+        with: "Rice, yam, bread, fried plantain",
+        drinks: "Wine, beer, fresh juice, soft drinks",
+        sides: "Coleslaw, salad, extra seafood, vegetables"
+      },
+      "Prawns and Vegetable Stew": {
+        with: "Rice, yam, bread, pasta",
+        drinks: "Wine, fresh juice, soft drinks",
+        sides: "Salad, coleslaw, fried plantain, extra vegetables"
+      },
+      "Traditional Locust Bean Stew": {
+        with: "Rice, yam, eba, fufu, amala",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Vegetables, stockfish, dried fish, garden egg"
+      },
+      "Coconut Milk Rice with Seafood": {
+        with: "Complete luxury meal - restaurant quality",
+        drinks: "Wine, champagne, fresh juice, soft drinks",
+        sides: "Salad, coleslaw, grilled vegetables, bread"
+      },
+      "Egusi Soup with Rice": {
+        with: "Complete traditional meal - alternative to swallow",
+        drinks: "Palm wine, zobo, fresh juice, soft drinks",
+        sides: "Assorted meat, stockfish, fried plantain"
+      }
     }
     return combinations[mealName] || null
   }
