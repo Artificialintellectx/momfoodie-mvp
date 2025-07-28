@@ -979,6 +979,52 @@ export default function Result() {
         with: "Complete traditional meal - alternative to swallow",
         drinks: "Palm wine, zobo, fresh juice, soft drinks",
         sides: "Assorted meat, stockfish, fried plantain"
+      },
+      // New under 30 minute lunch recipes combinations
+      "Indomie Noodles Special": {
+        with: "Fried eggs, sausages, corned beef, vegetables, sardines",
+        drinks: "Soft drinks, fresh juice, tea, coffee",
+        sides: "Bread, fried plantain, coleslaw, cucumber salad"
+      },
+      "Pasta Jollof": {
+        with: "Grilled chicken, fried fish, beef, coleslaw, salad",
+        drinks: "Soft drinks, fresh juice, wine, zobo",
+        sides: "Fried plantain, garlic bread, mixed vegetables, spring rolls"
+      },
+      "Macaroni Jollof": {
+        with: "Chicken, fish, beef, vegetables, coleslaw",
+        drinks: "Soft drinks, fresh juice, wine, beer",
+        sides: "Fried plantain, salad, garlic bread, boiled eggs"
+      },
+      "Noodles Stir-fry": {
+        with: "Vegetables, chicken, beef, shrimp, eggs",
+        drinks: "Soft drinks, fresh juice, tea, Asian-style beverages",
+        sides: "Spring rolls, fried plantain, cucumber salad, bread"
+      },
+      "Quick Noodle Salad": {
+        with: "Vegetables, mayonnaise, boiled eggs, chicken, tuna",
+        drinks: "Fresh juice, soft drinks, iced tea, water",
+        sides: "Crackers, bread, fruits, nuts, cheese"
+      },
+      "Boiled Corn and Pear": {
+        with: "Natural combination - classic Nigerian snack",
+        drinks: "Fresh coconut water, zobo, soft drinks, water",
+        sides: "Roasted groundnuts, coconut, palm wine (for adults)"
+      },
+      "Fried Yam and Ketchup": {
+        with: "Fried eggs, sausages, baked beans, vegetables",
+        drinks: "Tea, coffee, soft drinks, fresh juice",
+        sides: "Bread, coleslaw, cucumber salad, mayonnaise"
+      },
+      "Boiled Potato and Oil": {
+        with: "Fried fish, pepper sauce, salt, onions, vegetables",
+        drinks: "Tea, fresh juice, soft drinks, zobo",
+        sides: "Bread, boiled eggs, cucumber salad, tomatoes"
+      },
+      "Quick Yam and Tomato Sauce": {
+        with: "Fried fish, scrambled eggs, sausages, vegetables",
+        drinks: "Tea, coffee, soft drinks, fresh juice",
+        sides: "Bread, fried plantain, coleslaw, salad"
       }
     }
     return combinations[mealName] || null
