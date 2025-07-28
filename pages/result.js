@@ -1136,6 +1136,177 @@ export default function Result() {
         with: "Fish, meat, palm oil, pepper sauce",
         drinks: "Fresh juice, soft drinks, zobo, tea",
         sides: "Bread, boiled eggs, roasted groundnuts"
+      },
+      // New over 1 hour lunch recipes combinations (elaborate category)
+      "Pounded Yam with Egusi Soup": {
+        with: "Traditional complete meal - Nigeria's most iconic combination",
+        drinks: "Palm wine, zobo, fresh juice, soft drinks",
+        sides: "Assorted meat, stockfish, dried fish, fried plantain, garden egg, bitter leaf salad, pepper sauce"
+      },
+      "Amala with Ewedu and Gbegiri": {
+        with: "Traditional Yoruba combination - triple soup serving",
+        drinks: "Palm wine, zobo, fresh juice, soft drinks",
+        sides: "Assorted meat, fish, locust beans, palm oil, fried plantain, pepper sauce, garden egg"
+      },
+      "Fufu with Bitterleaf Soup": {
+        with: "Traditional combination - classic pairing",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Stockfish, dried fish, assorted meat, cocoyam paste, garden egg, ugba, pepper sauce"
+      },
+      "Oha Soup with Pounded Yam": {
+        with: "Traditional Igbo combination - premium soup",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Stockfish, dried fish, assorted meat, cocoyam paste, garden egg, ugba, bitter leaf salad"
+      },
+      "Nsala Soup (White Soup) with Fufu": {
+        with: "Traditional Igbo combination - medicinal soup",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Catfish, stockfish, uziza seeds, utazi leaves, garden egg, pepper sauce"
+      },
+      "Afang Soup with Pounded Yam": {
+        with: "Traditional Cross River combination",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Stockfish, dried fish, periwinkles, assorted meat, garden egg, ugba, pepper sauce"
+      },
+      "Edikaikong Soup with Fufu": {
+        with: "Traditional Cross River combination - vegetable soup",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Stockfish, dried fish, beef, goat meat, periwinkles, garden egg, pepper sauce"
+      },
+      "Ogbono Soup with Semovita": {
+        with: "Popular combination - smooth, thick soup",
+        drinks: "Palm wine, zobo, soft drinks, fresh juice",
+        sides: "Assorted meat, stockfish, dried fish, vegetables, fried plantain, pepper sauce"
+      },
+      "Okro Soup with Fufu": {
+        with: "Traditional combination - classic pairing",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Fish, meat, stockfish, locust beans, garden egg, pepper sauce"
+      },
+      "Groundnut Soup with Tuwo": {
+        with: "Northern Nigerian combination",
+        drinks: "Kunu, zobo, fresh juice, fura da nono",
+        sides: "Beef, chicken, ram meat, vegetables, dan wake, kilishi, groundnuts"
+      },
+      "Stockfish Soup with Semolina": {
+        with: "Traditional combination - protein-rich",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Extra stockfish, dried fish, vegetables, garden egg, ugba, pepper sauce"
+      },
+      "Ewa Riro (Stewed Beans) with Plantain": {
+        with: "Traditional combination - complete balanced meal",
+        drinks: "Soft drinks, fresh juice, zobo",
+        sides: "Fish, meat, palm oil, pepper sauce, bread, rice, fried plantain"
+      },
+      "Irish Potato Porridge with Goat Meat": {
+        with: "Complete hearty meal - filling and nutritious",
+        drinks: "Beer, soft drinks, fresh juice, zobo",
+        sides: "Extra goat meat, vegetables, pepper sauce, bread, fried plantain, salad"
+      },
+      "Ukazi Soup": {
+        with: "Pounded yam, eba, fufu, semolina",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Stockfish, dried fish, assorted meat, periwinkles, garden egg, ugba, pepper sauce"
+      },
+      "Uziza Soup": {
+        with: "Pounded yam, eba, fufu, rice",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Stockfish, dried fish, assorted meat, garden egg, vegetables, pepper sauce"
+      },
+      "Ugu Soup (Fluted Pumpkin)": {
+        with: "Pounded yam, eba, fufu, semolina, rice",
+        drinks: "Soft drinks, fresh juice, zobo, palm wine",
+        sides: "Fish, meat, stockfish, crayfish, fried plantain, garden egg, salad"
+      },
+      "Carrot Soup": {
+        with: "Rice, pounded yam, eba, fufu",
+        drinks: "Fresh juice, soft drinks, zobo",
+        sides: "Fish, chicken, beef, vegetables, bread, fried plantain, salad"
+      },
+      "Cabbage Stew": {
+        with: "Rice, yam, bread, fried plantain",
+        drinks: "Soft drinks, fresh juice, tea",
+        sides: "Fish, chicken, beef, vegetables, salad, coleslaw, boiled eggs"
+      },
+      "Abak Atama Soup (Cross River)": {
+        with: "Pounded yam, eba, fufu, semolina",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Dried fish, stockfish, periwinkles, palm fruit, garden egg, pepper sauce"
+      },
+      "Banga Soup": {
+        with: "Rice, pounded yam, eba, starch",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Fresh fish, dried fish, stockfish, scent leaves, garden egg, pepper sauce"
+      },
+      "Owho Soup (Delta)": {
+        with: "Starch, pounded yam, eba, rice",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Fresh fish, stockfish, scent leaves, garden egg, pepper sauce"
+      },
+      "Tuwon Masara Soup (Northern)": {
+        with: "Tuwo masara, rice, yam",
+        drinks: "Kunu, zobo, fura da nono, fresh juice",
+        sides: "Beef, ram meat, vegetables, dan wake, kilishi, groundnuts"
+      },
+      "Miyar Karkashi (Northern)": {
+        with: "Tuwo, rice, yam",
+        drinks: "Kunu, zobo, fresh juice",
+        sides: "Beef, chicken, dried vegetables, groundnuts, dan wake"
+      },
+      "Obe Ilasa (Yoruba)": {
+        with: "Rice, amala, eba, pounded yam",
+        drinks: "Palm wine, zobo, soft drinks",
+        sides: "Fish, meat, locust beans, fried plantain, pepper sauce"
+      },
+      "Oguro Soup (Edo)": {
+        with: "Pounded yam, eba, starch",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Fish, meat, stockfish, garden egg, pepper sauce"
+      },
+      "Pineapple Fried Rice": {
+        with: "Complete exotic meal - special occasion dish",
+        drinks: "Wine, champagne, fresh juice, soft drinks",
+        sides: "Grilled chicken, shrimp, coleslaw, salad, spring rolls"
+      },
+      "Pepper Soup and Agidi": {
+        with: "Traditional combination - authentic pairing",
+        drinks: "Palm wine, beer, fresh juice, zobo",
+        sides: "Extra fish/meat in soup, vegetables, bread, fried plantain, pepper sauce"
+      },
+      "Isi Ewu": {
+        with: "Complete specialty meal - traditional delicacy",
+        drinks: "Palm wine, beer, soft drinks, fresh juice",
+        sides: "Extra goat head pieces, utazi leaves, ehuru, agidi, rice, bread, fried plantain"
+      },
+      "Gbegiri and Amala": {
+        with: "Traditional Yoruba combination - bean soup with yam flour",
+        drinks: "Palm wine, zobo, fresh juice, soft drinks",
+        sides: "Ewedu, assorted meat, fish, locust beans, fried plantain, pepper sauce"
+      },
+      "Beef Stew and Yam": {
+        with: "Traditional combination - classic pairing",
+        drinks: "Palm wine, zobo, fresh juice, soft drinks",
+        sides: "Extra beef, vegetables, pepper sauce, bread, fried plantain"
+      },
+      "Turkey Stew and Rice": {
+        with: "Traditional combination - festive meal",
+        drinks: "Beer, wine, soft drinks, fresh juice",
+        sides: "Extra turkey, vegetables, coleslaw, salad, fried plantain"
+      },
+      "Snail Stew and Rice": {
+        with: "Traditional combination - delicacy meal",
+        drinks: "Palm wine, beer, fresh juice, soft drinks",
+        sides: "Extra snails, vegetables, pepper sauce, garden egg, fried plantain"
+      },
+      "Cocoyam and Fish Sauce": {
+        with: "Traditional combination - simple and nutritious",
+        drinks: "Palm wine, zobo, fresh juice, soft drinks",
+        sides: "Extra fish, vegetables, pepper sauce, garden egg, ugba, fried plantain"
+      },
+      "Rice and Pepper Soup": {
+        with: "Complete comfort meal - warming combination",
+        drinks: "Fresh juice, soft drinks, palm wine, beer",
+        sides: "Extra fish/meat in soup, vegetables, bread, fried plantain"
       }
     }
     return combinations[mealName] || null
