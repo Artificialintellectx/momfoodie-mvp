@@ -1025,6 +1025,117 @@ export default function Result() {
         with: "Fried fish, scrambled eggs, sausages, vegetables",
         drinks: "Tea, coffee, soft drinks, fresh juice",
         sides: "Bread, fried plantain, coleslaw, salad"
+      },
+      // New 45-60 minute lunch recipes combinations (regular category)
+      "Fish Stew with Rice": {
+        with: "Fried plantain, coleslaw, mixed vegetables, boiled eggs",
+        drinks: "Soft drinks, fresh juice, zobo, wine",
+        sides: "Salad, cucumber slices, bread, chin chin"
+      },
+      "Beef Stew with Rice": {
+        with: "Fried plantain, coleslaw, vegetables, moi moi",
+        drinks: "Soft drinks, beer, wine, fresh juice",
+        sides: "Salad, bread, boiled eggs, spring rolls"
+      },
+      "Dried Fish Stew with Rice": {
+        with: "Fried plantain, vegetables, garden egg, pepper sauce",
+        drinks: "Palm wine, zobo, fresh juice, soft drinks",
+        sides: "Ugba, bitter leaf salad, roasted groundnuts"
+      },
+      "Yam Porridge with Smoked Fish": {
+        with: "Complete traditional meal - authentic combination",
+        drinks: "Palm wine, zobo, fresh juice, soft drinks",
+        sides: "Extra smoked fish, vegetables, pepper sauce, palm oil"
+      },
+      "Yam Porridge with Diced Goat Meat": {
+        with: "Complete hearty meal - protein-rich",
+        drinks: "Palm wine, beer, zobo, fresh juice",
+        sides: "Extra goat meat, vegetables, pepper sauce"
+      },
+      "Snail Stew with White Rice": {
+        with: "Fried plantain, vegetables, pepper sauce, extra snails",
+        drinks: "Palm wine, beer, zobo, fresh juice",
+        sides: "Garden egg, ugba, roasted plantain, bread"
+      },
+      "Turkey Jollof": {
+        with: "Complete festive meal - special occasion dish",
+        drinks: "Wine, champagne, soft drinks, fresh juice",
+        sides: "Coleslaw, salad, fried plantain, moi moi, chin chin"
+      },
+      "Afang Soup with Semolina": {
+        with: "Traditional combination - complete meal",
+        drinks: "Palm wine, zobo, fresh juice, soft drinks",
+        sides: "Stockfish, dried fish, assorted meat, periwinkles"
+      },
+      "Edikaikong Soup with Garri": {
+        with: "Traditional combination - Cross River specialty",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Stockfish, dried fish, beef, goat meat, periwinkles"
+      },
+      "Onugbu Soup with Semolina": {
+        with: "Traditional Igbo combination - bitter leaf soup",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Stockfish, dried fish, assorted meat, cocoyam paste"
+      },
+      "Ogbono Soup with Semolina": {
+        with: "Popular combination - smooth, thick soup",
+        drinks: "Palm wine, zobo, soft drinks, fresh juice",
+        sides: "Assorted meat, stockfish, dried fish, vegetables"
+      },
+      "Okazi Soup with Semolina": {
+        with: "Traditional combination - Afang leaf soup",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Stockfish, dried fish, beef, goat meat, periwinkles"
+      },
+      "Uziza Soup with Yam": {
+        with: "Traditional combination - authentic pairing",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Stockfish, dried fish, assorted meat, vegetables"
+      },
+      "Nchuanwu Soup with Semolina": {
+        with: "Traditional combination - scent leaf soup",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Stockfish, dried fish, assorted meat, vegetables"
+      },
+      "Garden Egg Leaf Soup": {
+        with: "Pounded yam, eba, fufu, semolina, rice",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Stockfish, dried fish, meat, garden egg"
+      },
+      "Locust Bean Soup (Iru)": {
+        with: "Pounded yam, eba, amala, rice",
+        drinks: "Palm wine, zobo, fresh juice",
+        sides: "Assorted meat, stockfish, dried fish, vegetables"
+      },
+      "Cow Foot Stew": {
+        with: "Rice, yam, bread, fried plantain",
+        drinks: "Beer, palm wine, soft drinks, fresh juice",
+        sides: "Vegetables, coleslaw, extra cow foot pieces"
+      },
+      "Jollof Rice with Prawns": {
+        with: "Complete seafood meal - premium dish",
+        drinks: "Wine, beer, fresh juice, soft drinks",
+        sides: "Coleslaw, salad, fried plantain, spring rolls, bread"
+      },
+      "Mixed Seafood Stew": {
+        with: "Rice, yam, bread, fried plantain",
+        drinks: "Wine, beer, fresh juice, soft drinks",
+        sides: "Coleslaw, salad, garlic bread, vegetables"
+      },
+      "Abacha (African Salad)": {
+        with: "Complete traditional meal - authentic specialty",
+        drinks: "Palm wine, beer, zobo, fresh juice",
+        sides: "Stockfish, dried fish, ugba, garden egg, kpomo"
+      },
+      "Efo Riro with Rice": {
+        with: "Complete balanced meal - vegetables and carbs",
+        drinks: "Soft drinks, fresh juice, zobo, palm wine",
+        sides: "Fried plantain, bread, boiled eggs, salad"
+      },
+      "Spinach and Yam": {
+        with: "Fish, meat, palm oil, pepper sauce",
+        drinks: "Fresh juice, soft drinks, zobo, tea",
+        sides: "Bread, boiled eggs, roasted groundnuts"
       }
     }
     return combinations[mealName] || null
