@@ -949,7 +949,7 @@ export default function Home() {
                           </div>
                           <h3 className="text-xl font-bold text-gray-800">What ingredients do you have?</h3>
                         </div>
-                        <p className="text-gray-600 text-sm">Select your ingredients and we'll find perfect recipes for you!</p>
+                        <p className="text-gray-600 text-sm">Select your ingredients and we&apos;ll find perfect recipes for you!</p>
                       </div>
 
                       {/* Search Bar - More prominent */}
