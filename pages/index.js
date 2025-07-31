@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { supabase } from '../lib/supabase'
-import { mealTypes, cookingTimes, commonIngredients, leftoverIngredients, leftoverCombinations } from '../lib/data'
+import { mealTypes, cookingTimes, ingredientCategories, commonIngredients, leftoverIngredients, leftoverCombinations } from '../lib/data'
 import { analytics } from '../lib/analytics'
 import { 
   ChefHat, 
@@ -35,11 +35,42 @@ export default function Home() {
   const [showValidationModal, setShowValidationModal] = useState(false)
   const [validationMessage, setValidationMessage] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(12)
 
-  // Filter ingredients based on search term
-  const filteredIngredients = availableIngredients.filter(ingredient =>
-    ingredient.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  // Get all ingredients from categories
+  const allIngredients = ingredientCategories.flatMap(category => category.ingredients)
+  
+  // Filter ingredients based on search term and category
+  const getFilteredIngredients = () => {
+    let filtered = allIngredients
+    
+    // Filter by search term
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(ingredient =>
+        ingredient.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+    
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      const category = ingredientCategories.find(cat => cat.id === selectedCategory)
+      filtered = filtered.filter(ingredient => 
+        category?.ingredients.includes(ingredient)
+      )
+    }
+    
+    return filtered
+  }
+
+  const filteredIngredients = getFilteredIngredients()
+  
+  // Pagination
+  const totalPages = Math.ceil(filteredIngredients.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const currentIngredients = filteredIngredients.slice(startIndex, endIndex)
 
   // Function to get meal type based on Lagos time
   const getMealTypeByTime = () => {
@@ -504,35 +535,180 @@ export default function Home() {
 
   // Helper function to get ingredient icon
   const getIngredientIcon = (ingredient) => {
-    return ingredient === 'Rice' ? '🍚' :
-           ingredient === 'Plantain' ? '🍌' :
-           ingredient === 'Yam' ? '🍠' :
-           ingredient === 'Tomatoes' ? '🍅' :
-           ingredient === 'Onions' ? '🧅' :
-           ingredient === 'Pepper' ? '🌶️' :
-           ingredient === 'Beans' ? '🫘' :
-           ingredient === 'Chicken' ? '🍗' :
-           ingredient === 'Beef' ? '🥩' :
-           ingredient === 'Fish' ? '🐟' :
-           ingredient === 'Eggs' ? '🥚' :
-           ingredient === 'Spinach' ? '🥬' :
-           ingredient === 'Palm oil' ? '🫒' :
-           ingredient === 'Vegetable oil' ? '🫗' :
-           ingredient === 'Garlic' ? '🧄' :
-           ingredient === 'Ginger' ? '🫚' :
-           ingredient === 'Okra' ? '🥗' :
-           ingredient === 'Sweet potato' ? '🍠' :
-           ingredient === 'Carrots' ? '🥕' :
-           ingredient === 'Green beans' ? '🫛' :
-           ingredient === 'Bread' ? '🍞' :
-           ingredient === 'Egg' ? '🥚' :
-           ingredient === 'Irish potatoes' ? '🥔' :
-           ingredient === 'Garri' ? '🫓' :
-           ingredient === 'Semovita' ? '🫓' :
-           ingredient === 'Wheat' ? '🌾' :
-           ingredient === 'Starch' ? '🫓' :
-           ingredient === 'Spaghetti' ? '🍝' :
-           ingredient === 'Noodles' ? '🍜' : '🥬'
+    const iconMap = {
+      // Swallows & Starches
+      'Garri': '🌾',
+      'Semovita': '🌾',
+      'Amala': '🍚',
+      'Eba': '🍚',
+      'Pounded yam': '🍠',
+      'Tuwo': '🌾',
+      'Fufu': '🍚',
+      'Rice': '🍚',
+      'Wheat': '🌾',
+      'Starch': '🌾',
+      'Spaghetti': '🍝',
+      'Noodles': '🍜',
+      'Couscous': '🌾',
+      
+      // Proteins & Meats
+      'Chicken': '🍗',
+      'Beef': '🥩',
+      'Goat meat': '🥩',
+      'Fish': '🐟',
+      'Pork': '🥩',
+      'Turkey': '🦃',
+      'Egg': '🥚',
+      'Shrimp': '🦐',
+      'Crab': '🦀',
+      'Snail': '🐌',
+      'Liver': '🥩',
+      'Kidney': '🥩',
+      'Tripe': '🥩',
+      'Stockfish': '🐟',
+      'Dried fish': '🐟',
+      'Smoked fish': '🐟',
+      'Bush meat': '🥩',
+      'Ponmo': '🥩',
+      
+      // Vegetables & Greens
+      'Tomatoes': '🍅',
+      'Onions': '🧅',
+      'Spinach': '🥬',
+      'Okra': '🥬',
+      'Carrots': '🥕',
+      'Green beans': '🫘',
+      'Bell peppers': '🫑',
+      'Scotch bonnet': '🌶️',
+      'Habanero': '🌶️',
+      'Cucumber': '🥒',
+      'Lettuce': '🥬',
+      'Cabbage': '🥬',
+      'Cauliflower': '🥬',
+      'Broccoli': '🥬',
+      'Sweet potato': '🍠',
+      'Irish potatoes': '🥔',
+      'Yam': '🍠',
+      'Plantain': '🍌',
+      'Cassava': '🍠',
+      'Pumpkin leaves': '🥬',
+      'Bitter leaf': '🥬',
+      'Water leaf': '🥬',
+      'Scent leaf': '🌿',
+      'Curry leaf': '🌿',
+      'Basil': '🌿',
+      
+      // Fruits & Tropical
+      'Banana': '🍌',
+      'Orange': '🍊',
+      'Apple': '🍎',
+      'Mango': '🥭',
+      'Pineapple': '🍍',
+      'Watermelon': '🍉',
+      'Pawpaw': '🥭',
+      'Guava': '🍈',
+      'Grape': '🍇',
+      'Strawberry': '🍓',
+      'Avocado': '🥑',
+      'Lemon': '🍋',
+      'Lime': '🍋',
+      'Tangerine': '🍊',
+      'Grapefruit': '🍊',
+      'Pomegranate': '🍎',
+      'Coconut': '🥥',
+      'Tiger nut': '🥜',
+      
+      // Dairy & Alternatives
+      'Milk': '🥛',
+      'Cheese': '🧀',
+      'Yogurt': '🥛',
+      'Butter': '🧈',
+      'Cream': '🥛',
+      'Sour cream': '🥛',
+      'Coconut milk': '🥛',
+      'Almond milk': '🥛',
+      'Soy milk': '🥛',
+      'Coconut cream': '🥛',
+      'Evaporated milk': '🥛',
+      'Condensed milk': '🥛',
+      
+      // Spices & Seasonings
+      'Garlic': '🧄',
+      'Ginger': '🫘',
+      'Pepper': '🌶️',
+      'Curry powder': '🌶️',
+      'Thyme': '🌿',
+      'Bay leaves': '🌿',
+      'Nutmeg': '🌰',
+      'Cinnamon': '🌰',
+      'Cumin': '🌶️',
+      'Coriander': '🌿',
+      'Seasoning cubes': '🧂',
+      'Salt': '🧂',
+      'Black pepper': '🌶️',
+      'White pepper': '🌶️',
+      'Cayenne pepper': '🌶️',
+      'Paprika': '🌶️',
+      'Turmeric': '🌶️',
+      'Cloves': '🌰',
+      'Cardamom': '🌰',
+      
+      // Oils & Fats
+      'Palm oil': '🫒',
+      'Vegetable oil': '🫒',
+      'Olive oil': '🫒',
+      'Coconut oil': '🫒',
+      'Groundnut oil': '🫒',
+      'Sesame oil': '🫒',
+      'Margarine': '🧈',
+      'Ghee': '🧈',
+      'Red palm oil': '🫒',
+      'Palm kernel oil': '🫒',
+      
+      // Legumes & Beans
+      'Beans': '🫘',
+      'Black-eyed peas': '🫘',
+      'Lentils': '🫘',
+      'Chickpeas': '🫘',
+      'Cowpeas': '🫘',
+      'Soybeans': '🫘',
+      'Peanuts': '🥜',
+      'Groundnuts': '🥜',
+      'Almonds': '🥜',
+      'Cashews': '🥜',
+      'Bambara nuts': '🥜',
+      'Melon seeds': '🌰',
+      'Pumpkin seeds': '🌰',
+      
+      // Baked Goods & Snacks
+      'Bread': '🍞',
+      'Toast': '🍞',
+      'Buns': '🍞',
+      'Cake': '🍰',
+      'Cookies': '🍪',
+      'Biscuits': '🍪',
+      'Puff puff': '🍩',
+      'Rolls': '🍞',
+      'Croissants': '🥐',
+      'Agege bread': '🍞',
+      'Plantain chips': '🍌',
+      'Groundnut': '🥜',
+      'Popcorn': '🍿',
+      
+      // Traditional Nigerian
+      'Crayfish': '🦐',
+      'Periwinkle': '🐌',
+      'Ogbono': '🌰',
+      'Egusi': '🌰',
+      'Uziza': '🌿',
+      'Utazi': '🌿',
+      'Nchawu': '🌿',
+      'Palm wine': '🍷',
+      'Zobo': '🍷',
+      'Kunu': '🥛',
+      'Tiger nut milk': '🥛'
+    }
+    return iconMap[ingredient] || '🥘'
   }
 
   const handleMealTypeSelection = (type) => {
@@ -610,60 +786,60 @@ export default function Home() {
       <div className="relative z-10 container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-6xl">
         
         {/* Optimized Hero Section */}
-        <div className="text-center mb-6 sm:mb-8 animate-slide-in-up">
-          <div className="flex flex-col items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="text-center mb-4 sm:mb-6 animate-slide-in-up">
+          <div className="flex flex-col items-center gap-2 sm:gap-4 mb-3 sm:mb-4">
             {/* Compact Logo Icon */}
             <div className="relative group">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-strong animate-pulse-glow group-hover:scale-105 transition-transform duration-300">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-strong animate-pulse-glow group-hover:scale-105 transition-transform duration-300">
                 <div className="relative">
-                  <ChefHat className="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-lg" />
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-rose-400 to-pink-500 rounded-full flex items-center justify-center shadow-medium">
-                    <Heart className="w-2 h-2 text-white animate-bounce-light" />
+                  <ChefHat className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-white drop-shadow-lg" />
+                  <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-br from-rose-400 to-pink-500 rounded-full flex items-center justify-center shadow-medium">
+                    <Heart className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-white animate-bounce-light" />
                   </div>
                 </div>
               </div>
               {/* Subtle floating elements */}
-              <div className="absolute -top-1 -left-1 w-2 h-2 bg-purple-300 rounded-full opacity-60 animate-float"></div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 bg-indigo-300 rounded-full opacity-50 animate-float" style={{ animationDelay: '1s' }}></div>
+              <div className="absolute -top-0.5 -left-0.5 sm:-top-1 sm:-left-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-purple-300 rounded-full opacity-60 animate-float"></div>
+              <div className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-1 h-1 sm:w-1.5 sm:h-1.5 bg-indigo-300 rounded-full opacity-50 animate-float" style={{ animationDelay: '1s' }}></div>
             </div>
             
             {/* Compact Typography */}
             <div className="text-center">
-              <h1 className="text-3xl sm:text-4xl font-fun bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-1 tracking-tight hover:scale-105 transition-transform duration-300 cursor-pointer">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-fun bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-1 tracking-tight hover:scale-105 transition-transform duration-300 cursor-pointer">
                 MomFudy
               </h1>
-              <p className="text-gray-600 text-base sm:text-lg font-medium">Your Smart Kitchen Assistant</p>
-              <div className="flex items-center justify-center gap-1.5 mt-1">
-                <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse"></div>
+              <p className="text-gray-600 text-sm sm:text-base md:text-lg font-medium">Your Smart Kitchen Assistant</p>
+              <div className="flex items-center justify-center gap-1 sm:gap-1.5 mt-1">
+                <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-purple-400 rounded-full animate-pulse"></div>
                 <span className="text-xs sm:text-sm text-gray-500 font-medium">Never wonder what to cook again</span>
-                <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-indigo-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Mode Toggle */}
-        <div className="flex justify-center mb-6 sm:mb-8 animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
-          <div className="toggle-container w-full max-w-md">
+        {/* Mode Toggle - Mobile Optimized */}
+        <div className="flex justify-center mb-4 sm:mb-6 animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
+          <div className="toggle-container w-full max-w-sm sm:max-w-md">
             <button
               onClick={() => setShowIngredientMode(false)}
-              className={`toggle-button px-6 py-3 w-1/2 ${
+              className={`toggle-button px-4 sm:px-6 py-2.5 sm:py-3 w-1/2 ${
                 !showIngredientMode ? 'active' : 'inactive'
               }`}
             >
-              <Sparkles className="w-4 h-4 inline mr-2" />
-              <span className="hidden sm:inline">Quick Suggestion</span>
-              <span className="sm:hidden">Quick</span>
+              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 inline mr-1.5 sm:mr-2" />
+              <span className="hidden sm:inline text-sm">Quick Suggestion</span>
+              <span className="sm:hidden text-xs">Quick</span>
             </button>
             <button
               onClick={() => setShowIngredientMode(true)}
-              className={`toggle-button px-6 py-3 w-1/2 ${
+              className={`toggle-button px-4 sm:px-6 py-2.5 sm:py-3 w-1/2 ${
                 showIngredientMode ? 'active' : 'inactive'
               }`}
             >
-              <CircleCheck className="w-4 h-4 inline mr-2" />
-              <span className="hidden sm:inline">Smart Ingredients</span>
-              <span className="sm:hidden">Smart</span>
+              <CircleCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 inline mr-1.5 sm:mr-2" />
+              <span className="hidden sm:inline text-sm">Smart Ingredients</span>
+              <span className="sm:hidden text-xs">Smart</span>
             </button>
           </div>
         </div>
@@ -876,33 +1052,34 @@ export default function Home() {
                 </div>
               ) : (
                 <div className="card mb-8 sm:mb-12">
-                  <div className="flex items-center gap-4 mb-8">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                      leftoverMode 
-                        ? 'bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg shadow-green-500/25' 
-                        : 'bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg shadow-purple-500/25'
-                    }`}>
-                      {leftoverMode ? (
-                        <Refrigerator className="w-6 h-6 text-white" />
-                      ) : (
-                        <CircleCheck className="w-6 h-6 text-white" />
-                      )}
+                  {/* Main Header - Single, Clear Section */}
+                  <div className="text-center mb-8">
+                    <div className="flex items-center justify-center gap-4 mb-4">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                        leftoverMode 
+                          ? 'bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg shadow-green-500/25' 
+                          : 'bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg shadow-purple-500/25'
+                      }`}>
+                        {leftoverMode ? (
+                          <Refrigerator className="w-6 h-6 text-white" />
+                        ) : (
+                          <CircleCheck className="w-6 h-6 text-white" />
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                          {leftoverMode ? 'Transform Your Leftovers' : 'Smart Meal Suggestion'}
+                        </h3>
+                        <p className="text-gray-600 text-base">
+                          {leftoverMode 
+                            ? 'Turn yesterday\'s meal into today\'s delicious dish'
+                            : 'Select your ingredients and we\'ll find perfect recipes for you!'
+                          }
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="heading-md text-gray-800">
-                        {leftoverMode ? 'Transform Your Leftovers' : 'What ingredients do you have?'}
-                      </h3>
-                      <p className="text-gray-600 text-sm mt-1">
-                        {leftoverMode 
-                          ? 'Turn yesterday\'s meal into today\'s delicious dish'
-                          : 'Select ingredients to find recipes you can make'
-                        }
-                      </p>
-                    </div>
-                  </div>
 
-                  {/* Compact Mode Toggle */}
-                  <div className="animate-slide-in-up" style={{ animationDelay: '0.3s' }}>
+                    {/* Mode Toggle - Integrated into header */}
                     <div className="flex justify-center mb-6">
                       <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-1.5 inline-flex shadow-lg border border-gray-100">
                         <button
@@ -938,71 +1115,107 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Ingredient Selection - Improved Design */}
+                  {/* Ingredient Selection - Streamlined Design */}
                   <div className="animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
                     <div className="card">
-                      {/* Enhanced Header */}
-                      <div className="text-center mb-6">
-                        <div className="flex items-center justify-center gap-3 mb-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
-                            <Search className="w-5 h-5 text-white" />
-                          </div>
-                          <h3 className="text-xl font-bold text-gray-800">What ingredients do you have?</h3>
+                      {/* Search Section Header */}
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+                          <Search className="w-5 h-5 text-white" />
                         </div>
-                        <p className="text-gray-600 text-sm">Select your ingredients and we&apos;ll find perfect recipes for you!</p>
+                        <div>
+                          <h4 className="text-lg font-semibold text-gray-800">Find Your Ingredients</h4>
+                          <p className="text-gray-600 text-sm">Search and select ingredients you have available</p>
+                        </div>
                       </div>
 
-                      {/* Search Bar - More prominent */}
+                      {/* Enhanced Search Bar - Mobile Optimized */}
                       <div className="relative mb-6">
-                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <input
-                          type="text"
-                          placeholder="Search ingredients or type to add custom ingredient..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter' && searchTerm.trim()) {
-                              const customIngredient = searchTerm.trim()
-                              if (!selectedIngredients.includes(customIngredient) && !commonIngredients.includes(customIngredient)) {
+                        <div className="relative">
+                          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                          <input
+                            type="text"
+                            placeholder="Search ingredients or type to add custom ingredient..."
+                            value={searchTerm}
+                            onChange={(e) => {
+                              setSearchTerm(e.target.value)
+                              setCurrentPage(1) // Reset to first page when searching
+                            }}
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter' && searchTerm.trim()) {
+                                const customIngredient = searchTerm.trim()
+                                if (!selectedIngredients.includes(customIngredient) && !commonIngredients.includes(customIngredient)) {
+                                  setSelectedIngredients(prev => [...prev, customIngredient])
+                                  setSearchTerm('')
+                                }
+                              }
+                            }}
+                            className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-700 placeholder-gray-400 text-base"
+                          />
+                          {searchTerm.trim() && !commonIngredients.includes(searchTerm.trim()) && !selectedIngredients.includes(searchTerm.trim()) && (
+                            <button
+                              onClick={() => {
+                                const customIngredient = searchTerm.trim()
                                 setSelectedIngredients(prev => [...prev, customIngredient])
                                 setSearchTerm('')
-                              }
-                            }
-                          }}
-                          className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-700 placeholder-gray-400"
-                        />
-                        {searchTerm.trim() && !commonIngredients.includes(searchTerm.trim()) && !selectedIngredients.includes(searchTerm.trim()) && (
-                          <button
-                            onClick={() => {
-                              const customIngredient = searchTerm.trim()
-                              setSelectedIngredients(prev => [...prev, customIngredient])
-                              setSearchTerm('')
-                            }}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600 transition-colors duration-200"
-                          >
-                            Add
-                          </button>
+                              }}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-green-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-green-600 transition-colors duration-200 font-medium"
+                            >
+                              Add
+                            </button>
+                          )}
+                        </div>
+                        
+                        {/* Search suggestions for mobile */}
+                        {searchTerm.trim() && filteredIngredients.length > 0 && (
+                          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto">
+                            {filteredIngredients.slice(0, 6).map((ingredient) => (
+                              <button
+                                key={ingredient}
+                                onClick={() => {
+                                  handleIngredientToggle(ingredient)
+                                  setSearchTerm('')
+                                }}
+                                className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-200 flex items-center gap-3 border-b border-gray-100 last:border-b-0"
+                              >
+                                <span className="text-lg">{getIngredientIcon(ingredient)}</span>
+                                <span className="text-gray-700 font-medium">{ingredient}</span>
+                                {selectedIngredients.includes(ingredient) && (
+                                  <CheckCircle className="w-4 h-4 text-green-500 ml-auto" />
+                                )}
+                              </button>
+                            ))}
+                          </div>
                         )}
                       </div>
 
-                      {/* Selected Ingredients Display */}
+                      {/* Selected Ingredients Display - Mobile Optimized */}
                       {selectedIngredients.length > 0 && (
                         <div className="mb-6">
-                          <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                            <CircleCheck className="w-4 h-4 text-green-500" />
-                            Selected Ingredients ({selectedIngredients.length})
-                          </h4>
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                              <CircleCheck className="w-4 h-4 text-green-500" />
+                              Selected ({selectedIngredients.length})
+                            </h4>
+                            <button
+                              onClick={() => setSelectedIngredients([])}
+                              className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1"
+                            >
+                              <X className="w-3 h-3" />
+                              Clear All
+                            </button>
+                          </div>
                           <div className="flex flex-wrap gap-2">
                             {selectedIngredients.map((ingredient, index) => (
                               <div
                                 key={index}
-                                className="bg-gradient-to-r from-green-100 to-emerald-100 border border-green-200 rounded-full px-3 py-1.5 flex items-center gap-2 shadow-sm"
+                                className="bg-gradient-to-r from-green-100 to-emerald-100 border border-green-200 rounded-full px-3 py-2 flex items-center gap-2 shadow-sm"
                               >
                                 <span className="text-sm">{getIngredientIcon(ingredient)}</span>
                                 <span className="text-green-700 text-sm font-medium">{ingredient}</span>
                                 <button
                                   onClick={() => setSelectedIngredients(prev => prev.filter((_, i) => i !== index))}
-                                  className="text-green-600 hover:text-green-800 transition-colors"
+                                  className="text-green-600 hover:text-green-800 transition-colors p-1"
                                 >
                                   <X className="w-3 h-3" />
                                 </button>
@@ -1012,53 +1225,158 @@ export default function Home() {
                         </div>
                       )}
 
-                      {/* Ingredients Grid - Better spacing and organization */}
-                      <div className="space-y-4">
-                        {/* Available Ingredients Section */}
-                        <div>
-                          <h4 className="text-sm font-semibold text-gray-700 mb-3">All Available Ingredients</h4>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                            {filteredIngredients.map((ingredient) => (
-                              <button
-                                key={ingredient}
-                                onClick={() => handleIngredientToggle(ingredient)}
-                                className={`group p-3 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${
-                                  selectedIngredients.includes(ingredient)
-                                    ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-md'
-                                    : 'bg-white border-gray-200 hover:border-green-200'
-                                }`}
-                              >
-                                <div className="flex flex-col items-center gap-2">
-                                  <span className="text-2xl">{getIngredientIcon(ingredient)}</span>
-                                  <span className="text-xs font-medium text-gray-700 text-center leading-tight">{ingredient}</span>
-                                </div>
-                              </button>
-                            ))}
-                          </div>
+                      {/* Category Filter */}
+                      <div className="mb-6">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-3">Filter by Category</h4>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedCategory('all')
+                              setCurrentPage(1)
+                            }}
+                            className={`px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+                              selectedCategory === 'all'
+                                ? 'bg-blue-500 text-white shadow-md'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                          >
+                            All Categories
+                          </button>
+                          {ingredientCategories.map((category) => (
+                            <button
+                              key={category.id}
+                              onClick={() => {
+                                setSelectedCategory(category.id)
+                                setCurrentPage(1)
+                              }}
+                              className={`px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 flex items-center gap-1 ${
+                                selectedCategory === category.id
+                                  ? 'bg-blue-500 text-white shadow-md'
+                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                              }`}
+                            >
+                              <span>{category.emoji}</span>
+                              <span className="hidden sm:inline">{category.name}</span>
+                              <span className="sm:hidden">{category.name.split(' ')[0]}</span>
+                            </button>
+                          ))}
                         </div>
                       </div>
 
-                      {/* Clear All Button - Only show when ingredients are selected */}
-                      {selectedIngredients.length > 0 && (
-                        <div className="flex justify-center mt-6">
-                          <button
-                            onClick={() => setSelectedIngredients([])}
-                            className="px-6 py-3 text-gray-600 hover:text-red-600 transition-colors duration-200 font-medium flex items-center gap-2"
-                          >
-                            <X className="w-4 h-4" />
-                            Clear All
-                          </button>
+                      {/* Ingredients Grid - Mobile Optimized */}
+                      <div className="space-y-4">
+                        {/* Available Ingredients Section */}
+                        <div>
+                          <div className="flex items-center justify-between mb-4">
+                            <h4 className="text-sm font-semibold text-gray-700">
+                              {selectedCategory === 'all' ? 'All Available Ingredients' : ingredientCategories.find(cat => cat.id === selectedCategory)?.name}
+                            </h4>
+                            <span className="text-xs text-gray-500">{filteredIngredients.length} ingredients</span>
+                          </div>
+                          
+                          {/* Mobile-optimized grid with better spacing */}
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                            {currentIngredients.map((ingredient) => (
+                              <button
+                                key={ingredient}
+                                onClick={() => handleIngredientToggle(ingredient)}
+                                className={`group relative p-4 sm:p-3 rounded-xl border-2 transition-all duration-200 hover:shadow-md active:scale-95 ${
+                                  selectedIngredients.includes(ingredient)
+                                    ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300 shadow-md transform scale-105'
+                                    : 'bg-white border-gray-200 hover:border-green-200 hover:bg-green-50/50'
+                                }`}
+                              >
+                                {/* Selection indicator */}
+                                {selectedIngredients.includes(ingredient) && (
+                                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-md">
+                                    <CheckCircle className="w-3 h-3 text-white" />
+                                  </div>
+                                )}
+                                
+                                <div className="flex flex-col items-center gap-2 sm:gap-1.5">
+                                  <span className="text-2xl sm:text-xl">{getIngredientIcon(ingredient)}</span>
+                                  <span className="text-xs sm:text-xs font-medium text-gray-700 text-center leading-tight line-clamp-2">{ingredient}</span>
+                                </div>
+                                
+                                {/* Hover effect */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 to-emerald-400/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                              </button>
+                            ))}
+                          </div>
+                          
+                          {/* No results message */}
+                          {filteredIngredients.length === 0 && searchTerm.trim() && (
+                            <div className="text-center py-8">
+                              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Search className="w-8 h-8 text-gray-400" />
+                              </div>
+                              <p className="text-gray-500 text-sm">No ingredients found for "{searchTerm}"</p>
+                              <p className="text-gray-400 text-xs mt-1">Try a different search term or add it as a custom ingredient</p>
+                            </div>
+                          )}
+
+                          {/* Pagination Controls */}
+                          {totalPages > 1 && (
+                            <div className="flex items-center justify-center gap-2 mt-6">
+                              <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 text-gray-600 hover:bg-gray-200"
+                              >
+                                Previous
+                              </button>
+                              
+                              <div className="flex items-center gap-1">
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                  const pageNum = i + 1
+                                  return (
+                                    <button
+                                      key={pageNum}
+                                      onClick={() => setCurrentPage(pageNum)}
+                                      className={`w-8 h-8 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                        currentPage === pageNum
+                                          ? 'bg-blue-500 text-white'
+                                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                      }`}
+                                    >
+                                      {pageNum}
+                                    </button>
+                                  )
+                                })}
+                                {totalPages > 5 && (
+                                  <span className="text-gray-500 text-sm">...</span>
+                                )}
+                              </div>
+                              
+                              <button
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages}
+                                className="px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 text-gray-600 hover:bg-gray-200"
+                              >
+                                Next
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Page Info */}
+                          {totalPages > 1 && (
+                            <div className="text-center mt-2">
+                              <span className="text-xs text-gray-500">
+                                Page {currentPage} of {totalPages} • Showing {startIndex + 1}-{Math.min(endIndex, filteredIngredients.length)} of {filteredIngredients.length} ingredients
+                              </span>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Improved Get Meal Suggestion Button */}
+                  {/* Enhanced Get Meal Suggestion Button - Mobile Optimized */}
                   <div className="flex justify-center mt-8">
                     <button
                       onClick={getSuggestion}
                       disabled={loading || (leftoverMode ? true : selectedIngredients.length === 0)}
-                      className={`relative px-8 py-4 flex items-center justify-center gap-3 group transition-all duration-300 transform hover:scale-105 min-w-[280px] font-bold text-lg rounded-2xl shadow-xl border-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
+                      className={`relative w-full max-w-sm sm:max-w-md px-6 sm:px-8 py-4 sm:py-5 flex items-center justify-center gap-3 group transition-all duration-300 transform hover:scale-105 active:scale-95 font-bold text-base sm:text-lg rounded-2xl shadow-xl border-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
                         leftoverMode
                           ? 'bg-gradient-to-r from-gray-400 to-gray-500 border-gray-300/20 cursor-not-allowed'
                           : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-green-500/25'
@@ -1094,14 +1412,15 @@ export default function Home() {
                     </button>
                   </div>
 
-                  {/* Quick Stats */}
+                  {/* Enhanced Quick Stats - Mobile Optimized */}
                   {!leftoverMode && selectedIngredients.length > 0 && (
                     <div className="mt-6 text-center">
-                      <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-4 py-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-4 py-2 shadow-sm">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                         <span className="text-sm text-green-700 font-medium">
-                          {selectedIngredients.length} ingredient{selectedIngredients.length !== 1 ? 's' : ''} selected • Smart suggestions enabled
+                          {selectedIngredients.length} ingredient{selectedIngredients.length !== 1 ? 's' : ''} selected
                         </span>
+                        <span className="text-xs text-green-600">• Smart suggestions enabled</span>
                       </div>
                     </div>
                   )}
