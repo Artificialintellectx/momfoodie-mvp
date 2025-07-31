@@ -1310,7 +1310,7 @@ export default function Home() {
                               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Search className="w-8 h-8 text-gray-400" />
                               </div>
-                              <p className="text-gray-500 text-sm">No ingredients found for "{searchTerm}"</p>
+                              <p className="text-gray-500 text-sm">No ingredients found for &quot;{searchTerm}&quot;</p>
                               <p className="text-gray-400 text-xs mt-1">Try a different search term or add it as a custom ingredient</p>
                             </div>
                           )}
