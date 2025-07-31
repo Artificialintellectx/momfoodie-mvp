@@ -193,15 +193,15 @@ export default function Home() {
           // console.log('🔍 Ingredient mode: No meal type or cooking time filters applied')
         }
         
-        const { data, error } = await query.limit(50)
+        const { data, error } = await query
 
         if (error) {
           // console.log('❌ Supabase error:', error.message)
           // setMessage({ type: 'error', text: 'Failed to load meals from database' }) // This line was removed
           return
         } else if (data && data.length > 0) {
-          // console.log(`✅ Found ${data.length} meals from Supabase`)
-          // console.log('📋 Supabase meals:', data.map(m => `${m.name} (${m.meal_type}, ${m.dietary_preference})`))
+          console.log(`✅ Found ${data.length} meals from Supabase database`)
+          console.log('📋 Sample meals:', data.slice(0, 5).map(m => `${m.name} (${m.meal_type})`))
           
           // Debug: Show meals that contain rice
           if (showIngredientMode && selectedIngredients.includes('Rice')) {
@@ -289,13 +289,27 @@ export default function Home() {
                 // console.log(`⚠️ &quot;${meal.name}&quot; contains unselected ingredients`)
               }
               
+              // Define protein ingredients for priority scoring
+              const proteinIngredients = [
+                'beef', 'chicken', 'fish', 'pork', 'lamb', 'goat', 'turkey', 'duck',
+                'tilapia', 'mackerel', 'stockfish', 'dried fish', 'smoked fish',
+                'shrimp', 'prawn', 'crab', 'lobster', 'snail', 'periwinkle',
+                'egg', 'eggs', 'quail egg', 'quail eggs'
+              ]
+              
               // Check each selected ingredient against the meal
               selectedIngredients.forEach(ingredient => {
                 const ingredientLower = ingredient.toLowerCase()
                 
                 // Check if ingredient appears in meal name (higher score)
                 if (meal.name.toLowerCase().includes(ingredientLower)) {
-                  score += 3
+                  // Extra bonus for protein ingredients in meal name
+                  if (proteinIngredients.includes(ingredientLower)) {
+                    score += 8 // Higher score for protein in title
+                    console.log(`🥩 Protein "${ingredient}" found in meal name: "${meal.name}" - Priority boost!`)
+                  } else {
+                    score += 3 // Regular score for other ingredients in title
+                  }
                   matchedIngredients.push(ingredient)
                   // console.log(`✅ &quot;${ingredient}&quot; found in meal name: &quot;${meal.name}&quot;`)
                 }
@@ -333,7 +347,13 @@ export default function Home() {
                   return matches
                 })
                 if (ingredientInList) {
-                  score += 5
+                  // Extra bonus for protein ingredients in ingredients list
+                  if (proteinIngredients.includes(ingredientLower)) {
+                    score += 7 // Higher score for protein in ingredients
+                    console.log(`🥩 Protein "${ingredient}" found in ingredients: "${meal.name}" - Priority boost!`)
+                  } else {
+                    score += 5 // Regular score for other ingredients
+                  }
                   if (!matchedIngredients.includes(ingredient)) {
                     matchedIngredients.push(ingredient)
                   }
@@ -362,9 +382,25 @@ export default function Home() {
                 score += 10
               }
               
-              // PENALTY for meals with unselected ingredients (reduced penalty for more flexibility)
+              // Special bonus for meals where protein is the main ingredient
+              const selectedProteins = selectedIngredients.filter(ing => proteinIngredients.includes(ing.toLowerCase()))
+              if (selectedProteins.length > 0) {
+                selectedProteins.forEach(protein => {
+                  const proteinLower = protein.toLowerCase()
+                  // Check if protein appears early in ingredients list (main ingredient)
+                  const proteinIndex = meal.ingredients.findIndex(ing => 
+                    ing.toLowerCase().includes(proteinLower)
+                  )
+                  if (proteinIndex <= 2) { // Protein in first 3 ingredients
+                    score += 5
+                    console.log(`🥩 Protein "${protein}" is main ingredient in "${meal.name}" - Main ingredient bonus!`)
+                  }
+                })
+              }
+              
+              // PENALTY for meals with unselected ingredients (minimal penalty for maximum flexibility)
               if (hasUnselectedIngredients) {
-                score = Math.max(0, score - 10) // Reduced penalty to allow more options
+                score = Math.max(0, score - 5) // Minimal penalty to allow more options
               }
               
               const result = {
@@ -403,19 +439,170 @@ export default function Home() {
             // NEW: AI-powered ingredient matching system
             // This provides intelligent suggestions based on semantic understanding
             
-            // Get all meals with any ingredient matches (no strict filtering)
+            // Get all meals with any ingredient matches (more flexible filtering)
             const allMatchingMeals = scoredMeals
               .filter(meal => meal.ingredientScore > 0 && !meal.excluded)
+              .sort((a, b) => b.ingredientScore - a.ingredientScore) // Sort by score first
             
-            console.log(`📊 Total meals with ingredient matches: ${allMatchingMeals.length}`)
-            console.log('📋 Meals being passed to AI:')
-            allMatchingMeals.slice(0, 5).forEach((meal, index) => {
-              console.log(`  ${index + 1}. "${meal.name}" - Score: ${meal.ingredientScore}, Matches: ${meal.matchedIngredients.join(', ')}`)
+            // STRICT VALIDATION: Only include meals that contain ALL selected ingredients
+            const strictlyMatchingMeals = allMatchingMeals.filter(meal => {
+              const hasAllIngredients = selectedIngredients.every(selectedIngredient => {
+                const selectedLower = selectedIngredient.toLowerCase()
+                return meal.ingredients.some(mealIngredient => 
+                  mealIngredient.toLowerCase().includes(selectedLower)
+                ) || meal.name.toLowerCase().includes(selectedLower)
+              })
+              
+              if (!hasAllIngredients) {
+                console.log(`❌ Excluding "${meal.name}" - Missing ingredients: ${selectedIngredients.filter(ing => {
+                  const ingLower = ing.toLowerCase()
+                  return !meal.ingredients.some(mealIng => mealIng.toLowerCase().includes(ingLower)) && 
+                         !meal.name.toLowerCase().includes(ingLower)
+                }).join(', ')}`)
+              }
+              
+              return hasAllIngredients
             })
             
-            if (allMatchingMeals.length > 0) {
+            console.log(`🔒 Strict validation: ${strictlyMatchingMeals.length} out of ${allMatchingMeals.length} meals contain ALL selected ingredients`)
+            
+            // PROTEIN PRIORITY SYSTEM: Separate meals by protein priority
+            const selectedProteins = selectedIngredients.filter(ing => 
+              ['beef', 'chicken', 'fish', 'pork', 'lamb', 'goat', 'turkey', 'duck', 'tilapia', 'mackerel', 'stockfish', 'dried fish', 'smoked fish', 'shrimp', 'prawn', 'crab', 'lobster', 'snail', 'periwinkle', 'egg', 'eggs', 'quail egg', 'quail eggs'].includes(ing.toLowerCase())
+            )
+            
+            let priorityMeals = strictlyMatchingMeals
+            let secondaryMeals = []
+            
+            if (selectedProteins.length > 0) {
+              console.log(`🥩 Protein priority mode: ${selectedProteins.join(', ')} selected`)
+              
+              // Separate meals into priority tiers
+              const tier1Meals = strictlyMatchingMeals.filter(meal => {
+                return selectedProteins.some(protein => 
+                  meal.name.toLowerCase().includes(protein.toLowerCase())
+                )
+              })
+              
+              const tier2Meals = strictlyMatchingMeals.filter(meal => {
+                return !selectedProteins.some(protein => 
+                  meal.name.toLowerCase().includes(protein.toLowerCase())
+                )
+              })
+              
+              priorityMeals = tier1Meals
+              secondaryMeals = tier2Meals
+              
+              console.log(`🥩 Tier 1 (Protein in title): ${tier1Meals.length} meals`)
+              tier1Meals.slice(0, 3).forEach((meal, index) => {
+                console.log(`  ${index + 1}. "${meal.name}"`)
+              })
+              
+              console.log(`🥩 Tier 2 (Protein in ingredients only): ${tier2Meals.length} meals`)
+              tier2Meals.slice(0, 3).forEach((meal, index) => {
+                console.log(`  ${index + 1}. "${meal.name}"`)
+              })
+            }
+            
+            console.log(`📊 Total meals with ingredient matches: ${allMatchingMeals.length} out of ${data.length} total meals`)
+            
+            // Protein priority mode is already handled above - using existing selectedProteins variable
+            
+            console.log('📋 Top meals being passed to AI:')
+            priorityMeals.slice(0, 5).forEach((meal, index) => {
+              console.log(`  ${index + 1}. "${meal.name}" - Score: ${meal.ingredientScore}, Matches: ${meal.matchedIngredients.join(', ')}`)
+            })
+            console.log(`🤖 Passing ${priorityMeals.length} priority meals to AI for intelligent ranking`)
+            
+            if (priorityMeals.length > 0) {
+              // COST SAVING: Use AI only for complex cases, otherwise use rule-based
+              const shouldUseAI = priorityMeals.length > 5 || selectedIngredients.length > 2
+              
+              if (shouldUseAI) {
+                try {
+                  // Use AI to rank and suggest meals
+                  const userContext = {
+                    mealType,
+                    cookingTime,
+                    spicy: selectedIngredients.some(ing => ['scotch bonnet', 'habanero', 'pepper'].includes(ing.toLowerCase())),
+                    traditional: true,
+                    difficulty: 'any'
+                  }
+                  
+                  console.log('🤖 Using AI for complex ranking (cost justified)')
+                  // Get AI-powered suggestions from priority meals first
+                  const aiSuggestions = await getAISuggestions(selectedIngredients, priorityMeals, userContext)
+                
+                                  // Combine AI ranking with rule-based scoring
+                  suggestions = aiSuggestions.map(meal => ({
+                    ...meal,
+                    ingredientScore: meal.aiScore || meal.ingredientScore,
+                    matchedIngredients: meal.matchedIngredients || [],
+                    matchPercentage: meal.matchPercentage || 0,
+                    hasUnselectedIngredients: meal.hasUnselectedIngredients || false
+                  }))
+                  
+                  // console.log(`🤖 AI ranked ${suggestions.length} suggestions`)
+                  
+                } catch (error) {
+                  console.error('AI suggestion error, falling back to rule-based:', error)
+                  
+                  // Fallback to rule-based ranking
+                  suggestions = priorityMeals.sort((a, b) => {
+                    // Primary: Meals without unselected ingredients get priority
+                    if (a.hasUnselectedIngredients !== b.hasUnselectedIngredients) {
+                      return a.hasUnselectedIngredients ? 1 : -1
+                    }
+                    // Secondary: Higher ingredient score (more selected ingredients used)
+                    if (b.ingredientScore !== a.ingredientScore) {
+                      return b.ingredientScore - a.ingredientScore
+                    }
+                    // Tertiary: Higher match percentage
+                    return b.matchPercentage - a.matchPercentage
+                  })
+                }
+                
+                // Take top results based on ingredient count (more flexible)
+                const maxResults = Math.min(20, Math.max(5, selectedIngredients.length * 3))
+                suggestions = suggestions.slice(0, maxResults)
+                
+                // console.log(`🎯 Showing top ${suggestions.length} results`)
+                
+                // Debug: Show top suggestions
+                if (suggestions.length > 0) {
+                  // console.log('📊 Top suggestions:')
+                  suggestions.forEach((meal, index) => {
+                    // console.log(`  ${index + 1}. &quot;${meal.name}&quot; - Score: ${meal.ingredientScore}, Matches: ${meal.matchedIngredients.join(', ')}, Match %: ${meal.matchPercentage}%, Has Unselected: ${meal.hasUnselectedIngredients}`)
+                  })
+                }
+              } else {
+                // Use rule-based ranking for simple cases (cost saving)
+                console.log('📊 Using rule-based ranking (cost saving for simple cases)')
+                suggestions = priorityMeals.sort((a, b) => {
+                  // Primary: Meals without unselected ingredients get priority
+                  if (a.hasUnselectedIngredients !== b.hasUnselectedIngredients) {
+                    return a.hasUnselectedIngredients ? 1 : -1
+                  }
+                  // Secondary: Higher ingredient score (more selected ingredients used)
+                  if (b.ingredientScore !== a.ingredientScore) {
+                    return b.ingredientScore - a.ingredientScore
+                  }
+                  // Tertiary: Higher match percentage
+                  return b.matchPercentage - a.matchPercentage
+                })
+                
+                // Take top results
+                const maxResults = Math.min(15, Math.max(3, selectedIngredients.length * 2))
+                suggestions = suggestions.slice(0, maxResults)
+              }
+            }
+            
+            // FALLBACK: If no priority meals found, try secondary meals
+            if (suggestions.length === 0 && secondaryMeals.length > 0) {
+              console.log(`🥩 No priority meals found, falling back to ${secondaryMeals.length} secondary meals`)
+              
               try {
-                // Use AI to rank and suggest meals
+                // Use AI to rank and suggest secondary meals
                 const userContext = {
                   mealType,
                   cookingTime,
@@ -424,8 +611,8 @@ export default function Home() {
                   difficulty: 'any'
                 }
                 
-                // Get AI-powered suggestions
-                const aiSuggestions = await getAISuggestions(selectedIngredients, allMatchingMeals, userContext)
+                // Get AI-powered suggestions from secondary meals
+                const aiSuggestions = await getAISuggestions(selectedIngredients, secondaryMeals, userContext)
                 
                 // Combine AI ranking with rule-based scoring
                 suggestions = aiSuggestions.map(meal => ({
@@ -436,13 +623,11 @@ export default function Home() {
                   hasUnselectedIngredients: meal.hasUnselectedIngredients || false
                 }))
                 
-                // console.log(`🤖 AI ranked ${suggestions.length} suggestions`)
-                
               } catch (error) {
                 console.error('AI suggestion error, falling back to rule-based:', error)
                 
-                // Fallback to rule-based ranking
-                suggestions = allMatchingMeals.sort((a, b) => {
+                // Fallback to rule-based ranking for secondary meals
+                suggestions = secondaryMeals.sort((a, b) => {
                   // Primary: Meals without unselected ingredients get priority
                   if (a.hasUnselectedIngredients !== b.hasUnselectedIngredients) {
                     return a.hasUnselectedIngredients ? 1 : -1
@@ -460,15 +645,7 @@ export default function Home() {
               const maxResults = Math.min(20, Math.max(5, selectedIngredients.length * 3))
               suggestions = suggestions.slice(0, maxResults)
               
-              // console.log(`🎯 Showing top ${suggestions.length} results`)
-              
-              // Debug: Show top suggestions
-              if (suggestions.length > 0) {
-                // console.log('📊 Top suggestions:')
-                suggestions.forEach((meal, index) => {
-                  // console.log(`  ${index + 1}. &quot;${meal.name}&quot; - Score: ${meal.ingredientScore}, Matches: ${meal.matchedIngredients.join(', ')}, Match %: ${meal.matchPercentage}%, Has Unselected: ${meal.hasUnselectedIngredients}`)
-                })
-              }
+              console.log(`🥩 Secondary meals processed: ${suggestions.length} suggestions`)
             }
             
             // console.log(`📊 Final suggestions:`, suggestions.slice(0, 3).map(m => 
@@ -492,10 +669,10 @@ export default function Home() {
             if (suggestions.length === 0) {
               const ingredientInfo = selectedIngredients.length === 1 
                 ? `the ingredient &quot;${selectedIngredients[0]}&quot;`
-                : `any of the selected ingredients`
+                : `ALL selected ingredients`
               
               console.log(`❌ No meals found with ${ingredientInfo}`)
-              alert(`No meals found containing ${ingredientInfo} &quot;${selectedIngredients.join(', ')}&quot;. Try selecting different ingredients.`)
+              alert(`No meals found containing ${ingredientInfo} &quot;${selectedIngredients.join(', ')}&quot;. Try selecting different ingredients or fewer ingredients.`)
               return
             }
           } else if (!showIngredientMode) {
