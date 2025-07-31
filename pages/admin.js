@@ -3,8 +3,13 @@ import Link from 'next/link'
 import { 
   ChefHat, Plus, Save, Edit, Trash2, Eye, Search, Clock, Users, Zap, 
   CheckCircle2, AlertCircle, Star, BarChart3, Home, Settings, TrendingUp,
-  Shield, Users2, FileText, Activity, Target, Heart, Recycle
+  Shield, Users2, FileText, Activity, Target, Heart, Recycle, Calendar,
+  BarChart, LineChart, PieChart
 } from 'lucide-react'
+import { 
+  LineChart as RechartsLineChart, Line, AreaChart, Area, BarChart as RechartsBarChart, Bar, 
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell
+} from 'recharts'
 import { analytics, analyticsDashboard } from '../lib/analytics'
 import { supabase } from '../lib/supabase'
 
@@ -66,6 +71,157 @@ const MetricCard = ({ title, value, subtitle, icon: Icon, color = "blue" }) => {
       </div>
       <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
       <p className="text-sm text-gray-600">{subtitle}</p>
+    </div>
+  )
+}
+
+// Chart Components
+const AnalyticsChart = ({ data, title, type = 'line', color = '#3B82F6', height = 300 }) => {
+  if (!data || data.length === 0) {
+    return (
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 text-center">
+        <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-gray-600 mb-2">{title}</h3>
+        <p className="text-gray-500">No data available for this period</p>
+      </div>
+    )
+  }
+
+  // Handle different data structures (count vs returnVisitors)
+  const chartData = data.map(item => ({
+    name: item.formattedDate,
+    value: item.count || item.returnVisitors || 0
+  }))
+
+  const colors = {
+    blue: '#3B82F6',
+    green: '#10B981',
+    purple: '#8B5CF6',
+    orange: '#F59E0B',
+    red: '#EF4444'
+  }
+
+  const chartColor = colors[color] || color
+
+  if (type === 'area') {
+    return (
+      <div className="bg-white border border-gray-200 rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">{title}</h3>
+        <ResponsiveContainer width="100%" height={height}>
+          <AreaChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+            <XAxis 
+              dataKey="name" 
+              stroke="#6B7280"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis 
+              stroke="#6B7280"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+            />
+            <Tooltip 
+              contentStyle={{
+                backgroundColor: 'white',
+                border: '1px solid #E5E7EB',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}
+            />
+            <Area 
+              type="monotone" 
+              dataKey="value" 
+              stroke={chartColor} 
+              fill={chartColor}
+              fillOpacity={0.3}
+              strokeWidth={3}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    )
+  }
+
+  if (type === 'bar') {
+    return (
+      <div className="bg-white border border-gray-200 rounded-xl p-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">{title}</h3>
+        <ResponsiveContainer width="100%" height={height}>
+          <RechartsBarChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+            <XAxis 
+              dataKey="name" 
+              stroke="#6B7280"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis 
+              stroke="#6B7280"
+              fontSize={12}
+              tickLine={false}
+              axisLine={false}
+            />
+            <Tooltip 
+              contentStyle={{
+                backgroundColor: 'white',
+                border: '1px solid #E5E7EB',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}
+            />
+            <Bar 
+              dataKey="value" 
+              fill={chartColor}
+              radius={[4, 4, 0, 0]}
+            />
+          </RechartsBarChart>
+        </ResponsiveContainer>
+      </div>
+    )
+  }
+
+  // Default line chart
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <h3 className="text-lg font-semibold text-gray-800 mb-4">{title}</h3>
+      <ResponsiveContainer width="100%" height={height}>
+        <RechartsLineChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+          <XAxis 
+            dataKey="name" 
+            stroke="#6B7280"
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis 
+            stroke="#6B7280"
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+          />
+          <Tooltip 
+            contentStyle={{
+              backgroundColor: 'white',
+              border: '1px solid #E5E7EB',
+              borderRadius: '8px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }}
+          />
+          <Line 
+            type="monotone" 
+            dataKey="value" 
+            stroke={chartColor} 
+            strokeWidth={3}
+            dot={{ fill: chartColor, strokeWidth: 2, r: 4 }}
+            activeDot={{ r: 6, stroke: chartColor, strokeWidth: 2, fill: 'white' }}
+          />
+        </RechartsLineChart>
+      </ResponsiveContainer>
     </div>
   )
 }
@@ -165,14 +321,19 @@ export default function AdminNew() {
   
   // Analytics state
   const [analyticsData, setAnalyticsData] = useState({
-    visits: null,
-    suggestions: null,
+    visits: { total: 0, uniqueVisitors: 0, byPage: {} },
+    suggestions: { total: 0, averageClicksPerSession: 0, topButtonTypes: [] },
     averageTime: 0,
-    returnUsage: null,
-    feedback: null
+    returnUsage: { returnVisitors: 0, totalVisitors: 0, percentage: 0 },
+    feedback: { total: 0, averageRating: 0, ratingDistribution: {}, topRatedMeals: [], recentFeedback: [] }
   })
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
   const [analyticsPeriod, setAnalyticsPeriod] = useState('7d')
+  const [customDateRange, setCustomDateRange] = useState({
+    startDate: '',
+    endDate: '',
+    isActive: false
+  })
 
   // Device management state
   const [currentIP, setCurrentIP] = useState('')
@@ -226,7 +387,15 @@ export default function AdminNew() {
   const loadAnalytics = useCallback(async () => {
     setAnalyticsLoading(true)
     try {
-      console.log('🔄 Loading analytics data for period:', analyticsPeriod)
+      // Determine date parameters based on period
+      let startDate = null
+      let endDate = null
+      
+      if (analyticsPeriod === 'custom' && customDateRange.isActive) {
+        startDate = customDateRange.startDate
+        endDate = customDateRange.endDate
+        // console.log('📅 Using custom date range:', startDate, 'to', endDate)
+      }
       
       // Use individual try-catch blocks for each analytics call
       let visits = null
@@ -236,36 +405,36 @@ export default function AdminNew() {
       let feedback = null
 
       try {
-        visits = await analyticsDashboard.getWebsiteVisits(analyticsPeriod)
-        console.log('✅ Website visits loaded:', visits)
+        visits = await analyticsDashboard.getWebsiteVisits(analyticsPeriod, startDate, endDate)
+        // console.log('✅ Website visits loaded:', visits)
       } catch (error) {
         console.warn('Failed to load website visits:', error.message)
       }
 
       try {
-        suggestions = await analyticsDashboard.getSuggestionClicks(analyticsPeriod)
-        console.log('✅ Suggestion clicks loaded:', suggestions)
+        suggestions = await analyticsDashboard.getSuggestionClicks(analyticsPeriod, startDate, endDate)
+        // console.log('✅ Suggestion clicks loaded:', suggestions)
       } catch (error) {
         console.warn('Failed to load suggestion clicks:', error.message)
       }
 
       try {
         averageTime = await analyticsDashboard.getAverageTimeSpent(analyticsPeriod)
-        console.log('✅ Average time loaded:', averageTime)
+        // console.log('✅ Average time loaded:', averageTime)
       } catch (error) {
         console.warn('Failed to load average time spent:', error.message)
       }
 
       try {
-        returnUsage = await analyticsDashboard.getReturnUsage(analyticsPeriod)
-        console.log('✅ Return usage loaded:', returnUsage)
+        returnUsage = await analyticsDashboard.getReturnUsage(analyticsPeriod, startDate, endDate)
+        // console.log('✅ Return usage loaded:', returnUsage)
       } catch (error) {
         console.warn('Failed to load return usage:', error.message)
       }
 
       try {
         feedback = await analyticsDashboard.getUserFeedback(analyticsPeriod)
-        console.log('✅ User feedback loaded:', feedback)
+        // console.log('✅ User feedback loaded:', feedback)
       } catch (error) {
         console.warn('Failed to load user feedback:', error.message)
       }
@@ -278,7 +447,7 @@ export default function AdminNew() {
         feedback
       }
 
-      console.log('📊 Setting analytics data:', analyticsDataToSet)
+      // console.log('📊 Setting analytics data:', analyticsDataToSet)
       setAnalyticsData(analyticsDataToSet)
 
     } catch (error) {
@@ -294,21 +463,29 @@ export default function AdminNew() {
     } finally {
       setAnalyticsLoading(false)
     }
-  }, [analyticsPeriod])
+  }, [analyticsPeriod, customDateRange])
 
   // Load analytics when period changes (must come after loadAnalytics definition)
   useEffect(() => {
-    if (activeTab === 'analytics') {
+    if (activeTab === 'analytics' || activeTab === 'overview') {
       loadAnalytics()
     }
   }, [analyticsPeriod, activeTab, loadAnalytics])
+
+  // Load analytics on initial mount
+  useEffect(() => {
+    // Only load if we have the loadAnalytics function available
+    if (typeof loadAnalytics === 'function') {
+      loadAnalytics()
+    }
+  }, [loadAnalytics]) // Include loadAnalytics in dependencies
 
   // Data loading functions
   const loadRecipes = async () => {
     setLoading(true)
     try {
       if (!supabase) {
-        console.log('📊 Supabase not configured. Using fallback data.')
+        // console.log('📊 Supabase not configured. Using fallback data.')
         // Use fallback data when Supabase is not configured
         setMeals([])
         setMessage({ type: 'info', text: 'Using fallback data - Supabase not configured' })
@@ -333,7 +510,7 @@ export default function AdminNew() {
   const loadBlacklistedIPs = async () => {
     setBlacklistLoading(true)
     try {
-      console.log('🔄 Loading blacklisted IPs...')
+      // console.log('🔄 Loading blacklisted IPs...')
       const ips = await analyticsDashboard.getBlacklistedIPs()
       setBlacklistedIPs(ips || [])
     } catch (error) {
@@ -461,7 +638,7 @@ export default function AdminNew() {
         cuisine_type: formData.cuisine_type?.trim() || 'Nigerian'
       }
 
-      console.log('Saving recipe data:', recipeData)
+      // console.log('Saving recipe data:', recipeData)
 
       if (!supabase) {
         setMessage({ type: 'error', text: 'Cannot save recipe - Supabase not configured' })
@@ -653,6 +830,20 @@ export default function AdminNew() {
   // Tab content components
   const OverviewTab = () => (
     <div className="space-y-6">
+      {/* Welcome Section */}
+      <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl p-6 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold mb-2">🎉 Welcome to MomFudy Admin</h2>
+            <p className="text-blue-100">Complete meal suggestion platform with advanced analytics</p>
+          </div>
+          <div className="text-right">
+            <div className="text-3xl font-bold">{meals.length}</div>
+            <div className="text-blue-100 text-sm">Total Recipes</div>
+          </div>
+        </div>
+      </div>
+
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
@@ -665,24 +856,132 @@ export default function AdminNew() {
         <MetricCard
           title="Website Visits"
           value={analyticsData.visits?.total || 0}
-          subtitle="Last 7 days"
+          subtitle={`${analyticsData.visits?.uniqueVisitors || 0} unique visitors`}
           icon={Users}
           color="green"
         />
         <MetricCard
           title="Suggestion Clicks"
           value={analyticsData.suggestions?.total || 0}
-          subtitle="Last 7 days"
+          subtitle={`${analyticsData.suggestions?.averageClicksPerSession || 0} avg per session`}
           icon={Target}
           color="purple"
         />
         <MetricCard
-          title="User Ratings"
-          value={analyticsData.feedback?.total || 0}
-          subtitle="Total feedback"
-          icon={Star}
+          title="Return Visitors"
+          value={analyticsData.returnUsage?.returnVisitors || 0}
+          subtitle={`${analyticsData.returnUsage?.percentage || 0}% retention rate`}
+          icon={Users2}
           color="yellow"
         />
+      </div>
+
+      {/* Analytics Overview Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Website Visits Chart */}
+        <AnalyticsChart
+          data={analyticsData.visits?.dailyData || []}
+          title="📈 Website Visits Trend"
+          type="area"
+          color="blue"
+          height={250}
+        />
+        
+        {/* Suggestion Clicks Chart */}
+        <AnalyticsChart
+          data={analyticsData.suggestions?.dailyData || []}
+          title="🎯 Suggestion Clicks Trend"
+          type="bar"
+          color="green"
+          height={250}
+        />
+      </div>
+
+      {/* Feature Highlights */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Analytics Features */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+              <BarChart3 className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800">📊 Advanced Analytics</h3>
+          </div>
+          <div className="space-y-3 text-sm text-gray-600">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <span>Real-time website visits tracking</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Suggestion click analytics</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+              <span>Return visitor insights</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+              <span>User feedback tracking</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Chart Features */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+              <LineChart className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800">📈 Beautiful Charts</h3>
+          </div>
+          <div className="space-y-3 text-sm text-gray-600">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <span>Interactive area charts</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Responsive bar charts</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+              <span>Real-time data updates</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+              <span>Hover tooltips & animations</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Filtering Features */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800">🗓️ Smart Filtering</h3>
+          </div>
+          <div className="space-y-3 text-sm text-gray-600">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <span>Preset time periods (7/30/90 days)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Custom date range selection</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+              <span>Real-time period switching</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+              <span>Instant chart updates</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Recent Activity */}
@@ -729,6 +1028,71 @@ export default function AdminNew() {
             </div>
             <span className="text-sm text-gray-500">Last 7 days</span>
           </div>
+
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
+                <Star className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="font-medium text-gray-800">User Feedback</p>
+                <p className="text-sm text-gray-600">{analyticsData.feedback?.total || 0} total ratings</p>
+              </div>
+            </div>
+            <span className="text-sm text-gray-500">
+              {analyticsData.feedback?.averageRating || 0}/5 avg rating
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">⚡ Quick Actions</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <button
+            onClick={() => setActiveTab('recipes')}
+            className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+          >
+            <Plus className="w-5 h-5 text-blue-600" />
+            <div className="text-left">
+              <div className="font-medium text-blue-800">Add Recipe</div>
+              <div className="text-sm text-blue-600">Create new meal</div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
+          >
+            <BarChart3 className="w-5 h-5 text-green-600" />
+            <div className="text-left">
+              <div className="font-medium text-green-800">View Analytics</div>
+              <div className="text-sm text-green-600">Detailed insights</div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('settings')}
+            className="flex items-center gap-3 p-4 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors"
+          >
+            <Settings className="w-5 h-5 text-purple-600" />
+            <div className="text-left">
+              <div className="font-medium text-purple-800">Settings</div>
+              <div className="text-sm text-purple-600">Configure system</div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('leftovers')}
+            className="flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <Recycle className="w-5 h-5 text-gray-600" />
+            <div className="text-left">
+              <div className="font-medium text-gray-800">Leftovers</div>
+              <div className="text-sm text-gray-600">Coming soon</div>
+            </div>
+          </button>
         </div>
       </div>
     </div>
@@ -977,22 +1341,68 @@ export default function AdminNew() {
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-800">📊 Analytics Dashboard</h3>
         <div className="flex items-center gap-4">
-          <select 
-            value={analyticsPeriod} 
-            onChange={(e) => setAnalyticsPeriod(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-          >
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-            <option value="90d">Last 90 days</option>
-          </select>
+          {/* Enhanced Period Filter */}
+          <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-1">
+            <Calendar className="w-4 h-4 text-gray-500" />
+            <select 
+              value={analyticsPeriod} 
+              onChange={(e) => {
+                setAnalyticsPeriod(e.target.value)
+                setCustomDateRange({ startDate: '', endDate: '', isActive: false })
+              }}
+              className="px-3 py-2 text-sm border-0 focus:ring-0 focus:outline-none"
+            >
+              <option value="today">Today</option>
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+              <option value="90d">Last 90 days</option>
+              <option value="custom">Custom Range</option>
+            </select>
+          </div>
+
+          {/* Custom Date Range Selector */}
+          {analyticsPeriod === 'custom' && (
+            <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-2">
+              <Calendar className="w-4 h-4 text-gray-500" />
+              <input
+                type="date"
+                value={customDateRange.startDate}
+                onChange={(e) => setCustomDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+                className="px-2 py-1 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Start Date"
+              />
+              <span className="text-gray-400">to</span>
+              <input
+                type="date"
+                value={customDateRange.endDate}
+                onChange={(e) => setCustomDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+                className="px-2 py-1 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="End Date"
+              />
+              <button
+                onClick={() => {
+                  if (customDateRange.startDate && customDateRange.endDate) {
+                    setCustomDateRange(prev => ({ ...prev, isActive: true }))
+                    loadAnalytics()
+                  }
+                }}
+                disabled={!customDateRange.startDate || !customDateRange.endDate}
+                className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Apply
+              </button>
+            </div>
+          )}
+          
           <button 
             onClick={loadAnalytics}
             disabled={analyticsLoading}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 disabled:opacity-50 transition-all duration-200"
           >
+            <Activity className="w-4 h-4" />
             {analyticsLoading ? 'Loading...' : 'Refresh'}
           </button>
+          
           <button 
             onClick={async () => {
               setAnalyticsLoading(true)
@@ -1120,7 +1530,37 @@ export default function AdminNew() {
               value={analyticsData.returnUsage?.returnVisitors || 0}
               subtitle={`${analyticsData.returnUsage?.totalVisitors || 0} total unique IPs`}
               icon={Users2}
+              color="yellow"
+            />
+          </div>
+
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Website Visits Chart */}
+            <AnalyticsChart
+              data={analyticsData.visits?.dailyData || []}
+              title="📈 Website Visits Trend"
+              type="area"
+              color="blue"
+              height={300}
+            />
+            
+            {/* Suggestion Clicks Chart */}
+            <AnalyticsChart
+              data={analyticsData.suggestions?.dailyData || []}
+              title="🎯 Suggestion Clicks Trend"
+              type="bar"
+              color="green"
+              height={300}
+            />
+
+            {/* Return Visitors Chart */}
+            <AnalyticsChart
+              data={analyticsData.returnUsage?.dailyData || []}
+              title="🔄 Return Visitors Trend"
+              type="line"
               color="orange"
+              height={300}
             />
           </div>
 

@@ -112,10 +112,10 @@ export default function Result() {
         if (!shownMeals.includes(mealData.id)) {
           const updatedShownMeals = [...shownMeals, mealData.id]
           localStorage.setItem(shownMealsKey, JSON.stringify(updatedShownMeals))
-          console.log(`🎯 Added first meal to shownMeals tracking: ${mealData.name} (ID: ${mealData.id})`)
-          console.log(`📊 Updated shownMeals for filter:`, updatedShownMeals)
+                  // console.log(`🎯 Added first meal to shownMeals tracking: ${mealData.name} (ID: ${mealData.id})`)
+        // console.log(`📊 Updated shownMeals for filter:`, updatedShownMeals)
         } else {
-          console.log(`🎯 First meal already in shownMeals tracking: ${mealData.name} (ID: ${mealData.id})`)
+          // console.log(`🎯 First meal already in shownMeals tracking: ${mealData.name} (ID: ${mealData.id})`)
         }
         
         // Load existing previousMeals (don't add current meal here - it will be added when user clicks "Get New Recipe")
@@ -1307,6 +1307,335 @@ export default function Result() {
         with: "Complete comfort meal - warming combination",
         drinks: "Fresh juice, soft drinks, palm wine, beer",
         sides: "Extra fish/meat in soup, vegetables, bread, fried plantain"
+      },
+      // Nigerian Quick & Convenient Dinner Combos
+      "Toasted Bread and Sardine": {
+        with: "Tomatoes, onions, mayonnaise, lettuce, cucumber",
+        drinks: "Tea, coffee, soft drinks, fresh juice, milk",
+        sides: "Boiled eggs, fruits, crisps, coleslaw"
+      },
+      "Fried Egg and Bread": {
+        with: "Butter, jam, sausages, baked beans, tomatoes",
+        drinks: "Tea, coffee, milk, fresh juice, hot chocolate",
+        sides: "Bacon, fruits, avocado, hash browns"
+      },
+      "Bread and Mayonnaise mixed with Sardine": {
+        with: "Lettuce, tomatoes, onions, cucumber, pepper",
+        drinks: "Soft drinks, fresh juice, tea, coffee",
+        sides: "Crisps, boiled eggs, fruits, coleslaw"
+      },
+      "Bread and Chicken Spread": {
+        with: "Lettuce, tomatoes, mayonnaise, cucumber, cheese",
+        drinks: "Soft drinks, fresh juice, tea, coffee",
+        sides: "Crisps, fruits, coleslaw, boiled eggs"
+      },
+      "Custard and Bread": {
+        with: "Sugar, honey, fruits, nuts, milk",
+        drinks: "Tea, coffee, milk, fresh juice",
+        sides: "Biscuits, more fruits, yogurt"
+      },
+      "Quick Egg Sandwich": {
+        with: "Mayonnaise, lettuce, tomatoes, cheese, ham",
+        drinks: "Tea, coffee, milk, fresh juice, soft drinks",
+        sides: "Crisps, fruits, pickles, coleslaw"
+      },
+      "Bread and Milkshake": {
+        with: "Fruits, nuts, cookies, ice cream",
+        drinks: "Milkshake (any flavor), fresh juice, tea, coffee",
+        sides: "Biscuits, more fruits, yogurt"
+      },
+      "Boiled Yam with Stew": {
+        with: "Fried fish, chicken, beef, fried plantain",
+        drinks: "Soft drinks, fresh juice, zobo, tea",
+        sides: "Coleslaw, salad, bread, boiled eggs"
+      },
+      "Boiled Plantain and Oil Sauce": {
+        with: "Fried fish, pepper sauce, salt, onions",
+        drinks: "Tea, fresh juice, soft drinks, zobo",
+        sides: "Boiled eggs, bread, vegetables, pepper"
+      },
+      "Plantain and Pepper Egg Sauce": {
+        with: "Extra eggs, bread, vegetables, fish",
+        drinks: "Tea, coffee, fresh juice, soft drinks",
+        sides: "Toast, salad, fruits, sausages"
+      },
+      "Boiled Plantain and Pepper Sauce": {
+        with: "Fried fish, boiled eggs, vegetables, bread",
+        drinks: "Soft drinks, fresh juice, zobo, tea",
+        sides: "Rice, salad, coleslaw, extra protein"
+      },
+      "Fried Yam and Ketchup": {
+        with: "Fried eggs, sausages, baked beans, mayonnaise",
+        drinks: "Tea, coffee, soft drinks, fresh juice",
+        sides: "Bread, coleslaw, salad, fruits"
+      },
+      "Boiled Corn and Pear or Coconut": {
+        with: "Traditional combination - natural pairing",
+        drinks: "Fresh coconut water, zobo, soft drinks, water",
+        sides: "Roasted groundnuts, palm wine (adults), tiger nuts"
+      },
+      "Cornflakes and Milk": {
+        with: "Sugar, honey, fruits (banana, strawberry), nuts",
+        drinks: "Additional milk, fresh juice, tea, coffee",
+        sides: "Toast, biscuits, yogurt, dried fruits"
+      },
+      "Rice and Egg Sauce": {
+        with: "Fried plantain, salad, vegetables, bread",
+        drinks: "Soft drinks, fresh juice, tea, coffee",
+        sides: "Coleslaw, sausages, chicken, fish"
+      },
+      "Noodles Soup": {
+        with: "Vegetables, eggs, chicken, fish, sausages",
+        drinks: "Soft drinks, fresh juice, tea, water",
+        sides: "Bread, crackers, spring rolls, fruits"
+      },
+      "Pasta Salad": {
+        with: "Vegetables, mayonnaise, chicken, tuna, boiled eggs",
+        drinks: "Fresh juice, soft drinks, iced tea, water",
+        sides: "Crackers, bread, fruits, nuts, cheese"
+      },
+      "Instant Noodles with Sardine": {
+        with: "Vegetables, eggs, bread, pepper sauce",
+        drinks: "Soft drinks, fresh juice, tea, coffee",
+        sides: "Crackers, fruits, crisps, coleslaw"
+      },
+      "Spaghetti Stir-fry": {
+        with: "Vegetables, chicken, beef, shrimp, eggs",
+        drinks: "Soft drinks, fresh juice, wine, tea",
+        sides: "Garlic bread, salad, spring rolls, coleslaw"
+      },
+      "Spaghetti with Fish Sauce": {
+        with: "Garlic bread, salad, vegetables, parmesan",
+        drinks: "Soft drinks, wine, fresh juice, tea",
+        sides: "Coleslaw, extra fish, bread rolls"
+      },
+      "Spaghetti with Egg Sauce": {
+        with: "Garlic bread, salad, vegetables, cheese",
+        drinks: "Soft drinks, fresh juice, milk, tea",
+        sides: "Coleslaw, fruits, bread, extra eggs"
+      },
+      "Spaghetti with Corned Beef": {
+        with: "Garlic bread, salad, vegetables, cheese",
+        drinks: "Soft drinks, fresh juice, wine, tea",
+        sides: "Coleslaw, bread rolls, extra vegetables"
+      },
+      "Quick Pancake and Sardine": {
+        with: "Honey, syrup, butter, vegetables",
+        drinks: "Tea, coffee, milk, fresh juice",
+        sides: "Fruits, eggs, bacon, salad"
+      },
+      // Nigerian Specialty Pasta & Rice Dinner Combos (Regular Category)
+      "Spaghetti with Chicken Sauce": {
+        with: "Garlic bread, coleslaw, mixed salad, parmesan cheese",
+        drinks: "Soft drinks, wine, fresh juice, beer",
+        sides: "Caesar salad, fried plantain, spring rolls, breadsticks"
+      },
+      "Spaghetti with Turkey Sauce": {
+        with: "Complete festive meal - premium holiday option",
+        drinks: "Wine, champagne, beer, fresh juice, soft drinks",
+        sides: "Garlic bread, coleslaw, mixed vegetables, salad, dinner rolls"
+      },
+      "Spaghetti with Goat Meat": {
+        with: "Unique Nigerian fusion - traditional meat, modern presentation",
+        drinks: "Beer, wine, palm wine, soft drinks, fresh juice",
+        sides: "Garlic bread, pepper sauce, coleslaw, mixed vegetables"
+      },
+      "Spaghetti with Prawns": {
+        with: "Complete seafood luxury meal - restaurant-quality dish",
+        drinks: "White wine, champagne, beer, fresh juice, soft drinks",
+        sides: "Garlic bread, Caesar salad, grilled vegetables, lemon wedges"
+      },
+      "Spaghetti with Snail": {
+        with: "Exotic Nigerian fusion - adventurous combination",
+        drinks: "Wine, beer, palm wine, fresh juice, soft drinks",
+        sides: "Garlic bread, pepper sauce, coleslaw, extra snails"
+      },
+      "Spaghetti with Corned Beef": {
+        with: "Budget-friendly comfort meal - convenient option",
+        drinks: "Soft drinks, fresh juice, tea, coffee, beer",
+        sides: "Bread, coleslaw, vegetables, salad, fried plantain"
+      },
+      "Spaghetti with Sardine": {
+        with: "Quick seafood option - economical choice",
+        drinks: "Soft drinks, fresh juice, tea, coffee, wine",
+        sides: "Garlic bread, salad, vegetables, coleslaw, crackers"
+      },
+      "Groundnut Soup with Rice": {
+        with: "Traditional Northern fusion - authentic groundnut flavors",
+        drinks: "Kunu, zobo, fresh juice, soft drinks, palm wine",
+        sides: "Extra groundnuts, vegetables, meat, pepper sauce"
+      },
+      "Prawn Stew with Rice": {
+        with: "Complete seafood meal - coastal specialty",
+        drinks: "Wine, beer, fresh juice, soft drinks, cocktails",
+        sides: "Coleslaw, salad, fried plantain, garlic bread, extra prawns"
+      },
+      "Dried Fish Stew with Rice": {
+        with: "Traditional comfort meal - authentic Nigerian flavors",
+        drinks: "Palm wine, zobo, fresh juice, soft drinks, beer",
+        sides: "Garden egg, ugba, fried plantain, pepper sauce, vegetables"
+      },
+      "Plantain and Fish Stew": {
+        with: "Complete balanced meal - carbs, protein, and flavor",
+        drinks: "Soft drinks, fresh juice, zobo, palm wine, beer",
+        sides: "Rice, bread, extra fish, vegetables, pepper sauce"
+      },
+      "Rice and Beans with Plantain": {
+        with: "Complete nutritious meal - balanced amino acids and carbs",
+        drinks: "Zobo, fresh juice, soft drinks, kunu, palm wine",
+        sides: "Fried fish, pepper sauce, coleslaw, vegetables"
+      },
+      "Vegetable Jollof": {
+        with: "Complete healthy meal - nutrient-rich and satisfying",
+        drinks: "Fresh juice, zobo, soft drinks, herbal teas, water",
+        sides: "Grilled proteins, salad, coleslaw, nuts, fruits"
+      },
+      "Chinese Fried Rice (Naija Style)": {
+        with: "Complete fusion meal - Asian technique, Nigerian flavors",
+        drinks: "Soft drinks, fresh juice, Asian teas, wine, beer",
+        sides: "Spring rolls, chicken, prawn crackers, coleslaw, salad"
+      },
+      // New quick lunch recipes combinations (Fusion & Vegetarian)
+      "Stir-fry Noodles with Suya Chunks": {
+        with: "Unique Nigerian-Asian fusion - traditional suya flavors with Asian technique",
+        drinks: "Beer, soft drinks, Asian teas, fresh juice, wine",
+        sides: "Spring rolls, pepper sauce, cucumber salad, prawn crackers, coleslaw"
+      },
+      "Stir Fried Suya Pasta": {
+        with: "Creative Nigerian-Italian fusion - suya spices with Italian pasta",
+        drinks: "Beer, wine, soft drinks, fresh juice, cocktails",
+        sides: "Garlic bread, suya seasoning, pepper sauce, mixed salad, extra suya"
+      },
+      "Spaghetti and Gizzard Sauce": {
+        with: "Nigerian comfort fusion - local protein with Italian preparation",
+        drinks: "Beer, wine, soft drinks, fresh juice, palm wine",
+        sides: "Garlic bread, coleslaw, pepper sauce, extra gizzards, plantain chips"
+      },
+      "Stir Fry Spaghetti": {
+        with: "Modern Nigerian pasta - Asian stir-fry technique with spaghetti",
+        drinks: "Soft drinks, wine, beer, fresh juice, Asian-style beverages",
+        sides: "Vegetables, spring rolls, garlic bread, salad, protein additions"
+      },
+      "Veggie Potato Pottage": {
+        with: "Complete healthy meal - nutritious plant-based comfort food",
+        drinks: "Fresh juice, herbal teas, soft drinks, smoothies, water",
+        sides: "Whole grain bread, mixed nuts, avocado, fresh fruits, salad"
+      },
+      "Veggie Beans Pottage": {
+        with: "Complete protein-rich meal - satisfying vegetarian option",
+        drinks: "Fresh juice, zobo, herbal teas, soft drinks, plant milk",
+        sides: "Fried plantain, whole grain bread, nuts, vegetables, fruits"
+      },
+      // New elaborate dinner recipes combinations (Premium Fusion)
+      "Assorted Meat Jollof": {
+        with: "Complete festive meal - multiple proteins in one dish",
+        drinks: "Wine, beer, champagne, soft drinks, fresh juice",
+        sides: "Coleslaw, mixed salad, fried plantain, moi moi, chin chin"
+      },
+      "Goat Meat Jollof": {
+        with: "Complete celebration meal - special occasion rice",
+        drinks: "Beer, wine, palm wine, soft drinks, fresh juice",
+        sides: "Pepper sauce, coleslaw, fried plantain, extra goat meat, salad"
+      },
+      "Snail Pepper Soup": {
+        with: "Complete traditional delicacy - warming, medicinal soup",
+        drinks: "Palm wine, beer, fresh juice, zobo, soft drinks",
+        sides: "Rice, yam, plantain, bread, extra snails, pepper sauce"
+      },
+      "Coconut Moi-Moi": {
+        with: "Enhanced traditional dish - coconut adds richness and flavor",
+        drinks: "Fresh coconut water, soft drinks, fresh juice, zobo",
+        sides: "Rice, bread, fried plantain, pepper sauce, salad"
+      },
+      "Alfredo Shrimp Pasta": {
+        with: "Complete luxury meal - Italian-Nigerian fusion",
+        drinks: "White wine, champagne, soft drinks, fresh juice",
+        sides: "Garlic bread, Caesar salad, grilled vegetables, lemon wedges"
+      },
+      "Dafaduka": {
+        with: "Traditional Northern specialty - authentic regional dish",
+        drinks: "Kunu, zobo, fresh juice, soft drinks, fura da nono",
+        sides: "Traditional Northern vegetables, groundnuts, pepper sauce"
+      },
+      "Stir Fried Suya Pasta": {
+        with: "Unique Nigerian fusion - traditional suya flavors with pasta",
+        drinks: "Beer, wine, soft drinks, fresh juice, cocktails",
+        sides: "Suya spice seasoning, pepper sauce, salad, garlic bread"
+      },
+      "Prawn, Citrus and Avocado Salad": {
+        with: "Complete light luxury meal - fresh, healthy, and elegant",
+        drinks: "White wine, champagne, fresh juice, sparkling water, cocktails",
+        sides: "Crusty bread, additional citrus, nuts, light appetizers"
+      },
+      "Jollof Rice with Soya Chunks": {
+        with: "Complete vegetarian meal - protein-rich plant-based option",
+        drinks: "Fresh juice, soft drinks, zobo, herbal teas, water",
+        sides: "Vegetable salad, coleslaw, fried plantain, nuts, fruits"
+      },
+      "Fish in Spinach Sauce with Boiled Yam": {
+        with: "Complete balanced meal - protein, vegetables, and carbs",
+        drinks: "Fresh juice, soft drinks, zobo, wine",
+        sides: "Extra fish, bread, pepper sauce, salad"
+      },
+      "Beans and Sweet Potato Pottage": {
+        with: "Complete nutritious meal - balanced carbs and protein",
+        drinks: "Fresh juice, zobo, soft drinks, herbal teas",
+        sides: "Fried fish, plantain, pepper sauce, vegetables"
+      },
+      "Ikokore": {
+        with: "Traditional Yoruba specialty - water yam and fish porridge",
+        drinks: "Palm wine, zobo, fresh juice, soft drinks",
+        sides: "Extra fish, pepper sauce, vegetables, fried plantain"
+      },
+      "Vegetable Jollof with Soya Chunks": {
+        with: "Complete healthy meal - nutrient-dense vegetarian option",
+        drinks: "Fresh juice, zobo, herbal teas, soft drinks, smoothies",
+        sides: "Mixed nuts, avocado salad, grilled vegetables, fruits"
+      },
+      "Loaded Singapore Noodle": {
+        with: "Asian-Nigerian fusion - international technique with local flavors",
+        drinks: "Asian teas, soft drinks, wine, fresh juice, cocktails",
+        sides: "Spring rolls, prawn crackers, vegetables, Asian-style salad"
+      },
+      "Seafood Okro with Eba": {
+        with: "Traditional combination - coastal specialty",
+        drinks: "Palm wine, beer, fresh juice, soft drinks",
+        sides: "Mixed seafood, periwinkles, stockfish, pepper sauce"
+      },
+      "Chicken Curry Sauce with Basmati Rice": {
+        with: "Indo-Nigerian fusion - curry spices with Nigerian preparation",
+        drinks: "Lassi, wine, soft drinks, fresh juice, chai tea",
+        sides: "Naan bread, raita, pickles, salad, papadums"
+      },
+      "Spaghetti and Gizzard Sauce": {
+        with: "Nigerian comfort fusion - local protein with Italian preparation",
+        drinks: "Beer, wine, soft drinks, fresh juice",
+        sides: "Garlic bread, coleslaw, pepper sauce, extra gizzards"
+      },
+      "Gizdodo": {
+        with: "Popular Nigerian specialty - gizzard and plantain combination",
+        drinks: "Beer, soft drinks, wine, fresh juice, palm wine",
+        sides: "Rice, bread, pepper sauce, coleslaw, extra protein"
+      },
+      "Chicken Okro Soup": {
+        with: "Complete comfort meal - hearty traditional soup",
+        drinks: "Palm wine, soft drinks, fresh juice, zobo",
+        sides: "Pounded yam, eba, fufu, rice, fried plantain"
+      },
+      "Pasta Peppersoup": {
+        with: "Unique Nigerian creation - traditional soup flavors with pasta",
+        drinks: "Beer, palm wine, soft drinks, fresh juice, zobo",
+        sides: "Bread, pepper sauce, extra protein, vegetables"
+      },
+      "Vegetable Pasta": {
+        with: "Complete healthy meal - nutrient-rich Italian-style dish",
+        drinks: "Wine, fresh juice, herbal teas, soft drinks, water",
+        sides: "Garlic bread, mixed salad, grilled vegetables, nuts"
+      },
+      "Pasta Alfredo": {
+        with: "Complete creamy comfort meal - classic Italian preparation",
+        drinks: "White wine, soft drinks, fresh juice, sparkling water",
+        sides: "Garlic bread, Caesar salad, grilled chicken, vegetables"
       }
     }
     return combinations[mealName] || null
@@ -1315,8 +1644,6 @@ export default function Result() {
   // Helper function to get ingredient icon
   const getIngredientIcon = (ingredient) => {
     return ingredient === 'Rice' ? '🍚' :
-           ingredient === 'Plantain' ? '🍌' :
-           ingredient === 'Yam' ? '🍠' :
            ingredient === 'Tomatoes' ? '🍅' :
            ingredient === 'Onions' ? '🧅' :
            ingredient === 'Pepper' ? '🌶️' :
@@ -1344,6 +1671,8 @@ export default function Result() {
            ingredient === 'Spaghetti' ? '🍝' :
            ingredient === 'Noodles' ? '🍜' : '🥬'
   }
+
+
 
   // Show loading schema while loading
   if (loading) {

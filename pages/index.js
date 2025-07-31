@@ -24,7 +24,7 @@ export default function Home() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [pageLoading, setPageLoading] = useState(true)
-  const [showIngredientMode, setShowIngredientMode] = useState(false)
+  const [showIngredientMode, setShowIngredientMode] = useState(true) // Changed to true to make ingredient mode default
   const [leftoverMode, setLeftoverMode] = useState(false)
   const [mealType, setMealType] = useState('')
   const [cookingTime, setCookingTime] = useState('quick')
@@ -160,23 +160,23 @@ export default function Home() {
         const { data, error } = await query.limit(50)
 
         if (error) {
-          console.log('❌ Supabase error:', error.message)
+          // console.log('❌ Supabase error:', error.message)
           // setMessage({ type: 'error', text: 'Failed to load meals from database' }) // This line was removed
           return
         } else if (data && data.length > 0) {
-          console.log(`✅ Found ${data.length} meals from Supabase`)
-          console.log('📋 Supabase meals:', data.map(m => `${m.name} (${m.meal_type}, ${m.dietary_preference})`))
+          // console.log(`✅ Found ${data.length} meals from Supabase`)
+          // console.log('📋 Supabase meals:', data.map(m => `${m.name} (${m.meal_type}, ${m.dietary_preference})`))
           
           // Debug: Show meals that contain rice
           if (showIngredientMode && selectedIngredients.includes('Rice')) {
-            console.log('🍚 Meals that might contain rice:')
+            // console.log('🍚 Meals that might contain rice:')
             data.forEach(meal => {
               const hasRiceInName = meal.name.toLowerCase().includes('rice')
               const hasRiceInIngredients = meal.ingredients.some(ing => ing.toLowerCase().includes('rice'))
               if (hasRiceInName || hasRiceInIngredients) {
-                console.log(`  - &quot;${meal.name}&quot; - Rice in name: ${hasRiceInName}, Rice in ingredients: ${hasRiceInIngredients}`)
+                // console.log(`  - &quot;${meal.name}&quot; - Rice in name: ${hasRiceInName}, Rice in ingredients: ${hasRiceInIngredients}`)
                 if (hasRiceInIngredients) {
-                  console.log(`    Ingredients containing rice: ${meal.ingredients.filter(ing => ing.toLowerCase().includes('rice')).join(', ')}`)
+                  // console.log(`    Ingredients containing rice: ${meal.ingredients.filter(ing => ing.toLowerCase().includes('rice')).join(', ')}`)
                 }
               }
             })
@@ -184,7 +184,7 @@ export default function Home() {
           
           // Apply ingredient filtering for Supabase results if in ingredient mode
           if (showIngredientMode && selectedIngredients.length > 0) {
-            console.log(`🔍 Starting ingredient filtering for: ${selectedIngredients.join(', ')}`)
+            // console.log(`🔍 Starting ingredient filtering for: ${selectedIngredients.join(', ')}`)
             
             // Smart ingredient filtering with scoring
             const scoredMeals = data.map(meal => {
@@ -200,7 +200,7 @@ export default function Home() {
                 if (meal.name.toLowerCase().includes(ingredientLower)) {
                   score += 3
                   matchedIngredients.push(ingredient)
-                  console.log(`✅ &quot;${ingredient}&quot; found in meal name: &quot;${meal.name}&quot;`)
+                  // console.log(`✅ &quot;${ingredient}&quot; found in meal name: &quot;${meal.name}&quot;`)
                 }
                 
                 // Check if ingredient appears in ingredients list (highest score)
@@ -220,7 +220,7 @@ export default function Home() {
                 if (isOptional) {
                   // If any selected ingredient is optional, exclude this recipe entirely
                   excludedByOptional = true
-                  console.log(`❌ Excluding &quot;${meal.name}&quot; - &quot;${ingredient}&quot; is marked as optional`)
+                  // console.log(`❌ Excluding &quot;${meal.name}&quot; - &quot;${ingredient}&quot; is marked as optional`)
                   return
                 }
                 
@@ -232,7 +232,7 @@ export default function Home() {
                   if (!matchedIngredients.includes(ingredient)) {
                     matchedIngredients.push(ingredient)
                   }
-                  console.log(`✅ &quot;${ingredient}&quot; found in ingredients list: &quot;${meal.name}&quot;`)
+                  // console.log(`✅ &quot;${ingredient}&quot; found in ingredients list: &quot;${meal.name}&quot;`)
                 }
               })
               
@@ -265,26 +265,26 @@ export default function Home() {
               }
               
               if (matchedIngredients.length > 0) {
-                console.log(`📊 &quot;${meal.name}&quot; - Score: ${score}, Matches: ${matchedIngredients.join(', ')}, Match %: ${result.matchPercentage}%`)
+                // console.log(`📊 &quot;${meal.name}&quot; - Score: ${score}, Matches: ${matchedIngredients.join(', ')}, Match %: ${result.matchPercentage}%`)
               }
               
               return result
             })
             
-            console.log(`📋 Total meals with ingredient matches: ${scoredMeals.filter(m => m.matchedIngredients.length > 0).length}`)
+            // console.log(`📋 Total meals with ingredient matches: ${scoredMeals.filter(m => m.matchedIngredients.length > 0).length}`)
             
             // Debug: Show all scored meals
-            console.log('📊 All scored meals:')
+            // console.log('📊 All scored meals:')
             scoredMeals.forEach(meal => {
-              console.log(`  - &quot;${meal.name}&quot; - Score: ${meal.ingredientScore}, Matches: ${meal.matchedIngredients.join(', ')}, Match %: ${meal.matchPercentage}%, Excluded: ${meal.excluded}`)
+              // console.log(`  - &quot;${meal.name}&quot; - Score: ${meal.ingredientScore}, Matches: ${meal.matchedIngredients.join(', ')}, Match %: ${meal.matchPercentage}%, Excluded: ${meal.excluded}`)
             })
             
             // Debug: Show excluded meals
             const excludedMeals = scoredMeals.filter(m => m.excluded)
             if (excludedMeals.length > 0) {
-              console.log('❌ Excluded meals:')
+              // console.log('❌ Excluded meals:')
               excludedMeals.forEach(meal => {
-                console.log(`  - &quot;${meal.name}&quot; - Excluded: ${meal.excluded}`)
+                // console.log(`  - &quot;${meal.name}&quot; - Excluded: ${meal.excluded}`)
               })
             }
             
@@ -311,7 +311,7 @@ export default function Home() {
             }
 
             const thresholds = getThresholdForIngredients(selectedIngredients.length)
-            console.log(`🎯 Adaptive thresholds for ${selectedIngredients.length} ingredients: Primary ${thresholds.primary}%, Fallback ${thresholds.fallback}, Final ${thresholds.final} ingredients`)
+            // console.log(`🎯 Adaptive thresholds for ${selectedIngredients.length} ingredients: Primary ${thresholds.primary}%, Fallback ${thresholds.fallback}, Final ${thresholds.final} ingredients`)
 
             // First try with primary threshold
             suggestions = scoredMeals
@@ -323,22 +323,22 @@ export default function Home() {
                 return b.matchPercentage - a.matchPercentage
               })
 
-            console.log(`🔍 After primary filtering (${thresholds.primary}% threshold): ${suggestions.length} meals`)
-            console.log(`🔍 Meals with score > 0: ${scoredMeals.filter(m => m.ingredientScore > 0).length}`)
-            console.log(`🔍 Meals not excluded: ${scoredMeals.filter(m => !m.excluded).length}`)
-            console.log(`🔍 Meals with match % >= ${thresholds.primary}: ${scoredMeals.filter(m => m.matchPercentage >= thresholds.primary).length}`)
+            // console.log(`🔍 After primary filtering (${thresholds.primary}% threshold): ${suggestions.length} meals`)
+            // console.log(`🔍 Meals with score > 0: ${scoredMeals.filter(m => m.ingredientScore > 0).length}`)
+            // console.log(`🔍 Meals not excluded: ${scoredMeals.filter(m => !m.excluded).length}`)
+            // console.log(`🔍 Meals with match % >= ${thresholds.primary}: ${scoredMeals.filter(m => m.matchPercentage >= thresholds.primary).length}`)
             
             // Debug: Show suggestions after primary filtering
             if (suggestions.length > 0) {
-              console.log('📊 Suggestions after primary filtering:')
+              // console.log('📊 Suggestions after primary filtering:')
               suggestions.forEach(meal => {
-                console.log(`  - &quot;${meal.name}&quot; - Score: ${meal.ingredientScore}, Match %: ${meal.matchPercentage}%`)
+                // console.log(`  - &quot;${meal.name}&quot; - Score: ${meal.ingredientScore}, Match %: ${meal.matchPercentage}%`)
               })
             }
 
             // If no results with primary threshold, try fallback threshold
             if (suggestions.length === 0) {
-              console.log(`🔄 No results with ${thresholds.primary}% threshold, trying fallback: at least ${thresholds.fallback} ingredients`)
+              // console.log(`🔄 No results with ${thresholds.primary}% threshold, trying fallback: at least ${thresholds.fallback} ingredients`)
               
               suggestions = scoredMeals
                 .filter(meal => meal.ingredientScore > 0 && !meal.excluded && meal.matchedIngredients.length >= thresholds.fallback)
@@ -349,12 +349,12 @@ export default function Home() {
                   return b.matchPercentage - a.matchPercentage
                 })
 
-              console.log(`🔍 After fallback filtering (at least ${thresholds.fallback} ingredients): ${suggestions.length} meals`)
+              // console.log(`🔍 After fallback filtering (at least ${thresholds.fallback} ingredients): ${suggestions.length} meals`)
             }
 
             // If still no results, try final threshold
             if (suggestions.length === 0) {
-              console.log(`🔄 No results with fallback threshold, trying final: at least ${thresholds.final} ingredients`)
+              // console.log(`🔄 No results with fallback threshold, trying final: at least ${thresholds.final} ingredients`)
               
               suggestions = scoredMeals
                 .filter(meal => meal.ingredientScore > 0 && !meal.excluded && meal.matchedIngredients.length >= thresholds.final)
@@ -365,16 +365,16 @@ export default function Home() {
                   return b.matchPercentage - a.matchPercentage
                 })
 
-              console.log(`🔍 After final filtering (at least ${thresholds.final} ingredients): ${suggestions.length} meals`)
+              // console.log(`🔍 After final filtering (at least ${thresholds.final} ingredients): ${suggestions.length} meals`)
             }
             
-            console.log(`📊 Final suggestions:`, suggestions.slice(0, 3).map(m => 
-              `${m.name} (Score: ${m.ingredientScore}, Matches: ${m.matchedIngredients.join(', ')}, Match %: ${m.matchPercentage}%)`
-            ))
+            // console.log(`📊 Final suggestions:`, suggestions.slice(0, 3).map(m => 
+            //   `${m.name} (Score: ${m.ingredientScore}, Matches: ${m.matchedIngredients.join(', ')}, Match %: ${m.matchPercentage}%)`
+            // ))
             
             // Debug: Show suggestions array length and content right before meal selection
-            console.log(`🔍 Suggestions array before meal selection: ${suggestions.length} meals`)
-            console.log(`🔍 First 3 suggestions:`, suggestions.slice(0, 3).map(m => m.name))
+            // console.log(`🔍 Suggestions array before meal selection: ${suggestions.length} meals`)
+            // console.log(`🔍 First 3 suggestions:`, suggestions.slice(0, 3).map(m => m.name))
             
             // Check if no meals match the ingredient criteria
             if (suggestions.length === 0) {
@@ -382,22 +382,22 @@ export default function Home() {
                 ? `the ingredient &quot;${selectedIngredients[0]}&quot;`
                 : `at least ${thresholds.primary}%, ${thresholds.fallback}, or ${thresholds.final} ingredients`
               
-              console.log(`❌ No meals found with ${thresholdInfo}`)
+              // console.log(`❌ No meals found with ${thresholdInfo}`)
               alert(`No meals found containing ${thresholdInfo} of &quot;${selectedIngredients.join(', ')}&quot;. Try selecting different ingredients.`)
               return
             }
           } else if (!showIngredientMode) {
             // Only use all Supabase meals if we're NOT in ingredient mode
             suggestions = data
-            console.log(`✅ Using ${suggestions.length} Supabase meals`)
+            // console.log(`✅ Using ${suggestions.length} Supabase meals`)
           }
         } else {
-          console.log('⚠️ No meals found in Supabase for the selected criteria')
+          // console.log('⚠️ No meals found in Supabase for the selected criteria')
           // setMessage({ type: 'info', text: 'No meals found for the selected criteria. Try different filters.' }) // This line was removed
           return
         }
       } else {
-        console.log('❌ Supabase not configured')
+        // console.log('❌ Supabase not configured')
         // setMessage({ type: 'error', text: 'Database not configured. Please contact support.' }) // This line was removed
         return
       }
@@ -415,20 +415,20 @@ export default function Home() {
       const shownMealsKey = `shownMeals_${btoa(currentFilterKey).slice(0, 20)}`
       const shownMeals = JSON.parse(localStorage.getItem(shownMealsKey) || '[]')
       
-      console.log(`🎯 Current filter key: ${currentFilterKey}`)
-      console.log(`👀 Already shown meals for this filter: ${shownMeals.length}`)
+      // console.log(`🎯 Current filter key: ${currentFilterKey}`)
+      // console.log(`👀 Already shown meals for this filter: ${shownMeals.length}`)
       
       // Debug: Show suggestions array right before filtering by shown meals
-      console.log(`🔍 Suggestions array before shown meals filter: ${suggestions.length} meals`)
-      console.log(`🔍 Suggestions array type:`, typeof suggestions)
-      console.log(`🔍 Is suggestions an array?`, Array.isArray(suggestions))
+      // console.log(`🔍 Suggestions array before shown meals filter: ${suggestions.length} meals`)
+      // console.log(`🔍 Suggestions array type:`, typeof suggestions)
+      // console.log(`🔍 Is suggestions an array?`, Array.isArray(suggestions))
       if (Array.isArray(suggestions) && suggestions.length > 0) {
-        console.log(`🔍 First suggestion:`, suggestions[0].name)
+        // console.log(`🔍 First suggestion:`, suggestions[0].name)
       }
 
       // Filter out already shown meals for this filter combination
       const availableMeals = suggestions.filter(meal => !shownMeals.includes(meal.id))
-      console.log(`🎯 Available meals (excluding ${shownMeals.length} shown): ${availableMeals.length}`)
+      // console.log(`🎯 Available meals (excluding ${shownMeals.length} shown): ${availableMeals.length}`)
 
       let selectedMeal
 
@@ -441,11 +441,11 @@ export default function Home() {
         const updatedShownMeals = [...shownMeals, selectedMeal.id]
         localStorage.setItem(shownMealsKey, JSON.stringify(updatedShownMeals))
         
-        console.log(`🎯 Selected meal: ${selectedMeal.name} (ID: ${selectedMeal.id})`)
-        console.log(`📊 Total shown meals for this filter: ${updatedShownMeals.length}`)
+        // console.log(`🎯 Selected meal: ${selectedMeal.name} (ID: ${selectedMeal.id})`)
+        // console.log(`📊 Total shown meals for this filter: ${updatedShownMeals.length}`)
       } else if (suggestions.length > 0) {
         // All meals for this filter have been shown - reset and start over
-        console.log('🔄 All meals shown for this filter, resetting...')
+        // console.log('🔄 All meals shown for this filter, resetting...')
         localStorage.removeItem(shownMealsKey)
         
         // Randomly select from all suggestions
@@ -455,22 +455,22 @@ export default function Home() {
         // Start fresh tracking
         localStorage.setItem(shownMealsKey, JSON.stringify([selectedMeal.id]))
         
-        console.log(`🎯 Reset and selected: ${selectedMeal.name} (ID: ${selectedMeal.id})`)
+        // console.log(`🎯 Reset and selected: ${selectedMeal.name} (ID: ${selectedMeal.id})`)
       } else {
         // No meals found even after fallback - this shouldn't happen due to our filtering logic
-        console.error('❌ No meals available for selection - this indicates a logic error')
+        // console.error('❌ No meals available for selection - this indicates a logic error')
         alert('No meals found for your criteria. Please try different ingredients or filters.')
         return
       }
       
       // Safety check to ensure selectedMeal exists
       if (!selectedMeal) {
-        console.error('❌ selectedMeal is undefined - this indicates a logic error')
+        // console.error('❌ selectedMeal is undefined - this indicates a logic error')
         alert('Something went wrong. Please try again!')
         return
       }
       
-      console.log(`📝 Description: ${selectedMeal.description}`)
+      // console.log(`📝 Description: ${selectedMeal.description}`)
       
       // Store the meal and search criteria in localStorage
       localStorage.setItem('currentMeal', JSON.stringify(selectedMeal))
@@ -487,7 +487,7 @@ export default function Home() {
       router.push(`/result?meal=${mealParam}`)
 
     } catch (error) {
-      console.error('Error getting suggestion:', error)
+      // console.error('Error getting suggestion:', error)
       alert('Something went wrong. Please try again!')
     } finally {
       setLoading(false)
@@ -662,11 +662,28 @@ export default function Home() {
               }`}
             >
               <CircleCheck className="w-4 h-4 inline mr-2" />
-              <span className="hidden sm:inline">What Can I Make?</span>
-              <span className="sm:hidden">My ingredients</span>
+              <span className="hidden sm:inline">Smart Ingredients</span>
+              <span className="sm:hidden">Smart</span>
             </button>
           </div>
         </div>
+
+        {/* Popular Smart Suggestions Section - Only show when ingredient mode is active */}
+        {showIngredientMode && (
+          <div className="mb-6 sm:mb-8 animate-slide-in-up" style={{ animationDelay: '0.3s' }}>
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200/50 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <CircleCheck className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-green-800 font-bold text-base">🎯 Most Popular Feature</h3>
+                  <p className="text-green-600 text-sm">72% of users prefer ingredient-based suggestions!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Content */}
         <div className="animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
@@ -924,6 +941,17 @@ export default function Home() {
                   {/* Ingredient Selection - Improved Design */}
                   <div className="animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
                     <div className="card">
+                      {/* Enhanced Header */}
+                      <div className="text-center mb-6">
+                        <div className="flex items-center justify-center gap-3 mb-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+                            <Search className="w-5 h-5 text-white" />
+                          </div>
+                          <h3 className="text-xl font-bold text-gray-800">What ingredients do you have?</h3>
+                        </div>
+                        <p className="text-gray-600 text-sm">Select your ingredients and we'll find perfect recipes for you!</p>
+                      </div>
+
                       {/* Search Bar - More prominent */}
                       <div className="relative mb-6">
                         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -941,7 +969,7 @@ export default function Home() {
                               }
                             }
                           }}
-                          className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-gray-700 placeholder-gray-400"
+                          className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-700 placeholder-gray-400"
                         />
                         {searchTerm.trim() && !commonIngredients.includes(searchTerm.trim()) && !selectedIngredients.includes(searchTerm.trim()) && (
                           <button
@@ -950,18 +978,45 @@ export default function Home() {
                               setSelectedIngredients(prev => [...prev, customIngredient])
                               setSearchTerm('')
                             }}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600 transition-colors duration-200"
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600 transition-colors duration-200"
                           >
                             Add
                           </button>
                         )}
                       </div>
 
+                      {/* Selected Ingredients Display */}
+                      {selectedIngredients.length > 0 && (
+                        <div className="mb-6">
+                          <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                            <CircleCheck className="w-4 h-4 text-green-500" />
+                            Selected Ingredients ({selectedIngredients.length})
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedIngredients.map((ingredient, index) => (
+                              <div
+                                key={index}
+                                className="bg-gradient-to-r from-green-100 to-emerald-100 border border-green-200 rounded-full px-3 py-1.5 flex items-center gap-2 shadow-sm"
+                              >
+                                <span className="text-sm">{getIngredientIcon(ingredient)}</span>
+                                <span className="text-green-700 text-sm font-medium">{ingredient}</span>
+                                <button
+                                  onClick={() => setSelectedIngredients(prev => prev.filter((_, i) => i !== index))}
+                                  className="text-green-600 hover:text-green-800 transition-colors"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Ingredients Grid - Better spacing and organization */}
                       <div className="space-y-4">
                         {/* Available Ingredients Section */}
                         <div>
-                          <h4 className="text-sm font-semibold text-gray-700 mb-3">Available Ingredients</h4>
+                          <h4 className="text-sm font-semibold text-gray-700 mb-3">All Available Ingredients</h4>
                           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                             {filteredIngredients.map((ingredient) => (
                               <button
@@ -969,8 +1024,8 @@ export default function Home() {
                                 onClick={() => handleIngredientToggle(ingredient)}
                                 className={`group p-3 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${
                                   selectedIngredients.includes(ingredient)
-                                    ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'
-                                    : 'bg-white border-gray-200 hover:border-purple-200'
+                                    ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-md'
+                                    : 'bg-white border-gray-200 hover:border-green-200'
                                 }`}
                               >
                                 <div className="flex flex-col items-center gap-2">
@@ -1006,19 +1061,19 @@ export default function Home() {
                       className={`relative px-8 py-4 flex items-center justify-center gap-3 group transition-all duration-300 transform hover:scale-105 min-w-[280px] font-bold text-lg rounded-2xl shadow-xl border-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
                         leftoverMode
                           ? 'bg-gradient-to-r from-gray-400 to-gray-500 border-gray-300/20 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-blue-500/25'
+                          : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-green-500/25'
                       }`}
                     >
                       {/* Subtle background glow */}
                       <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl ${
-                        leftoverMode ? 'bg-gradient-to-r from-gray-400 to-gray-500' : 'bg-gradient-to-r from-blue-400 to-purple-400'
+                        leftoverMode ? 'bg-gradient-to-r from-gray-400 to-gray-500' : 'bg-gradient-to-r from-green-400 to-emerald-400'
                       }`}></div>
                       
                       {loading ? (
                         <>
                           <div className="loading-spinner w-5 h-5 border-2 border-white/30 border-t-white"></div>
                           <span className="text-base whitespace-nowrap font-semibold text-white">
-                            {leftoverMode ? 'Transforming Leftovers...' : 'Finding Perfect Meal...'}
+                            {leftoverMode ? 'Transforming Leftovers...' : 'Finding Perfect Recipes...'}
                           </span>
                         </>
                       ) : (
@@ -1026,10 +1081,10 @@ export default function Home() {
                           {leftoverMode ? (
                             <Recycle className="w-6 h-6 text-gray-300" />
                           ) : (
-                            <Flame className="w-5 h-5 text-white" />
+                            <CircleCheck className="w-5 h-5 text-white" />
                           )}
                           <span className="text-base whitespace-nowrap font-semibold text-white">
-                            {leftoverMode ? 'Coming Soon' : `Find Recipes (${selectedIngredients.length} ingredients)`}
+                            {leftoverMode ? 'Coming Soon' : `Find Smart Recipes (${selectedIngredients.length} ingredients)`}
                           </span>
                           {!leftoverMode && (
                             <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300 text-white" />
@@ -1042,10 +1097,10 @@ export default function Home() {
                   {/* Quick Stats */}
                   {!leftoverMode && selectedIngredients.length > 0 && (
                     <div className="mt-6 text-center">
-                      <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-full px-4 py-2">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span className="text-sm text-blue-700 font-medium">
-                          {selectedIngredients.length} ingredient{selectedIngredients.length !== 1 ? 's' : ''} selected
+                      <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-4 py-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-sm text-green-700 font-medium">
+                          {selectedIngredients.length} ingredient{selectedIngredients.length !== 1 ? 's' : ''} selected • Smart suggestions enabled
                         </span>
                       </div>
                     </div>

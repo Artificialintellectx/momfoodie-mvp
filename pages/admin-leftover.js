@@ -22,7 +22,6 @@ export default function AdminLeftover() {
       setLoading(true)
       
       if (!supabase) {
-        console.log('📊 Supabase not configured.')
         setTransformations([])
         return
       }
@@ -37,7 +36,6 @@ export default function AdminLeftover() {
         setMessage('Error loading transformations. Please check if the database table exists.')
         setTransformations([])
       } else {
-        console.log('✅ Transformations loaded:', data?.length || 0)
         setTransformations(data || [])
         setMessage('')
       }
@@ -121,7 +119,6 @@ export default function AdminLeftover() {
         return
       }
 
-      console.log('✅ Sample data created successfully')
       alert('Sample data created successfully!')
       await loadTransformations()
     } catch (error) {
