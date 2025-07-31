@@ -3,6 +3,8 @@ import { useRouter } from 'next/router'
 import { supabase } from '../lib/supabase'
 import { mealTypes, cookingTimes, ingredientCategories, commonIngredients, leftoverIngredients, leftoverCombinations } from '../lib/data'
 import { analytics } from '../lib/analytics'
+import { getAISuggestions, enhancedIngredientMatching, getContextualSuggestions } from '../lib/ai-suggestions'
+import { testAISystem, testIngredientSimilarity } from '../lib/ai-test'
 import { 
   ChefHat, 
   Heart, 
@@ -97,6 +99,9 @@ export default function Home() {
     // Track page visit and session start
     analytics.trackPageVisit('home', navigator.userAgent)
     analytics.trackSessionStart()
+    
+    // Add AI test to window for console access
+    window.testAISystem = testAI
     
     // Simulate page loading
     const timer = setTimeout(() => {
@@ -217,11 +222,72 @@ export default function Home() {
           if (showIngredientMode && selectedIngredients.length > 0) {
             // console.log(`🔍 Starting ingredient filtering for: ${selectedIngredients.join(', ')}`)
             
-            // Smart ingredient filtering with scoring
+            // Smart ingredient filtering with scoring - STRICT MODE
             const scoredMeals = data.map(meal => {
               let score = 0
               let matchedIngredients = []
               let excludedByOptional = false
+              let hasUnselectedIngredients = false
+              
+              // First, check if the meal contains ingredients the user didn't select
+              // This is the key improvement - we want to prioritize meals that ONLY use selected ingredients
+              const commonUnselectedIngredients = [
+                'coconut', 'coconut milk', 'coconut cream', 'fresh coconut',
+                'crayfish', 'periwinkle', 'stockfish', 'dried fish', 'smoked fish',
+                'ogbono', 'egusi', 'bitter leaf', 'water leaf', 'scent leaf',
+                'uziza', 'utazi', 'nchawu', 'ponmo', 'bush meat',
+                'palm wine', 'zobo', 'kunu', 'tiger nut milk',
+                'bambara nuts', 'melon seeds', 'pumpkin seeds',
+                'agege bread', 'puff puff', 'plantain chips',
+                'okra', 'chopped okra', 'blended okra', 'fresh okra'
+              ]
+              
+              // Special handling for oils - only penalize if the specific oil is required but not selected
+              // Check if meal contains unselected ingredients that are NOT in user's selection
+              const mealIngredientsLower = meal.ingredients.map(ing => ing.toLowerCase())
+              const userIngredientsLower = selectedIngredients.map(ing => ing.toLowerCase())
+              
+              const oilIngredients = ['palm oil', 'red palm oil', 'palm kernel oil', 'groundnut oil', 'vegetable oil', 'olive oil']
+              const userHasOil = oilIngredients.some(oil => userIngredientsLower.some(userIng => userIng.includes(oil)))
+              
+              const hasUnselected = commonUnselectedIngredients.some(unselectedIngredient => {
+                const unselectedLower = unselectedIngredient.toLowerCase()
+                // Check if this unselected ingredient is in the meal but NOT in user's selection
+                return mealIngredientsLower.some(mealIng => mealIng.includes(unselectedLower)) &&
+                       !userIngredientsLower.some(userIng => userIng.includes(unselectedLower))
+              })
+              
+
+              
+              // Check for oil requirements - only penalize if meal requires a specific oil that user doesn't have
+              let hasUnselectedOil = false
+              if (!userHasOil) {
+                // User doesn't have any oil, check if meal requires a specific oil
+                const mealRequiresOil = oilIngredients.some(oil => 
+                  mealIngredientsLower.some(mealIng => mealIng.includes(oil))
+                )
+                if (mealRequiresOil) {
+                  hasUnselectedOil = true
+                }
+              } else {
+                // User has some oil, check if meal requires a different specific oil
+                const mealOils = oilIngredients.filter(oil => 
+                  mealIngredientsLower.some(mealIng => mealIng.includes(oil))
+                )
+                const userOils = oilIngredients.filter(oil => 
+                  userIngredientsLower.some(userIng => userIng.includes(oil))
+                )
+                // If meal requires a specific oil that user doesn't have
+                if (mealOils.length > 0 && !mealOils.some(oil => userOils.includes(oil))) {
+                  hasUnselectedOil = true
+                }
+              }
+              
+              // Set hasUnselectedIngredients based on the checks above
+              if (hasUnselected || hasUnselectedOil) {
+                hasUnselectedIngredients = true
+                // console.log(`⚠️ &quot;${meal.name}&quot; contains unselected ingredients`)
+              }
               
               // Check each selected ingredient against the meal
               selectedIngredients.forEach(ingredient => {
@@ -255,9 +321,17 @@ export default function Home() {
                   return
                 }
                 
-                const ingredientInList = meal.ingredients.some(mealIngredient =>
-                  mealIngredient.toLowerCase().includes(ingredientLower)
-                )
+                const ingredientInList = meal.ingredients.some(mealIngredient => {
+                  const mealIngredientLower = mealIngredient.toLowerCase()
+                  const matches = mealIngredientLower.includes(ingredientLower)
+                  
+                  // Debug logging for rice and beef
+                  if (ingredientLower === 'rice' || ingredientLower === 'beef') {
+                    console.log(`🔍 Checking "${ingredient}" against "${mealIngredient}" - Match: ${matches}`)
+                  }
+                  
+                  return matches
+                })
                 if (ingredientInList) {
                   score += 5
                   if (!matchedIngredients.includes(ingredient)) {
@@ -288,15 +362,21 @@ export default function Home() {
                 score += 10
               }
               
+              // PENALTY for meals with unselected ingredients (reduced penalty for more flexibility)
+              if (hasUnselectedIngredients) {
+                score = Math.max(0, score - 10) // Reduced penalty to allow more options
+              }
+              
               const result = {
                 ...meal,
                 ingredientScore: score,
                 matchedIngredients: matchedIngredients,
-                matchPercentage: (matchedIngredients.length / selectedIngredients.length) * 100
+                matchPercentage: (matchedIngredients.length / selectedIngredients.length) * 100,
+                hasUnselectedIngredients: hasUnselectedIngredients
               }
               
               if (matchedIngredients.length > 0) {
-                // console.log(`📊 &quot;${meal.name}&quot; - Score: ${score}, Matches: ${matchedIngredients.join(', ')}, Match %: ${result.matchPercentage}%`)
+                console.log(`📊 "${meal.name}" - Score: ${score}, Matches: ${matchedIngredients.join(', ')}, Match %: ${result.matchPercentage}%, Has Unselected: ${hasUnselectedIngredients}`)
               }
               
               return result
@@ -320,83 +400,75 @@ export default function Home() {
             }
             
             // Filter out meals with no matches and sort by score (highest first)
-            // Adaptive threshold system based on number of selected ingredients
-            const getThresholdForIngredients = (ingredientCount) => {
-              if (ingredientCount === 1) {
-                return { primary: 0, fallback: 1, final: 1 } // Show any meal with the ingredient
-              } else if (ingredientCount === 2) {
-                return { primary: 100, fallback: 1, final: 1 } // 100% or at least 1 ingredient
-              } else if (ingredientCount === 3) {
-                return { primary: 70, fallback: 2, final: 1 } // 70% or at least 2, else at least 1
-              } else if (ingredientCount === 4) {
-                return { primary: 70, fallback: 2, final: 1 } // 70% or at least 2, else at least 1
-              } else if (ingredientCount >= 5 && ingredientCount <= 6) {
-                return { primary: 70, fallback: 3, final: 2 } // 70% or at least 3, else at least 2
-              } else if (ingredientCount > 6 && ingredientCount <= 10) {
-                return { primary: 70, fallback: 4, final: 2 } // 70% or at least 4, else at least 2
-              } else if (ingredientCount > 10 && ingredientCount <= 15) {
-                return { primary: 70, fallback: 5, final: 2 } // 70% or at least 5, else at least 2
-              } else {
-                return { primary: 70, fallback: 6, final: 2 } // 70% or at least 6, else at least 2
-              }
-            }
-
-            const thresholds = getThresholdForIngredients(selectedIngredients.length)
-            // console.log(`🎯 Adaptive thresholds for ${selectedIngredients.length} ingredients: Primary ${thresholds.primary}%, Fallback ${thresholds.fallback}, Final ${thresholds.final} ingredients`)
-
-            // First try with primary threshold
-            suggestions = scoredMeals
-              .filter(meal => meal.ingredientScore > 0 && !meal.excluded && meal.matchPercentage >= thresholds.primary)
-              .sort((a, b) => {
-                if (b.ingredientScore !== a.ingredientScore) {
-                  return b.ingredientScore - a.ingredientScore
-                }
-                return b.matchPercentage - a.matchPercentage
-              })
-
-            // console.log(`🔍 After primary filtering (${thresholds.primary}% threshold): ${suggestions.length} meals`)
-            // console.log(`🔍 Meals with score > 0: ${scoredMeals.filter(m => m.ingredientScore > 0).length}`)
-            // console.log(`🔍 Meals not excluded: ${scoredMeals.filter(m => !m.excluded).length}`)
-            // console.log(`🔍 Meals with match % >= ${thresholds.primary}: ${scoredMeals.filter(m => m.matchPercentage >= thresholds.primary).length}`)
+            // NEW: AI-powered ingredient matching system
+            // This provides intelligent suggestions based on semantic understanding
             
-            // Debug: Show suggestions after primary filtering
-            if (suggestions.length > 0) {
-              // console.log('📊 Suggestions after primary filtering:')
-              suggestions.forEach(meal => {
-                // console.log(`  - &quot;${meal.name}&quot; - Score: ${meal.ingredientScore}, Match %: ${meal.matchPercentage}%`)
-              })
-            }
-
-            // If no results with primary threshold, try fallback threshold
-            if (suggestions.length === 0) {
-              // console.log(`🔄 No results with ${thresholds.primary}% threshold, trying fallback: at least ${thresholds.fallback} ingredients`)
-              
-              suggestions = scoredMeals
-                .filter(meal => meal.ingredientScore > 0 && !meal.excluded && meal.matchedIngredients.length >= thresholds.fallback)
-                .sort((a, b) => {
+            // Get all meals with any ingredient matches (no strict filtering)
+            const allMatchingMeals = scoredMeals
+              .filter(meal => meal.ingredientScore > 0 && !meal.excluded)
+            
+            console.log(`📊 Total meals with ingredient matches: ${allMatchingMeals.length}`)
+            console.log('📋 Meals being passed to AI:')
+            allMatchingMeals.slice(0, 5).forEach((meal, index) => {
+              console.log(`  ${index + 1}. "${meal.name}" - Score: ${meal.ingredientScore}, Matches: ${meal.matchedIngredients.join(', ')}`)
+            })
+            
+            if (allMatchingMeals.length > 0) {
+              try {
+                // Use AI to rank and suggest meals
+                const userContext = {
+                  mealType,
+                  cookingTime,
+                  spicy: selectedIngredients.some(ing => ['scotch bonnet', 'habanero', 'pepper'].includes(ing.toLowerCase())),
+                  traditional: true,
+                  difficulty: 'any'
+                }
+                
+                // Get AI-powered suggestions
+                const aiSuggestions = await getAISuggestions(selectedIngredients, allMatchingMeals, userContext)
+                
+                // Combine AI ranking with rule-based scoring
+                suggestions = aiSuggestions.map(meal => ({
+                  ...meal,
+                  ingredientScore: meal.aiScore || meal.ingredientScore,
+                  matchedIngredients: meal.matchedIngredients || [],
+                  matchPercentage: meal.matchPercentage || 0,
+                  hasUnselectedIngredients: meal.hasUnselectedIngredients || false
+                }))
+                
+                // console.log(`🤖 AI ranked ${suggestions.length} suggestions`)
+                
+              } catch (error) {
+                console.error('AI suggestion error, falling back to rule-based:', error)
+                
+                // Fallback to rule-based ranking
+                suggestions = allMatchingMeals.sort((a, b) => {
+                  // Primary: Meals without unselected ingredients get priority
+                  if (a.hasUnselectedIngredients !== b.hasUnselectedIngredients) {
+                    return a.hasUnselectedIngredients ? 1 : -1
+                  }
+                  // Secondary: Higher ingredient score (more selected ingredients used)
                   if (b.ingredientScore !== a.ingredientScore) {
                     return b.ingredientScore - a.ingredientScore
                   }
+                  // Tertiary: Higher match percentage
                   return b.matchPercentage - a.matchPercentage
                 })
-
-              // console.log(`🔍 After fallback filtering (at least ${thresholds.fallback} ingredients): ${suggestions.length} meals`)
-            }
-
-            // If still no results, try final threshold
-            if (suggestions.length === 0) {
-              // console.log(`🔄 No results with fallback threshold, trying final: at least ${thresholds.final} ingredients`)
+              }
               
-              suggestions = scoredMeals
-                .filter(meal => meal.ingredientScore > 0 && !meal.excluded && meal.matchedIngredients.length >= thresholds.final)
-                .sort((a, b) => {
-                  if (b.ingredientScore !== a.ingredientScore) {
-                    return b.ingredientScore - a.ingredientScore
-                  }
-                  return b.matchPercentage - a.matchPercentage
+              // Take top results based on ingredient count (more flexible)
+              const maxResults = Math.min(20, Math.max(5, selectedIngredients.length * 3))
+              suggestions = suggestions.slice(0, maxResults)
+              
+              // console.log(`🎯 Showing top ${suggestions.length} results`)
+              
+              // Debug: Show top suggestions
+              if (suggestions.length > 0) {
+                // console.log('📊 Top suggestions:')
+                suggestions.forEach((meal, index) => {
+                  // console.log(`  ${index + 1}. &quot;${meal.name}&quot; - Score: ${meal.ingredientScore}, Matches: ${meal.matchedIngredients.join(', ')}, Match %: ${meal.matchPercentage}%, Has Unselected: ${meal.hasUnselectedIngredients}`)
                 })
-
-              // console.log(`🔍 After final filtering (at least ${thresholds.final} ingredients): ${suggestions.length} meals`)
+              }
             }
             
             // console.log(`📊 Final suggestions:`, suggestions.slice(0, 3).map(m => 
@@ -407,14 +479,23 @@ export default function Home() {
             // console.log(`🔍 Suggestions array before meal selection: ${suggestions.length} meals`)
             // console.log(`🔍 First 3 suggestions:`, suggestions.slice(0, 3).map(m => m.name))
             
+            // Debug: Show what we found
+            console.log(`🔍 Found ${suggestions.length} suggestions after AI processing`)
+            if (suggestions.length > 0) {
+              console.log('📋 Top suggestions:')
+              suggestions.slice(0, 5).forEach((meal, index) => {
+                console.log(`  ${index + 1}. "${meal.name}" - Score: ${meal.ingredientScore || meal.aiScore}, Matches: ${meal.matchedIngredients?.join(', ') || 'N/A'}`)
+              })
+            }
+            
             // Check if no meals match the ingredient criteria
             if (suggestions.length === 0) {
-              const thresholdInfo = selectedIngredients.length === 1 
+              const ingredientInfo = selectedIngredients.length === 1 
                 ? `the ingredient &quot;${selectedIngredients[0]}&quot;`
-                : `at least ${thresholds.primary}%, ${thresholds.fallback}, or ${thresholds.final} ingredients`
+                : `any of the selected ingredients`
               
-              // console.log(`❌ No meals found with ${thresholdInfo}`)
-              alert(`No meals found containing ${thresholdInfo} of &quot;${selectedIngredients.join(', ')}&quot;. Try selecting different ingredients.`)
+              console.log(`❌ No meals found with ${ingredientInfo}`)
+              alert(`No meals found containing ${ingredientInfo} &quot;${selectedIngredients.join(', ')}&quot;. Try selecting different ingredients.`)
               return
             }
           } else if (!showIngredientMode) {
@@ -767,6 +848,24 @@ export default function Home() {
     
     setLoading(true)
     getSuggestion() // Reuse the existing getSuggestion function
+  }
+
+  // Test AI system function
+  const testAI = async () => {
+    console.log('🧪 Testing AI system...')
+    try {
+      const result = await testAISystem()
+      console.log('AI Test Result:', result)
+      
+      if (result.success) {
+        alert(`✅ AI System Working!\n\nAPI Key: ${result.apiKeyAvailable ? 'Available' : 'Missing'}\nSimilarity Test: ${result.similarityTest}\nSuggestions: ${result.suggestionsCount}`)
+      } else {
+        alert(`❌ AI Test Failed: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('AI test error:', error)
+      alert(`❌ AI Test Error: ${error.message}`)
+    }
   }
 
   // Show skeleton loader while page is loading
