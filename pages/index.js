@@ -49,8 +49,8 @@ export default function Home() {
     // Filter by search term
     if (searchTerm.trim()) {
       filtered = filtered.filter(ingredient =>
-        ingredient.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+    ingredient.toLowerCase().includes(searchTerm.toLowerCase())
+  )
     }
     
     // Filter by category
@@ -783,7 +783,7 @@ export default function Home() {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-r from-orange-200/20 to-yellow-200/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-6xl">
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-6xl pb-24">
         
         {/* Optimized Hero Section */}
         <div className="text-center mb-4 sm:mb-6 animate-slide-in-up">
@@ -1055,7 +1055,7 @@ export default function Home() {
                   {/* Main Header - Single, Clear Section */}
                   <div className="text-center mb-8">
                     <div className="flex items-center justify-center gap-4 mb-4">
-                    </div>
+                  </div>
 
                     {/* Mode Toggle - Integrated into header */}
                     <div className="flex justify-center mb-6">
@@ -1099,8 +1099,8 @@ export default function Home() {
                       {/* Redesigned Search Section Header */}
                       <div className="text-center mb-8">
                         <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl shadow-lg mb-4">
-                          <Search className="w-5 h-5 text-white" />
-                        </div>
+                            <Search className="w-5 h-5 text-white" />
+                          </div>
                         <h3 className="text-xl font-bold text-gray-800 mb-2">Find Your Ingredients</h3>
                         <p className="text-gray-500 text-sm max-w-md mx-auto">Search and select ingredients you have available</p>
                       </div>
@@ -1111,39 +1111,39 @@ export default function Home() {
                           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-green-500 transition-colors duration-200">
                             <Search className="w-5 h-5" />
                           </div>
-                          <input
-                            type="text"
-                            placeholder="Search ingredients or type to add custom ingredient..."
-                            value={searchTerm}
+                        <input
+                          type="text"
+                            placeholder="Search ingredients"
+                          value={searchTerm}
                             onChange={(e) => {
                               setSearchTerm(e.target.value)
                               setCurrentPage(1) // Reset to first page when searching
                             }}
-                            onKeyPress={(e) => {
-                              if (e.key === 'Enter' && searchTerm.trim()) {
-                                const customIngredient = searchTerm.trim()
-                                if (!selectedIngredients.includes(customIngredient) && !commonIngredients.includes(customIngredient)) {
-                                  setSelectedIngredients(prev => [...prev, customIngredient])
-                                  setSearchTerm('')
-                                }
-                              }
-                            }}
-                            className="w-full pl-12 pr-16 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-300 text-gray-700 placeholder-gray-400 text-base shadow-sm hover:shadow-md focus:shadow-lg"
-                          />
-                          {searchTerm.trim() && !commonIngredients.includes(searchTerm.trim()) && !selectedIngredients.includes(searchTerm.trim()) && (
-                            <button
-                              onClick={() => {
-                                const customIngredient = searchTerm.trim()
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && searchTerm.trim()) {
+                              const customIngredient = searchTerm.trim()
+                              if (!selectedIngredients.includes(customIngredient) && !commonIngredients.includes(customIngredient)) {
                                 setSelectedIngredients(prev => [...prev, customIngredient])
                                 setSearchTerm('')
-                              }}
+                              }
+                            }
+                          }}
+                            className="w-full pl-12 pr-16 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-300 text-gray-700 placeholder-gray-400 text-base shadow-sm hover:shadow-md focus:shadow-lg"
+                        />
+                        {searchTerm.trim() && !commonIngredients.includes(searchTerm.trim()) && !selectedIngredients.includes(searchTerm.trim()) && (
+                          <button
+                            onClick={() => {
+                              const customIngredient = searchTerm.trim()
+                              setSelectedIngredients(prev => [...prev, customIngredient])
+                              setSearchTerm('')
+                            }}
                               className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-green-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-green-600 transition-colors duration-200 font-medium"
-                            >
-                              Add
-                            </button>
-                          )}
-                        </div>
-                        
+                          >
+                            Add
+                          </button>
+                        )}
+                      </div>
+
                         {/* Search suggestions for mobile */}
                         {searchTerm.trim() && filteredIngredients.length > 0 && (
                           <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto">
@@ -1172,9 +1172,9 @@ export default function Home() {
                         <div className="mb-6">
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                              <CircleCheck className="w-4 h-4 text-green-500" />
+                            <CircleCheck className="w-4 h-4 text-green-500" />
                               Selected ({selectedIngredients.length})
-                            </h4>
+                          </h4>
                             <button
                               onClick={() => setSelectedIngredients([])}
                               className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1"
@@ -1268,7 +1268,7 @@ export default function Home() {
                                 {selectedIngredients.includes(ingredient) && (
                                   <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-md">
                                     <CheckCircle className="w-3 h-3 text-white" />
-                                  </div>
+                                </div>
                                 )}
                                 
                                 <div className="flex flex-col items-center gap-2 sm:gap-1.5">
@@ -1287,16 +1287,16 @@ export default function Home() {
                             <div className="text-center py-8">
                               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Search className="w-8 h-8 text-gray-400" />
-                              </div>
+                        </div>
                               <p className="text-gray-500 text-sm">No ingredients found for &quot;{searchTerm}&quot;</p>
                               <p className="text-gray-400 text-xs mt-1">Try a different search term or add it as a custom ingredient</p>
-                            </div>
+                      </div>
                           )}
 
                           {/* Pagination Controls - Mobile Optimized */}
                           {totalPages > 1 && (
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-6">
-                              <button
+                          <button
                                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                 disabled={currentPage === 1}
                                 className="px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 text-gray-600 hover:bg-gray-200 min-w-[60px] sm:min-w-[80px]"
@@ -1332,9 +1332,9 @@ export default function Home() {
                                 className="px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 text-gray-600 hover:bg-gray-200 min-w-[60px] sm:min-w-[80px]"
                               >
                                 Next
-                              </button>
-                            </div>
-                          )}
+                          </button>
+                        </div>
+                      )}
 
                           {/* Page Info */}
                           {totalPages > 1 && (
@@ -1347,47 +1347,6 @@ export default function Home() {
                         </div>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Enhanced Get Meal Suggestion Button - Mobile Optimized */}
-                  <div className="flex justify-center mt-8">
-                    <button
-                      onClick={getSuggestion}
-                      disabled={loading || (leftoverMode ? true : selectedIngredients.length === 0)}
-                      className={`relative w-full max-w-sm sm:max-w-md px-6 sm:px-8 py-4 sm:py-5 flex items-center justify-center gap-3 group transition-all duration-300 transform hover:scale-105 active:scale-95 font-bold text-base sm:text-lg rounded-2xl shadow-xl border-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
-                        leftoverMode
-                          ? 'bg-gradient-to-r from-gray-400 to-gray-500 border-gray-300/20 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-green-500/25'
-                      }`}
-                    >
-                      {/* Subtle background glow */}
-                      <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl ${
-                        leftoverMode ? 'bg-gradient-to-r from-gray-400 to-gray-500' : 'bg-gradient-to-r from-green-400 to-emerald-400'
-                      }`}></div>
-                      
-                      {loading ? (
-                        <>
-                          <div className="loading-spinner w-5 h-5 border-2 border-white/30 border-t-white"></div>
-                          <span className="text-base whitespace-nowrap font-semibold text-white">
-                            {leftoverMode ? 'Transforming Leftovers...' : 'Finding Perfect Recipes...'}
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          {leftoverMode ? (
-                            <Recycle className="w-6 h-6 text-gray-300" />
-                          ) : (
-                            <CircleCheck className="w-5 h-5 text-white" />
-                          )}
-                          <span className="text-base whitespace-nowrap font-semibold text-white">
-                            {leftoverMode ? 'Coming Soon' : `Find Smart Recipes (${selectedIngredients.length} ingredients)`}
-                          </span>
-                          {!leftoverMode && (
-                            <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300 text-white" />
-                          )}
-                        </>
-                      )}
-                    </button>
                   </div>
 
                   {/* Enhanced Quick Stats - Mobile Optimized */}
@@ -1409,6 +1368,49 @@ export default function Home() {
 
 
         </div>
+
+                {/* Floating Smart Recipes Button - Moved outside main container */}
+        {selectedIngredients.length > 0 && (
+          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999] animate-slide-in-up" style={{ marginBottom: 'env(safe-area-inset-bottom)' }}>
+            <button
+              onClick={getSuggestion}
+              disabled={loading || leftoverMode}
+              className={`relative px-6 py-3 flex items-center justify-center gap-2 group transition-all duration-300 transform hover:scale-105 active:scale-95 font-bold text-base rounded-xl shadow-xl border-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none max-w-xs ${
+                leftoverMode
+                  ? 'bg-gradient-to-r from-gray-400 to-gray-500 border-gray-300/20 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-green-500/25'
+              }`}
+            >
+                      {/* Subtle background glow */}
+                      <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl ${
+                        leftoverMode ? 'bg-gradient-to-r from-gray-400 to-gray-500' : 'bg-gradient-to-r from-green-400 to-emerald-400'
+                      }`}></div>
+                      
+                                  {loading ? (
+              <>
+                <div className="loading-spinner w-4 h-4 border-2 border-white/30 border-t-white"></div>
+                <span className="text-sm whitespace-nowrap font-semibold text-white">
+                  {leftoverMode ? 'Transforming...' : 'Finding Recipes...'}
+                </span>
+              </>
+            ) : (
+              <>
+                {leftoverMode ? (
+                  <Recycle className="w-5 h-5 text-gray-300" />
+                ) : (
+                  <CircleCheck className="w-4 h-4 text-white" />
+                )}
+                <span className="text-sm whitespace-nowrap font-semibold text-white">
+                  {leftoverMode ? 'Coming Soon' : `Suggest Recipe (${selectedIngredients.length})`}
+                </span>
+                {!leftoverMode && (
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300 text-white" />
+                )}
+              </>
+            )}
+                    </button>
+                    </div>
+          )}
 
         {/* Saved Meals Section */}
         {savedMeals.length > 0 && (
