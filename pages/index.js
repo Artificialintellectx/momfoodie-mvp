@@ -1095,22 +1095,22 @@ export default function Home() {
 
                   {/* Ingredient Selection - Streamlined Design */}
                   <div className="animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
-                    <div className="card">
-                      {/* Search Section Header */}
-                      <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="card p-6 sm:p-8">
+                      {/* Redesigned Search Section Header */}
+                      <div className="text-center mb-8">
+                        <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl shadow-lg mb-4">
                           <Search className="w-5 h-5 text-white" />
                         </div>
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-800">Find Your Ingredients</h4>
-                          <p className="text-gray-600 text-sm">Search and select ingredients you have available</p>
-                        </div>
+                        <h3 className="text-xl font-bold text-gray-800 mb-2">Find Your Ingredients</h3>
+                        <p className="text-gray-500 text-sm max-w-md mx-auto">Search and select ingredients you have available</p>
                       </div>
 
-                      {/* Enhanced Search Bar - Mobile Optimized */}
-                      <div className="relative mb-6">
-                        <div className="relative">
-                          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      {/* Redesigned Search Bar */}
+                      <div className="relative mb-8">
+                        <div className="relative group">
+                          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-green-500 transition-colors duration-200">
+                            <Search className="w-5 h-5" />
+                          </div>
                           <input
                             type="text"
                             placeholder="Search ingredients or type to add custom ingredient..."
@@ -1128,7 +1128,7 @@ export default function Home() {
                                 }
                               }
                             }}
-                            className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 text-gray-700 placeholder-gray-400 text-base"
+                            className="w-full pl-12 pr-16 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-300 text-gray-700 placeholder-gray-400 text-base shadow-sm hover:shadow-md focus:shadow-lg"
                           />
                           {searchTerm.trim() && !commonIngredients.includes(searchTerm.trim()) && !selectedIngredients.includes(searchTerm.trim()) && (
                             <button
@@ -1253,12 +1253,12 @@ export default function Home() {
                           </div>
                           
                           {/* Mobile-optimized grid with better spacing */}
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-4">
                             {currentIngredients.map((ingredient) => (
                               <button
                                 key={ingredient}
                                 onClick={() => handleIngredientToggle(ingredient)}
-                                className={`group relative p-4 sm:p-3 rounded-xl border-2 transition-all duration-200 hover:shadow-md active:scale-95 ${
+                                className={`group relative p-5 sm:p-3 rounded-xl border-2 transition-all duration-200 hover:shadow-md active:scale-95 ${
                                   selectedIngredients.includes(ingredient)
                                     ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300 shadow-md transform scale-105'
                                     : 'bg-white border-gray-200 hover:border-green-200 hover:bg-green-50/50'
