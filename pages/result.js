@@ -321,7 +321,8 @@ export default function Result() {
           if (searchCriteria.showIngredientMode && searchCriteria.selectedIngredients?.length > 0) {
             // Check if we have cached progressive search results for this ingredient combination
             const titleThreshold = searchCriteria.titleThreshold || 50
-            const ingredientKey = `${searchCriteria.selectedIngredients.sort().join(',')}_${titleThreshold}`
+            const searchPhase = searchCriteria.searchPhase || 'primary_search'
+            const ingredientKey = `${searchCriteria.selectedIngredients.sort().join(',')}_${titleThreshold}_${searchPhase}`
             const cachedResults = JSON.parse(localStorage.getItem(`ingredient_search_${ingredientKey}`) || 'null')
             
             if (cachedResults) {
@@ -498,21 +499,18 @@ export default function Result() {
         // All meals for this filter have been shown - check if we should show modal for next phase
         console.log('🔄 All meals shown for this filter')
         
-        // Check if we're in primary search mode and should show modal for 25% threshold
-        const searchPhase = localStorage.getItem('ingredient_search_phase')
-                  const titleThreshold = JSON.parse(localStorage.getItem('ingredient_search_titleThreshold') || '50')
+        // Check if we should show modal for 25% threshold continuation
+        const currentTitleThreshold = searchCriteria.titleThreshold || 50
+        const currentSearchPhase = searchCriteria.searchPhase || 'primary_search'
         
-        if (searchPhase === 'primary_search' && titleThreshold === 50) {
+        if (currentSearchPhase === 'primary_search' && currentTitleThreshold === 50) {
           // Show modal asking if user wants to see recipes with 25% threshold
           setShowProgressiveModal(true)
           console.log('🔄 Showing modal to continue with 25% threshold')
-        } else if (searchPhase === 'primary_search' && titleThreshold === 25) {
-          // Already used 25% threshold automatically, show exhaustion
-          setShowExhaustionModal(true)
-          console.log('🔄 Already used 25% threshold automatically, showing exhaustion')
         } else {
-          // Show exhaustion notification
+          // Already used 25% threshold or in secondary search, show exhaustion
           setShowExhaustionModal(true)
+          console.log('🔄 All recipes shown, showing exhaustion modal')
         }
       }
     } catch (error) {
@@ -598,7 +596,7 @@ export default function Result() {
       console.log(`✅ Found ${allMeals.length} meals from Supabase`)
 
       // Perform search with 25% threshold
-      const searchResult = await performIngredientSearch(allMeals, originalIngredients, 25)
+      const searchResult = await performIngredientSearch(allMeals, originalIngredients, 25, 'secondary_search')
 
       if (searchResult.suggestions.length > 0) {
         // Update the main searchCriteria in localStorage to reflect the new threshold
@@ -618,6 +616,16 @@ export default function Result() {
         const newMeal = searchResult.suggestions[randomIndex]
         setMeal(newMeal)
         localStorage.setItem('currentMeal', JSON.stringify(newMeal))
+
+        // Cache the secondary search results
+        const secondaryIngredientKey = `${originalIngredients.sort().join(',')}_25_secondary_search`
+        localStorage.setItem(`ingredient_search_${secondaryIngredientKey}`, JSON.stringify({
+          suggestions: searchResult.suggestions,
+          searchState: getSearchState(searchResult).message,
+          searchPhase: 'secondary_search',
+          titleThreshold: 25,
+          originalIngredients: originalIngredients
+        }))
 
         // Reset shown meals tracking for new threshold
         const searchCriteriaData = JSON.stringify({
@@ -1644,33 +1652,178 @@ export default function Result() {
 
   // Helper function to get ingredient icon
   const getIngredientIcon = (ingredient) => {
-    return ingredient === 'Rice' ? '🍚' :
-           ingredient === 'Tomatoes' ? '🍅' :
-           ingredient === 'Onions' ? '🧅' :
-           ingredient === 'Pepper' ? '🌶️' :
-           ingredient === 'Beans' ? '🫘' :
-           ingredient === 'Chicken' ? '🍗' :
-           ingredient === 'Beef' ? '🥩' :
-           ingredient === 'Fish' ? '🐟' :
-           ingredient === 'Eggs' ? '🥚' :
-           ingredient === 'Spinach' ? '🥬' :
-           ingredient === 'Palm oil' ? '🫒' :
-           ingredient === 'Vegetable oil' ? '🫗' :
-           ingredient === 'Garlic' ? '🧄' :
-           ingredient === 'Ginger' ? '🫚' :
-           ingredient === 'Okra' ? '🥗' :
-           ingredient === 'Sweet potato' ? '🍠' :
-           ingredient === 'Carrots' ? '🥕' :
-           ingredient === 'Green beans' ? '🫛' :
-           ingredient === 'Bread' ? '🍞' :
-           ingredient === 'Egg' ? '🥚' :
-           ingredient === 'Irish potatoes' ? '🥔' :
-           ingredient === 'Garri' ? '🫓' :
-           ingredient === 'Semovita' ? '🫓' :
-           ingredient === 'Wheat' ? '🌾' :
-           ingredient === 'Starch' ? '🫓' :
-           ingredient === 'Spaghetti' ? '🍝' :
-           ingredient === 'Noodles' ? '🍜' : '🥬'
+    const iconMap = {
+      // Swallows & Starches
+      'Rice': '🍚',
+      'Garri': '🫓',
+      'Semovita': '🫓',
+      'Amala': '🫓',
+      'Eba': '🫓',
+      'Pounded yam': '🍠',
+      'Tuwo': '🫓',
+      'Fufu': '🫓',
+      'Wheat': '🌾',
+      'Starch': '🫓',
+      'Spaghetti': '🍝',
+      'Noodles': '🍜',
+      'Couscous': '🍚',
+      
+      // Proteins & Meats
+      'Chicken': '🍗',
+      'Beef': '🥩',
+      'Goat meat': '🥩',
+      'Fish': '🐟',
+      'Pork': '🥩',
+      'Turkey': '🦃',
+      'Egg': '🥚',
+      'Eggs': '🥚',
+      'Shrimp': '🦐',
+      'Crab': '🦀',
+      'Snail': '🐌',
+      'Liver': '🥩',
+      'Kidney': '🥩',
+      'Tripe': '🥩',
+      'Stockfish': '🐟',
+      'Dried fish': '🐟',
+      'Smoked fish': '🐟',
+      'Bush meat': '🥩',
+      'Ponmo': '🥩',
+      
+      // Vegetables & Greens
+      'Tomatoes': '🍅',
+      'Onions': '🧅',
+      'Spinach': '🥬',
+      'Okra': '🥗',
+      'Carrots': '🥕',
+      'Green beans': '🫛',
+      'Bell peppers': '🫑',
+      'Scotch bonnet': '🌶️',
+      'Habanero': '🌶️',
+      'Cucumber': '🥒',
+      'Lettuce': '🥬',
+      'Cabbage': '🥬',
+      'Cauliflower': '🥦',
+      'Broccoli': '🥦',
+      'Sweet potato': '🍠',
+      'Irish potatoes': '🥔',
+      'Yam': '🍠',
+      'Plantain': '🍌',
+      'Cassava': '🍠',
+      'Pumpkin leaves': '🥬',
+      'Bitter leaf': '🥬',
+      'Water leaf': '🥬',
+      'Scent leaf': '🌿',
+      'Curry leaf': '🌿',
+      'Basil': '🌿',
+      
+      // Fruits & Tropical
+      'Banana': '🍌',
+      'Orange': '🍊',
+      'Apple': '🍎',
+      'Mango': '🥭',
+      'Pineapple': '🍍',
+      'Watermelon': '🍉',
+      'Pawpaw': '🥭',
+      'Guava': '🍈',
+      'Grape': '🍇',
+      'Strawberry': '🍓',
+      'Avocado': '🥑',
+      'Lemon': '🍋',
+      'Lime': '🍋',
+      'Tangerine': '🍊',
+      'Grapefruit': '🍊',
+      'Pomegranate': '🍎',
+      'Coconut': '🥥',
+      'Tiger nut': '🥜',
+      
+      // Dairy & Alternatives
+      'Milk': '🥛',
+      'Cheese': '🧀',
+      'Yogurt': '🥛',
+      'Butter': '🧈',
+      'Cream': '🥛',
+      'Sour cream': '🥛',
+      'Coconut milk': '🥛',
+      'Almond milk': '🥛',
+      'Soy milk': '🥛',
+      'Coconut cream': '🥛',
+      'Evaporated milk': '🥛',
+      'Condensed milk': '🥛',
+      
+      // Spices & Seasonings
+      'Garlic': '🧄',
+      'Ginger': '🫚',
+      'Pepper': '🌶️',
+      'Curry powder': '🌶️',
+      'Thyme': '🌿',
+      'Bay leaves': '🌿',
+      'Nutmeg': '🌰',
+      'Cinnamon': '🌰',
+      'Cumin': '🌰',
+      'Coriander': '🌿',
+      'Seasoning cubes': '🧂',
+      'Salt': '🧂',
+      'Black pepper': '🌶️',
+      'White pepper': '🌶️',
+      'Cayenne pepper': '🌶️',
+      'Paprika': '🌶️',
+      'Turmeric': '🟡',
+      'Cloves': '🌰',
+      'Cardamom': '🌰',
+      
+      // Oils & Fats
+      'Palm oil': '🫒',
+      'Vegetable oil': '🫗',
+      'Olive oil': '🫒',
+      'Coconut oil': '🥥',
+      'Groundnut oil': '🥜',
+      'Sesame oil': '🫒',
+      'Margarine': '🧈',
+      'Ghee': '🧈',
+      'Red palm oil': '🫒',
+      'Palm kernel oil': '🫒',
+      
+      // Legumes & Beans
+      'Beans': '🫘',
+      'Black-eyed peas': '🫘',
+      'Lentils': '🫘',
+      'Chickpeas': '🫘',
+      'Cowpeas': '🫘',
+      'Soybeans': '🫘',
+      'Peanuts': '🥜',
+      'Groundnuts': '🥜',
+      'Almonds': '🥜',
+      'Cashews': '🥜',
+      'Bambara nuts': '🥜',
+      'Melon seeds': '🥜',
+      'Pumpkin seeds': '🥜',
+      
+      // Baked Goods & Snacks
+      'Bread': '🍞',
+      'Toast': '🍞',
+      'Buns': '🍞',
+      'Cake': '🍰',
+      'Cookies': '🍪',
+      'Biscuits': '🍪',
+      'Puff puff': '🍩',
+      'Rolls': '🍞',
+      'Croissants': '🥐',
+      'Agege bread': '🍞',
+      'Plantain chips': '🍌',
+      'Groundnut': '🥜',
+      'Popcorn': '🍿',
+      
+      // Traditional Nigerian
+      'Crayfish': '🦐',
+      'Periwinkle': '🐌',
+      'Ogbono': '🌰',
+      'Egusi': '🥜',
+      
+      // Default fallback
+      'default': '🥬'
+    }
+    
+    return iconMap[ingredient] || iconMap['default']
   }
 
 

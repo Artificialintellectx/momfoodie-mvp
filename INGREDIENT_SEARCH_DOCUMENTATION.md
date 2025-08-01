@@ -1,315 +1,297 @@
-# 🍽️ Ingredient Search Documentation
+# Ingredient Search Logic Documentation
 
 ## Overview
 
-The ingredient search feature allows users to find recipes based on ingredients they have available. This is a core feature of MomFoodie that solves the common problem: "What can I make with what I have?"
+The MomFoodie MVP implements a sophisticated ingredient-based recipe search system that uses title relevance thresholds to find recipes matching user-selected ingredients. The system operates on a two-tier threshold approach (50% → 25%) with automatic fallback and manual continuation options. **NEW**: Recipes are now prioritized based on the position of ingredient matches in the title, with first-word matches receiving highest priority.
 
-## 🎯 How It Works
+## Core Components
 
-### 1. **User Interface Flow**
+### 1. Search Function (`lib/progressive-search.js`)
 
-```
-Homepage → Toggle "My Ingredients" → Select Ingredients → Click "What Can I Make?" → View Results
-```
+#### `performIngredientSearch(allMeals, selectedIngredients, titleThreshold = 50, searchPhase = 'primary_search')`
 
-### 2. **Technical Process Flow**
+**Purpose**: Main search function that filters recipes based on ingredient title relevance and applies priority-based sorting.
 
-```
-1. User Selection → 2. Supabase Query → 3. Ingredient Filtering → 4. Adaptive Thresholds → 5. Meal Selection → 6. Display Results
-```
+**Parameters**:
+- `allMeals`: Array of all available meals from database
+- `selectedIngredients`: Array of user-selected ingredients
+- `titleThreshold`: Percentage threshold for title relevance (default: 50%)
+- `searchPhase`: Search phase identifier ('primary_search' or 'secondary_search')
 
-## 🔧 Technical Implementation
+**Process**:
+1. **Initial Filtering**: Finds meals containing any of the selected ingredients
+2. **Title Analysis**: Analyzes recipe titles for ingredient word matches
+3. **Threshold Filtering**: Keeps only recipes meeting the title relevance threshold
+4. **Priority Calculation**: Calculates priority scores based on ingredient position in title
+5. **Priority Sorting**: Sorts recipes by priority (first-word matches → second-word → third-word, etc.)
+6. **Result Formatting**: Returns structured search results
 
-### **Core Files**
-- `pages/index.js` - Initial ingredient search and filtering
-- `pages/result.js` - "Get New Suggestion" functionality
-- `lib/data.js` - Available ingredients list
-- `lib/supabase.js` - Database connection
+**Priority System**:
+- **First Word Matches**: Highest priority (score: 0-99)
+- **Second Word Matches**: Medium priority (score: 100-199)
+- **Third Word Matches**: Lower priority (score: 200-299)
+- **Multiple Ingredient Matches**: Bonus priority points
+- **First Selected Ingredient**: Special priority consideration
 
-### **Key Components**
-
-#### 1. **Ingredient Selection Interface**
+**Return Object**:
 ```javascript
-// Available ingredients from lib/data.js
-const commonIngredients = [
-  "Rice", "Plantain", "Tomatoes", "Onions", "Pepper", 
-  "Garri", "Semovita", "Wheat", "Starch", "Spaghetti", 
-  "Noodles", "Irish potatoes", "Beans", "Yam", "Cassava"
-]
-```
-
-#### 2. **Search Criteria Storage**
-```javascript
-const searchCriteria = {
-  mealType: 'any',
-  cookingTime: 'any', 
-  showIngredientMode: true,
-  selectedIngredients: ["Rice", "Plantain"]
+{
+  suggestions: [...], // Array of matching recipes (priority sorted)
+  searchPhase: 'primary_search' | 'secondary_search',
+  titleThreshold: number,
+  totalPotentialMatches: number,
+  totalMatchingRecipes: number
 }
 ```
 
-## 🧠 Smart Filtering Algorithm
+#### `getSearchState(searchResult)`
 
-### **Phase 1: Ingredient Detection**
+**Purpose**: Provides user-friendly messages about search results.
 
-The system searches for ingredients in two places per recipe:
+**Returns**: Object with message and type for UI display.
 
-1. **Recipe Name** (Score: +3 points)
-   - Example: "Fried Rice and Chicken" → "Rice" found in name
-   
-2. **Ingredients List** (Score: +5 points)
-   - Example: `["1 cup rice", "2 tomatoes"]` → "Rice" found in ingredients
+### 2. Search Flow
 
-### **Phase 2: Scoring System**
+#### Initial Search (`pages/index.js`)
 
+**Process**:
+1. **50% Threshold Attempt**: First tries with 50% title relevance
+2. **Automatic Fallback**: If no results, automatically tries 25% threshold
+3. **State Storage**: Stores search criteria with threshold and phase information
+4. **Priority Sorting**: Results are automatically sorted by ingredient position priority
+5. **Recipe Selection**: Randomly selects from available recipes
+
+**Key Code Flow**:
 ```javascript
-let score = 0
-let matchedIngredients = []
+// First attempt with 50% threshold
+let searchResult = await performIngredientSearch(data, selectedIngredients, 50)
+suggestions = searchResult.suggestions
 
-// Check recipe name
-if (meal.name.toLowerCase().includes(ingredient.toLowerCase())) {
-  score += 3
-  matchedIngredients.push(ingredient)
+// Automatic fallback to 25% if no results
+if (suggestions.length === 0) {
+  searchResult = await performIngredientSearch(data, selectedIngredients, 25)
+  suggestions = searchResult.suggestions
 }
 
-// Check ingredients list
-if (meal.ingredients.some(ing => ing.toLowerCase().includes(ingredient))) {
-  score += 5
-  if (!matchedIngredients.includes(ingredient)) {
-    matchedIngredients.push(ingredient)
-  }
-}
-
-// Bonus for multiple ingredients
-if (matchedIngredients.length > 1) {
-  score += matchedIngredients.length * 2
-}
-
-// Bonus for perfect match (all selected ingredients found)
-if (matchedIngredients.length === selectedIngredients.length) {
-  score += 10
-}
+// Store with correct threshold and phase
+localStorage.setItem('searchCriteria', JSON.stringify({
+  ...searchCriteria,
+  searchPhase: searchResult.searchPhase,
+  titleThreshold: searchResult.titleThreshold
+}))
 ```
 
-### **Phase 3: Optional Ingredient Exclusion**
+#### Recipe Navigation (`pages/result.js`)
 
-Recipes are excluded if any selected ingredient is marked as optional:
+**Process**:
+1. **Cached Results**: Uses cached search results for performance
+2. **Shown Meals Tracking**: Prevents recipe repetition within same session
+3. **Threshold-Aware Caching**: Separate caches for different thresholds
+4. **Priority Preservation**: Maintains priority order from cached results
+5. **Manual Continuation**: Option to continue with lower threshold
 
+### 3. Caching System
+
+#### Cache Keys
+
+**Ingredient Search Cache**:
 ```javascript
-const optionalIndicators = ['(optional)', '(opt)', 'optional', 'opt']
-const isOptional = meal.ingredients.some(mealIngredient => {
-  return mealIngredient.toLowerCase().includes(ingredientLower) && 
-         optionalIndicators.some(indicator => mealIngredientLower.includes(indicator))
+const ingredientKey = `${selectedIngredients.sort().join(',')}_${titleThreshold}_${searchPhase}`
+const cacheKey = `ingredient_search_${ingredientKey}`
+```
+
+**Shown Meals Tracking**:
+```javascript
+const filterKey = JSON.stringify({
+  mealType, cookingTime, showIngredientMode, 
+  selectedIngredients, leftoverMode, titleThreshold
 })
+const shownMealsKey = `shownMeals_${simpleHash(filterKey)}`
 ```
 
-## 🎯 Adaptive Threshold System
+#### Cache Structure
 
-The system uses intelligent thresholds based on the number of selected ingredients:
-
-### **Threshold Logic**
+**Ingredient Search Cache**:
 ```javascript
-const getThresholdForIngredients = (ingredientCount) => {
-  if (ingredientCount === 1) {
-    return { primary: 0, fallback: 1, final: 1 } // Show any meal with the ingredient
-  } else if (ingredientCount === 2) {
-    return { primary: 100, fallback: 1, final: 1 } // 100% or at least 1 ingredient
-  } else if (ingredientCount === 3) {
-    return { primary: 70, fallback: 2, final: 1 } // 70% or at least 2, else at least 1
-  } else if (ingredientCount === 4) {
-    return { primary: 70, fallback: 2, final: 1 } // 70% or at least 2, else at least 1
-  } else if (ingredientCount >= 5 && ingredientCount <= 6) {
-    return { primary: 70, fallback: 3, final: 2 } // 70% or at least 3, else at least 2
-  } else if (ingredientCount > 6 && ingredientCount <= 10) {
-    return { primary: 70, fallback: 4, final: 2 } // 70% or at least 4, else at least 2
-  } else if (ingredientCount > 10 && ingredientCount <= 15) {
-    return { primary: 70, fallback: 5, final: 2 } // 70% or at least 5, else at least 2
-  } else {
-    return { primary: 70, fallback: 6, final: 2 } // 70% or at least 6, else at least 2
-  }
+{
+  suggestions: [...], // Array of matching recipes (priority sorted)
+  searchState: "Found X recipes with Y% title relevance",
+  searchPhase: "primary_search" | "secondary_search",
+  titleThreshold: 50 | 25,
+  originalIngredients: [...]
 }
 ```
 
-### **Three-Tier Filtering Process**
+### 4. Threshold Logic
 
-1. **Primary Threshold**: Try to find meals with the specified percentage match
-2. **Fallback Threshold**: If no results, try with a minimum number of ingredients
-3. **Final Threshold**: If still no results, use the most lenient criteria
+#### 50% Threshold (Primary Search)
+- **Purpose**: Find highly relevant recipes
+- **Criteria**: At least 50% of recipe title words must match selected ingredients
+- **Behavior**: Used for initial search attempt
+- **Priority**: Results sorted by ingredient position in title
 
-## 🔄 Repetition Prevention
+#### 25% Threshold (Secondary Search)
+- **Purpose**: Find moderately relevant recipes when primary search fails
+- **Criteria**: At least 25% of recipe title words must match selected ingredients
+- **Behavior**: Automatic fallback or manual continuation
+- **Priority**: Results sorted by ingredient position in title
 
-### **Shown Meals Tracking**
+#### Title Relevance Calculation
 ```javascript
-const currentFilterKey = JSON.stringify({
-  mealType, cookingTime, showIngredientMode, selectedIngredients
-})
-const shownMealsKey = `shownMeals_${btoa(currentFilterKey).slice(0, 20)}`
-const shownMeals = JSON.parse(localStorage.getItem(shownMealsKey) || '[]')
+// Example: "Beef Stew with Rice" with ingredients ["Beef", "Rice"]
+// Title words: ["Beef", "Stew", "with", "Rice"]
+// Matching words: ["Beef", "Rice"] (2 out of 4 = 50% relevance)
+// Priority: Beef is first word (priority 0), Rice is fourth word (priority 3)
 ```
 
-### **Meal Selection Logic**
+### 5. Priority-Based Sorting
+
+#### Priority Calculation Algorithm
 ```javascript
-// Filter out already shown meals
-const availableMeals = suggestions.filter(meal => !shownMeals.includes(meal.id))
-
-// Also exclude current meal to prevent immediate repetition
-const finalAvailableMeals = meal ? availableMeals.filter(m => m.id !== meal.id) : availableMeals
-```
-
-## 📊 Example Scenarios
-
-### **Scenario 1: Single Ingredient Search**
-- **User selects**: "Rice"
-- **Threshold**: Primary 0%, Fallback 1, Final 1
-- **Result**: Shows all recipes containing rice (name or ingredients)
-
-### **Scenario 2: Multiple Ingredient Search**
-- **User selects**: ["Rice", "Tomatoes", "Onions", "Pepper"]
-- **Threshold**: Primary 70%, Fallback 2, Final 1
-- **Process**:
-  1. Try to find recipes with 70% match (3 out of 4 ingredients)
-  2. If none found, try recipes with at least 2 ingredients
-  3. If still none, show recipes with at least 1 ingredient
-
-### **Scenario 3: Three Ingredient Search**
-- **User selects**: ["Beef", "Okra", "Garri"]
-- **Threshold**: Primary 70%, Fallback 2, Final 1
-- **Process**:
-  1. Try to find recipes with 70% match (2 out of 3 ingredients)
-  2. If none found, try recipes with at least 2 ingredients
-  3. If still none, show recipes with at least 1 ingredient
-- **Expected Result**: Should show meals containing at least 1 of the selected ingredients
-
-### **Scenario 4: Optional Ingredient Exclusion**
-- **User selects**: "Plantain"
-- **Recipe has**: "Plantain (optional)"
-- **Result**: Recipe is excluded from results
-
-## 🎨 User Experience Features
-
-### **1. Ingredient Reminder**
-On the result page, users see their selected ingredients:
-```
-🍚 Selected Ingredients: Rice, Plantain, Tomatoes
-```
-
-### **2. Previous Recipe Navigation**
-- Button appears from second suggestion onwards
-- Shows count of previous suggestions
-- Allows users to go back through their search history
-
-### **3. Exhaustion Modal**
-When all available recipes have been shown:
-- "Reset & Continue" - Start fresh with same ingredients
-- "Go to Homepage" - Return to main search
-
-## 🔧 Configuration
-
-### **Adding New Ingredients**
-To add new ingredients, update `lib/data.js`:
-```javascript
-export const commonIngredients = [
-  // ... existing ingredients
-  "New Ingredient"
-]
-```
-
-### **Ingredient Icons**
-Icons are automatically assigned based on ingredient names:
-```javascript
-const getIngredientIcon = (ingredient) => {
-  const iconMap = {
-    'Rice': '🍚',
-    'Plantain': '🍌', 
-    'Tomatoes': '🍅',
-    'Onions': '🧅',
-    // ... more mappings
-  }
-  return iconMap[ingredient] || '🥘'
+const calculatePriorityScore = (meal, selectedIngredients) => {
+  // Find earliest position of first selected ingredient
+  // Find earliest position of any ingredient
+  // Count total ingredient matches
+  return (firstIngredientPriority * 10000) + (bestPriority * 100) + (totalMatches * 10)
 }
 ```
 
-## 🐛 Common Issues & Solutions
+#### Priority Rules
+1. **First Selected Ingredient**: Recipes starting with the first selected ingredient get highest priority
+2. **Position-Based**: Earlier positions in title get higher priority
+3. **Multiple Matches**: Recipes with more ingredient matches get bonus priority
+4. **Ingredient Order**: Order of ingredients in user selection affects priority
 
-### **Issue 1: "No meals found" despite ingredients existing**
-**Cause**: Variable shadowing in filtering logic
-**Solution**: Ensure `suggestions` variable is properly scoped
+#### Example Priority Order
+For ingredients ["Rice", "Beef"]:
+1. "Rice and Stew" (Rice first word)
+2. "Rice with Beef" (Rice first word)
+3. "Beef Stew with Rice" (Beef first word)
+4. "Chicken Rice" (Rice second word)
+5. "Stew with Rice and Beef" (Rice third word)
 
-### **Issue 2: Repetitive suggestions**
-**Cause**: Shown meals tracking not working
-**Solution**: Check localStorage key generation and meal ID tracking
+### 6. User Experience Flow
 
-### **Issue 3: Wrong ingredient matches**
-**Cause**: Case sensitivity or partial matches
-**Solution**: Use `toLowerCase()` for consistent matching
+#### Initial Search
+1. User selects ingredients
+2. System searches with 50% threshold
+3. If results found: Display recipes (priority sorted)
+4. If no results: Automatically try 25% threshold
+5. Display results with appropriate messaging
 
-### **Issue 4: "No meals found" for 3 ingredients**
-**Cause**: Missing threshold case for exactly 3 ingredients, causing fallback to 6 ingredients
-**Solution**: Added specific case for `ingredientCount === 3` with appropriate thresholds
-**Fixed**: Now uses Primary 70%, Fallback 2, Final 1 for 3 ingredients
+#### Recipe Navigation
+1. User clicks "Get Another Recipe"
+2. System checks cached results for current threshold
+3. Filters out already shown recipes
+4. Randomly selects from available recipes (maintaining priority order)
+5. Updates shown meals tracking
 
-## 📈 Performance Considerations
+#### Manual Continuation
+1. When all recipes shown for current threshold
+2. System shows modal asking if user wants 25% threshold recipes
+3. If accepted: Performs new search with 25% threshold (priority sorted)
+4. If declined: Shows exhaustion message
 
-### **Database Optimization**
-- Limit queries to 50 meals maximum
-- Use efficient string matching
-- Cache results when possible
+### 7. State Management
 
-### **User Experience**
-- Show loading states during filtering
-- Provide immediate feedback for selections
-- Handle edge cases gracefully
+#### LocalStorage Keys
+- `searchCriteria`: Current search parameters and threshold
+- `ingredient_search_${key}`: Cached search results (priority sorted)
+- `shownMeals_${hash}`: Tracked shown recipes per filter
+- `currentMeal`: Currently displayed recipe
+- `previousMeals`: History of shown recipes
 
-## 🔮 Future Enhancements
+#### Search Phases
+- `primary_search`: Initial search (50% or 25% threshold)
+- `secondary_search`: Manual continuation (25% threshold)
 
-### **Planned Features**
-1. **Fuzzy Matching**: Handle typos and variations
-2. **Ingredient Synonyms**: "Tomato" = "Tomatoes"
-3. **Quantity Matching**: "2 cups rice" vs "1 cup rice"
-4. **Dietary Restrictions**: Filter by dietary preferences
-5. **Cooking Time Integration**: Combine with time-based filtering
+### 8. Error Handling
 
-### **Advanced Features**
-1. **Smart Suggestions**: Learn from user preferences
-2. **Ingredient Substitutions**: Suggest alternatives
-3. **Nutritional Information**: Include health data
-4. **Seasonal Ingredients**: Time-based availability
+#### No Results Found
+- Automatic fallback from 50% to 25% threshold
+- User-friendly error messages
+- Suggestions to try different ingredients
 
-## 📝 API Reference
+#### Cache Misses
+- Automatic regeneration of search results
+- Fallback to fresh database queries
 
-### **Key Functions**
+#### State Inconsistencies
+- Validation of stored search criteria
+- Recovery mechanisms for corrupted state
 
-#### `getSuggestion()`
-Main function for ingredient-based meal suggestions
-- **Location**: `pages/index.js`
-- **Parameters**: None (uses component state)
-- **Returns**: Redirects to result page with selected meal
+### 9. Performance Optimizations
 
-#### `getNewSuggestion()`
-Get additional suggestions for same ingredients
-- **Location**: `pages/result.js`
-- **Parameters**: None (uses stored search criteria)
-- **Returns**: Updates current meal state
+#### Caching Strategy
+- Separate caches for different ingredient combinations
+- Threshold-aware caching to prevent conflicts
+- Hash-based keys for efficient storage
+- Priority-sorted results cached for consistent ordering
 
-#### `getThresholdForIngredients(count)`
-Calculate adaptive thresholds
-- **Parameters**: `count` (number of selected ingredients)
-- **Returns**: Object with `primary`, `fallback`, `final` thresholds
+#### Database Queries
+- Single query to fetch all meals
+- Client-side filtering for performance
+- Minimal server round trips
 
-## 🧪 Testing
+#### Memory Management
+- Limited shown meals tracking
+- Automatic cleanup of old cache entries
+- Efficient data structures
 
-### **Test Cases**
-1. **Single ingredient search**
-2. **Multiple ingredient search**
-3. **Optional ingredient exclusion**
-4. **Repetition prevention**
-5. **Edge cases (no results, all shown)**
+### 10. Analytics Integration
 
-### **Debug Mode**
-Enable detailed logging by uncommenting console.log statements in the code.
+#### Tracked Events
+- Search initiation
+- Recipe selection
+- Threshold transitions
+- User feedback
 
----
+#### Metrics Collected
+- Search success rates
+- Threshold usage patterns
+- User engagement metrics
+- Performance indicators
 
-**Last Updated**: July 2025
-**Version**: 1.0
-**Status**: Production Ready ✅ 
+### 11. Future Enhancements
+
+#### Potential Improvements
+- Dynamic threshold adjustment based on ingredient count
+- Machine learning for better relevance scoring
+- Advanced filtering options
+- Recipe recommendation algorithms
+- Enhanced priority algorithms
+
+#### Scalability Considerations
+- Database indexing for faster queries
+- Pagination for large result sets
+- Caching optimization strategies
+- Performance monitoring
+
+## Technical Implementation Details
+
+### File Structure
+```
+lib/
+  progressive-search.js    # Core search logic with priority sorting
+pages/
+  index.js                # Initial search and ingredient selection
+  result.js               # Recipe display and navigation
+```
+
+### Key Functions
+- `performIngredientSearch()`: Main search algorithm with priority sorting
+- `calculatePriorityScore()`: Priority calculation algorithm
+- `getSearchState()`: User messaging
+- `getNewSuggestion()`: Recipe navigation
+- `continueProgressiveSearch()`: Manual threshold continuation
+
+### Data Flow
+1. User Input → Ingredient Selection
+2. Search Request → Database Query
+3. Result Processing → Threshold Filtering
+4. Priority Calculation → Priority Sorting
+5. Cache Storage → State Management
+6. UI Display → User Interaction
+7. Navigation → Recipe Cycling
+
+This documentation provides a comprehensive overview of the current ingredient search system, its implementation details, operational characteristics, and the new priority-based sorting feature. 
