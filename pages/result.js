@@ -363,7 +363,7 @@ export default function Result() {
             if (suggestions.length === 0) {
               const thresholdInfo = searchCriteria.selectedIngredients.length === 1 
                 ? `the ingredient "${searchCriteria.selectedIngredients[0]}"`
-                : `at least ${thresholds.primary}%, ${thresholds.fallback}, or ${thresholds.final} ingredients`
+                : `at least ${searchCriteria.titleThreshold || 50}% title relevance`
               
               console.log(`❌ No meals found with ${thresholdInfo}`)
               setMessage({ type: 'info', text: `No meals found containing ${thresholdInfo} of "${searchCriteria.selectedIngredients.join(', ')}". Try selecting different ingredients.` })
@@ -406,6 +406,8 @@ export default function Result() {
       console.log(`👀 Shown meal IDs:`, shownMeals)
       console.log(`📊 Current titleThreshold: ${searchCriteria.titleThreshold || 50}`)
       console.log(`📊 Current searchPhase: ${searchCriteria.searchPhase || 'primary_search'}`)
+      console.log(`📊 Total suggestions available: ${suggestions.length}`)
+      console.log(`📊 Suggestions IDs:`, suggestions.map(m => m.id))
 
       // Filter out already shown meals for this filter combination
       const availableMeals = suggestions.filter(meal => !shownMeals.includes(meal.id))
@@ -419,6 +421,8 @@ export default function Result() {
       console.log(`🎯 Final available meal IDs:`, finalAvailableMeals.map(m => m.id))
       console.log(`🎯 Final available meal names:`, finalAvailableMeals.map(m => m.name))
       console.log(`🎯 Current meal being excluded:`, meal ? `${meal.name} (ID: ${meal.id})` : 'None')
+      console.log(`🎯 Available meals before excluding current: ${availableMeals.length}`)
+      console.log(`🎯 Available meal IDs before excluding current:`, availableMeals.map(m => m.id))
 
       if (finalAvailableMeals.length > 0) {
         // For progressive search, randomly select from available meals
@@ -441,6 +445,8 @@ export default function Result() {
           console.log(`🎯 Progressive search meal selected: ${newMeal.name}`)
           console.log(`📊 Total progressive search results: ${suggestions.length}`)
           console.log(`📊 Remaining progressive search results: ${finalAvailableMeals.length - 1}`)
+          console.log(`📊 Updated shown meals:`, updatedShownMeals)
+          console.log(`📊 Next available meals:`, finalAvailableMeals.filter(m => m.id !== newMeal.id).map(m => m.name))
         } else {
           // For non-progressive search, use random selection
           const randomIndex = Math.floor(Math.random() * finalAvailableMeals.length)
@@ -464,6 +470,8 @@ export default function Result() {
         // If no meals available after excluding current, but we have meals in the original pool,
         // it means only the current meal is available. Reset the shown meals and start fresh.
         console.log('🔄 Only current meal available, resetting shown meals...')
+        console.log(`🎯 Available meals count: ${availableMeals.length}`)
+        console.log(`🎯 Current meal ID: ${meal?.id}`)
         localStorage.removeItem(shownMealsKey)
         
         // Randomly select from all suggestions (excluding current meal)
@@ -511,10 +519,7 @@ export default function Result() {
       console.error('Error getting new suggestion:', error)
     } finally {
       setGenerating(false)
-      // Simulate loading time for better UX
-      setTimeout(() => {
-        setLoading(false)
-      }, 600)
+      setLoading(false)
     }
   }
 

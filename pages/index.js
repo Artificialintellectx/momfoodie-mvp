@@ -286,13 +286,22 @@ export default function Home() {
       
       // Store the meal and search criteria in localStorage
       localStorage.setItem('currentMeal', JSON.stringify(selectedMeal))
-      localStorage.setItem('searchCriteria', JSON.stringify({
+      
+      // Get the existing search criteria that was stored earlier (with titleThreshold and searchPhase)
+      const existingSearchCriteria = JSON.parse(localStorage.getItem('searchCriteria') || '{}')
+      
+      // Merge with current search criteria, preserving titleThreshold and searchPhase
+      const finalSearchCriteria = {
         mealType,
         cookingTime,
         showIngredientMode,
         selectedIngredients: showIngredientMode ? selectedIngredients : [],
-        leftoverMode: showIngredientMode ? leftoverMode : false
-      }))
+        leftoverMode: showIngredientMode ? leftoverMode : false,
+        titleThreshold: existingSearchCriteria.titleThreshold,
+        searchPhase: existingSearchCriteria.searchPhase
+      }
+      
+      localStorage.setItem('searchCriteria', JSON.stringify(finalSearchCriteria))
       
       // Redirect to results page with meal data
       const mealParam = encodeURIComponent(JSON.stringify(selectedMeal))
