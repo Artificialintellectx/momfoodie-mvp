@@ -45,6 +45,7 @@ export default function Result() {
   const [previousMeals, setPreviousMeals] = useState([])
   const [message, setMessage] = useState({ type: '', text: '' })
   const [searchCriteria, setSearchCriteria] = useState({})
+  const [additionalIngredients, setAdditionalIngredients] = useState([])
 
   // Helper function for creating hash keys
   const simpleHash = (str) => {
@@ -147,6 +148,19 @@ export default function Result() {
           setPreviousMeals(currentPreviousMeals)
           console.log(`📊 Loaded previousMeals count: ${currentPreviousMeals.length}`)
           console.log(`📊 Current meal is NOT added to previousMeals yet: ${mealData.name}`)
+        }
+        
+        // Load additional ingredients if in secondary search mode
+        if (searchCriteriaData.searchPhase === 'secondary_search' && searchCriteriaData.titleThreshold === 25) {
+          // Try to get additional ingredients from cached search results
+          const originalIngredients = JSON.parse(localStorage.getItem('ingredient_search_original') || '[]')
+          const secondaryIngredientKey = `${originalIngredients.sort().join(',')}_25_secondary_search`
+          const cachedResults = JSON.parse(localStorage.getItem(`ingredient_search_${secondaryIngredientKey}`) || 'null')
+          
+          if (cachedResults && cachedResults.additionalIngredients) {
+            setAdditionalIngredients(cachedResults.additionalIngredients)
+            console.log(`📊 Loaded additional ingredients: ${cachedResults.additionalIngredients.join(', ')}`)
+          }
         }
       }
       
@@ -504,6 +518,28 @@ export default function Result() {
         const currentSearchPhase = searchCriteria.searchPhase || 'primary_search'
         
         if (currentSearchPhase === 'primary_search' && currentTitleThreshold === 50) {
+          // Load additional ingredients for the modal
+          const loadAdditionalIngredients = async () => {
+            try {
+              const originalIngredients = JSON.parse(localStorage.getItem('ingredient_search_original') || '[]')
+              
+              // Fetch all meals from Supabase
+              const { data: allMeals, error } = await supabase
+                .from('meals')
+                .select('*')
+
+              if (!error && allMeals) {
+                // Perform a quick search to get additional ingredients
+                const searchResult = await performIngredientSearch(allMeals, originalIngredients, 25, 'secondary_search')
+                setAdditionalIngredients(searchResult.additionalIngredients || [])
+              }
+            } catch (error) {
+              console.error('Error loading additional ingredients:', error)
+            }
+          }
+          
+          loadAdditionalIngredients()
+          
           // Show modal asking if user wants to see recipes with 25% threshold
           setShowProgressiveModal(true)
           console.log('🔄 Showing modal to continue with 25% threshold')
@@ -611,6 +647,9 @@ export default function Result() {
         // Update the searchCriteria state as well
         setSearchCriteria(updatedSearchCriteria)
         
+        // Set additional ingredients for display in modal
+        setAdditionalIngredients(searchResult.additionalIngredients || [])
+        
         // Select a random meal from new results
         const randomIndex = Math.floor(Math.random() * searchResult.suggestions.length)
         const newMeal = searchResult.suggestions[randomIndex]
@@ -624,7 +663,8 @@ export default function Result() {
           searchState: getSearchState(searchResult).message,
           searchPhase: 'secondary_search',
           titleThreshold: 25,
-          originalIngredients: originalIngredients
+          originalIngredients: originalIngredients,
+          additionalIngredients: searchResult.additionalIngredients || []
         }))
 
         // Reset shown meals tracking for new threshold
@@ -2068,34 +2108,70 @@ export default function Result() {
         {/* Selected Ingredients Reminder - Only for Ingredient Mode */}
         {searchCriteria?.showIngredientMode && searchCriteria?.selectedIngredients?.length > 0 && (
           <div className="mb-6">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50 rounded-2xl p-4 shadow-sm">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-sm">
-                  <Search className="w-4 h-4 text-white" />
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50 rounded-2xl p-3 sm:p-4 shadow-sm">
+              <div className="flex items-center gap-2 sm:gap-3 mb-3">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0">
+                  <Search className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                 </div>
-                <div>
-                  <h3 className="text-blue-800 font-semibold text-sm">
-                    {searchCriteria?.leftoverMode ? 'Transforming your leftovers:' : 'Searching with your ingredients:'}
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-blue-800 font-semibold text-xs sm:text-sm">
+                    {searchCriteria?.leftoverMode 
+                      ? 'Transforming your leftovers:' 
+                      : searchCriteria.searchPhase === 'secondary_search' && searchCriteria.titleThreshold === 25
+                        ? 'Expanded ingredient search:'
+                        : 'Searching with your ingredients:'
+                    }
                   </h3>
                   <p className="text-blue-600 text-xs">
                     {searchCriteria?.leftoverMode 
                       ? 'We found recipes that transform your leftovers into delicious new meals'
-                      : 'We found recipes that best match your selection'
+                      : searchCriteria.searchPhase === 'secondary_search' && searchCriteria.titleThreshold === 25
+                        ? 'We found recipes using your ingredients plus additional ones for more variety'
+                        : 'We found recipes that best match your selection'
                     }
                   </p>
                 </div>
               </div>
               
-              <div className="flex flex-wrap gap-2">
-                {searchCriteria.selectedIngredients.map((ingredient, index) => (
-                  <div
-                    key={index}
-                    className="bg-white/80 backdrop-blur-sm border border-blue-200/50 rounded-full px-3 py-1.5 flex items-center gap-2 shadow-sm"
-                  >
-                    <span className="text-lg">{getIngredientIcon(ingredient)}</span>
-                    <span className="text-blue-700 text-sm font-medium">{ingredient}</span>
-                  </div>
-                ))}
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                {(() => {
+                  // Determine which ingredients to show based on search phase
+                  let ingredientsToShow = searchCriteria.selectedIngredients || []
+                  
+                  // If in secondary search (25% threshold), combine original + additional ingredients
+                  if (searchCriteria.searchPhase === 'secondary_search' && searchCriteria.titleThreshold === 25 && additionalIngredients.length > 0) {
+                    // Get original ingredients from localStorage
+                    const originalIngredients = JSON.parse(localStorage.getItem('ingredient_search_original') || '[]')
+                    // Combine original + additional ingredients, removing duplicates
+                    const combinedIngredients = [...new Set([...originalIngredients, ...additionalIngredients])]
+                    ingredientsToShow = combinedIngredients
+                  }
+                  
+                  return ingredientsToShow.map((ingredient, index) => (
+                    <div
+                      key={index}
+                      className={`bg-white/80 backdrop-blur-sm border rounded-full px-2 py-1 sm:px-3 sm:py-1.5 flex items-center gap-1.5 sm:gap-2 shadow-sm transition-all duration-200 max-w-full ${
+                        // Highlight additional ingredients with different styling
+                        searchCriteria.searchPhase === 'secondary_search' && 
+                        searchCriteria.titleThreshold === 25 && 
+                        additionalIngredients.includes(ingredient)
+                          ? 'border-emerald-300/50 bg-emerald-50/80'
+                          : 'border-blue-200/50'
+                      }`}
+                    >
+                      <span className="text-base sm:text-lg flex-shrink-0">{getIngredientIcon(ingredient)}</span>
+                      <span className={`text-xs sm:text-sm font-medium truncate max-w-[120px] sm:max-w-none ${
+                        searchCriteria.searchPhase === 'secondary_search' && 
+                        searchCriteria.titleThreshold === 25 && 
+                        additionalIngredients.includes(ingredient)
+                          ? 'text-emerald-700'
+                          : 'text-blue-700'
+                      }`}>
+                        {ingredient}
+                      </span>
+                    </div>
+                  ))
+                })()}
               </div>
             </div>
           </div>
@@ -2508,81 +2584,111 @@ export default function Result() {
 
         {/* Progressive Continuation Modal */}
         {showProgressiveModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
-            <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl animate-slide-in-up overflow-hidden">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl animate-slide-in-up overflow-hidden transform transition-all duration-300 hover:scale-[1.02]">
+              {/* Header with gradient background */}
+              <div className="relative bg-gradient-to-br from-purple-500 via-blue-500 to-indigo-600 p-6 text-white">
+                {/* Decorative elements */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
+                
+                <div className="relative flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30">
                       <Search className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold text-gray-900">Want More Recipes? 🔍</h3>
-                      <p className="text-gray-600">We can show you recipes with fewer ingredients</p>
+                      <h3 className="text-xl font-bold">Discover More Recipes</h3>
+                      <p className="text-blue-100 text-sm">Expand your culinary journey</p>
                     </div>
                   </div>
                   <button
                     onClick={() => setShowProgressiveModal(false)}
-                    className="w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors duration-200"
+                    className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center hover:bg-white/30 transition-all duration-200 border border-white/30"
                   >
-                    <span className="text-gray-600 text-xl font-light">×</span>
+                    <X className="w-5 h-5 text-white" />
                   </button>
                 </div>
               </div>
 
               {/* Content */}
               <div className="p-6">
+                {/* Main illustration */}
                 <div className="text-center mb-6">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Zap className="w-10 h-10 text-blue-500" />
+                  <div className="relative w-24 h-24 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-200 to-blue-200 rounded-full animate-pulse"></div>
+                    <Zap className="w-12 h-12 text-purple-600 relative z-10" />
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-800 mb-2">
-                    Want More Recipes? 🚀
+                  <h4 className="text-xl font-bold text-gray-800 mb-3">
+                    Ready for More Inspiration? 🚀
                   </h4>
-                  <p className="text-gray-600 leading-relaxed">
-                                        We can show you recipes with 25% title relevance instead of 50%.
-                    This will show you more recipes that are less strictly matched to your ingredients.
+                  <p className="text-gray-600 leading-relaxed text-sm">
+                    We've found amazing recipes that match your ingredients perfectly. 
+                    Plus, we discovered some exciting additional ingredients that could 
+                    take your cooking to the next level!
                   </p>
                 </div>
 
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 mb-6">
-                  <h5 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                    <ChefHat className="w-4 h-4 text-green-500" />
-                    Current Search State:
-                  </h5>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-700">Ingredients:</span>
-                      <span className="text-sm text-green-600 font-semibold">
-                        {JSON.parse(localStorage.getItem('ingredient_search_original') || '[]').join(', ')}
-                      </span>
+                {/* Additional ingredients section */}
+                {additionalIngredients.length > 0 && (
+                  <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl p-5 mb-6 border border-emerald-200/50">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                        <ChefHat className="w-4 h-4 text-white" />
+                      </div>
+                      <h5 className="font-semibold text-gray-800">Additional ingredients for these recipes:</h5>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-700">Current Threshold:</span>
-                      <span className="text-sm text-blue-600 font-semibold">
-                        50% title relevance
-                      </span>
+                    
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {additionalIngredients.slice(0, 6).map((ingredient, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 p-2 bg-white/70 backdrop-blur-sm rounded-xl border border-emerald-200/50 hover:bg-white/90 transition-all duration-200 group"
+                        >
+                          <span className="text-lg">{getIngredientIcon(ingredient)}</span>
+                          <span className="text-xs font-medium text-gray-700 group-hover:text-emerald-700 transition-colors">
+                            {ingredient}
+                          </span>
+                        </div>
+                      ))}
                     </div>
+                    
+                    {additionalIngredients.length > 6 && (
+                      <div className="mt-3 text-center">
+                        <span className="text-xs text-emerald-600 font-medium">
+                          +{additionalIngredients.length - 6} more ingredients
+                        </span>
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
 
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3">
+                {/* Action buttons */}
+                <div className="space-y-3">
                   <button
                     onClick={continueProgressiveSearch}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-2xl font-semibold hover:from-purple-600 hover:to-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-3 group"
                   >
-                    <Search className="w-5 h-5" />
-                    Show More Recipes
+                    <Search className="w-5 h-5 group-hover:animate-pulse" />
+                    <span>Show More Recipes</span>
+                    <div className="w-2 h-2 bg-white/30 rounded-full animate-ping"></div>
                   </button>
+                  
                   <button
                     onClick={() => setShowProgressiveModal(false)}
-                    className="flex-1 px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-gray-50 text-gray-600 rounded-2xl font-medium hover:bg-gray-100 transition-all duration-300 flex items-center justify-center gap-2"
                   >
-                    <X className="w-5 h-5" />
-                    Cancel
+                    <span>Maybe Later</span>
                   </button>
+                </div>
+
+                {/* Bottom decoration */}
+                <div className="mt-6 text-center">
+                  <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
+                    <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+                    <span>Discover new flavors</span>
+                    <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+                  </div>
                 </div>
               </div>
             </div>
