@@ -2623,7 +2623,7 @@ export default function Result() {
                     Ready for More Inspiration? 🚀
                   </h4>
                   <p className="text-gray-600 leading-relaxed text-sm">
-                    We've found amazing recipes that match your ingredients perfectly. 
+                    We&apos;ve found amazing recipes that match your ingredients perfectly. 
                     Plus, we discovered some exciting additional ingredients that could 
                     take your cooking to the next level!
                   </p>
