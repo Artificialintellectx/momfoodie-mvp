@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { supabase } from '../lib/supabase'
 import { analytics } from '../lib/analytics'
+import { performIngredientSearch, getSearchState } from '../lib/progressive-search'
 import { 
   ChefHat, 
   Heart, 
@@ -25,7 +26,8 @@ import {
   Search,
   RefreshCw,
   Refrigerator,
-  Recycle
+  Recycle,
+  X
 } from 'lucide-react'
 
 export default function Result() {
@@ -36,12 +38,24 @@ export default function Result() {
   const [showInstructionsModal, setShowInstructionsModal] = useState(false)
   const [savedMeals, setSavedMeals] = useState([])
   const [showExhaustionModal, setShowExhaustionModal] = useState(false)
+  const [showProgressiveModal, setShowProgressiveModal] = useState(false)
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
   const [rating, setRating] = useState(0)
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
   const [previousMeals, setPreviousMeals] = useState([])
   const [message, setMessage] = useState({ type: '', text: '' })
   const [searchCriteria, setSearchCriteria] = useState({})
+
+  // Helper function for creating hash keys
+  const simpleHash = (str) => {
+    let hash = 0
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i)
+      hash = ((hash << 5) - hash) + char
+      hash = hash & hash
+    }
+    return Math.abs(hash).toString(36)
+  }
 
   useEffect(() => {
     // Track page visit
@@ -61,7 +75,15 @@ export default function Result() {
       let mealData = null
       if (router.query.meal) {
         try {
-          mealData = JSON.parse(decodeURIComponent(router.query.meal))
+          // Handle potential double encoding
+          let decodedMeal = router.query.meal
+          try {
+            decodedMeal = decodeURIComponent(router.query.meal)
+          } catch (e) {
+            // If decodeURIComponent fails, try using the raw value
+            decodedMeal = router.query.meal
+          }
+          mealData = JSON.parse(decodedMeal)
         } catch (e) {
           console.error('Error parsing meal data:', e)
         }
@@ -90,19 +112,11 @@ export default function Result() {
           cookingTime: searchCriteriaData.cookingTime || 'any',
           showIngredientMode: searchCriteriaData.showIngredientMode || false,
           selectedIngredients: searchCriteriaData.selectedIngredients || [],
-          leftoverMode: searchCriteriaData.leftoverMode || false
+          leftoverMode: searchCriteriaData.leftoverMode || false,
+          titleThreshold: searchCriteriaData.titleThreshold || 50
         })
         
         // Create hash for the filter key
-        const simpleHash = (str) => {
-          let hash = 0
-          for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i)
-            hash = ((hash << 5) - hash) + char
-            hash = hash & hash
-          }
-          return Math.abs(hash).toString(36)
-        }
         
         const filterKeyHash = simpleHash(currentFilterKey)
         const shownMealsKey = `shownMeals_${filterKeyHash}`
@@ -294,7 +308,7 @@ export default function Result() {
           console.log('🔍 Ingredient mode: No meal type or cooking time filters applied')
         }
         
-        const { data, error } = await query.limit(50)
+        const { data, error } = await query
         
         if (error) {
           console.log('❌ Supabase error:', error.message)
@@ -303,152 +317,47 @@ export default function Result() {
         } else if (data && data.length > 0) {
           console.log(`✅ Found ${data.length} meals from Supabase`)
           
-          // Apply ingredient filtering for Supabase results if in ingredient mode
+          // Apply progressive search for ingredient mode
           if (searchCriteria.showIngredientMode && searchCriteria.selectedIngredients?.length > 0) {
-            // Smart ingredient filtering with scoring
-            const scoredMeals = data.map(meal => {
-              let score = 0
-              let matchedIngredients = []
-              let excludedByOptional = false
-              
-              // Check each selected ingredient against the meal
-              searchCriteria.selectedIngredients.forEach(ingredient => {
-                const ingredientLower = ingredient.toLowerCase()
-                
-                // Check if ingredient appears in meal name (higher score)
-                if (meal.name.toLowerCase().includes(ingredientLower)) {
-                  score += 3
-                  matchedIngredients.push(ingredient)
-                }
-                
-                // Check if ingredient appears in ingredients list (highest score)
-                // But first check if it's marked as optional
-                const optionalIndicators = ['(optional)', '(opt)', 'optional', 'opt']
-                const isOptional = meal.ingredients.some(mealIngredient => {
-                  const mealIngredientLower = mealIngredient.toLowerCase()
-                  return mealIngredientLower.includes(ingredientLower) && 
-                         optionalIndicators.some(indicator => mealIngredientLower.includes(indicator))
-                })
-                
-                if (isOptional) {
-                  // If any selected ingredient is optional, exclude this recipe entirely
-                  excludedByOptional = true
-                  console.log(`❌ Excluding "${meal.name}" - "${ingredient}" is marked as optional`)
-                  return
-                }
-                
-                const ingredientInList = meal.ingredients.some(mealIngredient =>
-                  mealIngredient.toLowerCase().includes(ingredientLower)
-                )
-                if (ingredientInList) {
-                  score += 5
-                  if (!matchedIngredients.includes(ingredient)) {
-                    matchedIngredients.push(ingredient)
-                  }
-                }
-              })
-              
-              // If any ingredient was optional, exclude this recipe
-              if (excludedByOptional) {
-                return {
-                  ...meal,
-                  ingredientScore: 0,
-                  matchedIngredients: [],
-                  matchPercentage: 0,
-                  excluded: true
-                }
-              }
-              
-              // Bonus for recipes that contain multiple selected ingredients
-              if (matchedIngredients.length > 1) {
-                score += matchedIngredients.length * 2
-              }
-              
-              // Bonus for recipes that contain ALL selected ingredients
-              if (matchedIngredients.length === searchCriteria.selectedIngredients.length) {
-                score += 10
-              }
-              
-              return {
-                ...meal,
-                ingredientScore: score,
-                matchedIngredients: matchedIngredients,
-                matchPercentage: (matchedIngredients.length / searchCriteria.selectedIngredients.length) * 100
-              }
-            })
+            // Check if we have cached progressive search results for this ingredient combination
+            const titleThreshold = searchCriteria.titleThreshold || 50
+            const ingredientKey = `${searchCriteria.selectedIngredients.sort().join(',')}_${titleThreshold}`
+            const cachedResults = JSON.parse(localStorage.getItem(`ingredient_search_${ingredientKey}`) || 'null')
             
-            // Filter out meals with no matches and sort by score (highest first)
-            // Adaptive threshold system based on number of selected ingredients
-            const getThresholdForIngredients = (ingredientCount) => {
-              if (ingredientCount === 1) {
-                return { primary: 0, fallback: 1, final: 1 } // Show any meal with the ingredient
-              } else if (ingredientCount === 2) {
-                return { primary: 100, fallback: 1, final: 1 } // 100% or at least 1 ingredient
-              } else if (ingredientCount === 3) {
-                return { primary: 70, fallback: 2, final: 1 } // 70% or at least 2, else at least 1
-              } else if (ingredientCount === 4) {
-                return { primary: 70, fallback: 2, final: 1 } // 70% or at least 2, else at least 1
-              } else if (ingredientCount >= 5 && ingredientCount <= 6) {
-                return { primary: 70, fallback: 3, final: 2 } // 70% or at least 3, else at least 2
-              } else if (ingredientCount > 6 && ingredientCount <= 10) {
-                return { primary: 70, fallback: 4, final: 2 } // 70% or at least 4, else at least 2
-              } else if (ingredientCount > 10 && ingredientCount <= 15) {
-                return { primary: 70, fallback: 5, final: 2 } // 70% or at least 5, else at least 2
-              } else {
-                return { primary: 70, fallback: 6, final: 2 } // 70% or at least 6, else at least 2
+            if (cachedResults) {
+              console.log(`📋 Using cached progressive search results for: ${searchCriteria.selectedIngredients.join(', ')}`)
+              suggestions = cachedResults.suggestions
+              console.log(`📊 Cached Search State: ${cachedResults.searchState}`)
+            } else {
+              console.log(`🔍 Starting progressive search with: ${searchCriteria.selectedIngredients.join(', ')}`)
+              
+              const searchResult = await performIngredientSearch(data, searchCriteria.selectedIngredients, searchCriteria.titleThreshold || 50)
+              suggestions = searchResult.suggestions
+              
+              // Show search state to user
+              const searchState = getSearchState(searchResult)
+              console.log(`📊 Search State: ${searchState.message}`)
+              
+              // Cache the results for this ingredient combination
+              localStorage.setItem(`ingredient_search_${ingredientKey}`, JSON.stringify({
+                suggestions: searchResult.suggestions,
+                searchState: searchState.message,
+                searchPhase: searchResult.searchPhase,
+                titleThreshold: searchResult.titleThreshold,
+                originalIngredients: searchCriteria.selectedIngredients
+              }))
+              
+              // Also save the search state for continuation
+              localStorage.setItem('ingredient_search_suggestions', JSON.stringify(searchResult.suggestions))
+              localStorage.setItem('ingredient_search_phase', searchResult.searchPhase)
+              localStorage.setItem('ingredient_search_state', JSON.stringify(searchState))
+              localStorage.setItem('ingredient_search_original', JSON.stringify(searchCriteria.selectedIngredients))
+              localStorage.setItem('ingredient_search_titleThreshold', JSON.stringify(searchResult.titleThreshold))
+              
+              if (searchResult.searchPhase === 'trending_fallback') {
+                alert('No recipes found with your ingredients. Here are some trending recipes to try!')
               }
             }
-
-            const thresholds = getThresholdForIngredients(searchCriteria.selectedIngredients.length)
-            console.log(`🎯 Adaptive thresholds for ${searchCriteria.selectedIngredients.length} ingredients: Primary ${thresholds.primary}%, Fallback ${thresholds.fallback}, Final ${thresholds.final} ingredients`)
-
-            // First try with primary threshold
-            suggestions = scoredMeals
-              .filter(meal => meal.ingredientScore > 0 && !meal.excluded && meal.matchPercentage >= thresholds.primary)
-              .sort((a, b) => {
-                if (b.ingredientScore !== a.ingredientScore) {
-                  return b.ingredientScore - a.ingredientScore
-                }
-                return b.matchPercentage - a.matchPercentage
-              })
-
-            console.log(`🔍 After primary filtering (${thresholds.primary}% threshold): ${suggestions.length} meals`)
-
-            // If no results with primary threshold, try fallback threshold
-            if (suggestions.length === 0) {
-              console.log(`🔄 No results with ${thresholds.primary}% threshold, trying fallback: at least ${thresholds.fallback} ingredients`)
-              
-              suggestions = scoredMeals
-                .filter(meal => meal.ingredientScore > 0 && !meal.excluded && meal.matchedIngredients.length >= thresholds.fallback)
-                .sort((a, b) => {
-                  if (b.ingredientScore !== a.ingredientScore) {
-                    return b.ingredientScore - a.ingredientScore
-                  }
-                  return b.matchPercentage - a.matchPercentage
-                })
-
-              console.log(`🔍 After fallback filtering (at least ${thresholds.fallback} ingredients): ${suggestions.length} meals`)
-            }
-
-            // If still no results, try final threshold
-            if (suggestions.length === 0) {
-              console.log(`🔄 No results with fallback threshold, trying final: at least ${thresholds.final} ingredients`)
-              
-              suggestions = scoredMeals
-                .filter(meal => meal.ingredientScore > 0 && !meal.excluded && meal.matchedIngredients.length >= thresholds.final)
-                .sort((a, b) => {
-                  if (b.ingredientScore !== a.ingredientScore) {
-                    return b.ingredientScore - a.ingredientScore
-                  }
-                  return b.matchPercentage - a.matchPercentage
-                })
-
-              console.log(`🔍 After final filtering (at least ${thresholds.final} ingredients): ${suggestions.length} meals`)
-            }
-
-            console.log(`📊 Final suggestions:`, suggestions.slice(0, 3).map(m => 
-              `${m.name} (Score: ${m.ingredientScore}, Matches: ${m.matchedIngredients.join(', ')}, Match %: ${m.matchPercentage}%)`
-            ))
             
             // Check if no meals match the ingredient criteria
             if (suggestions.length === 0) {
@@ -475,25 +384,17 @@ export default function Result() {
         return
       }
 
-      // Get current filter key to track shown meals per filter combination (only meal type and cooking time)
+      // Get current filter key to track shown meals per filter combination (including titleThreshold)
       const currentFilterKey = JSON.stringify({
         mealType: searchCriteria.mealType || 'any',
         cookingTime: searchCriteria.cookingTime || 'any',
         showIngredientMode: searchCriteria.showIngredientMode || false,
         selectedIngredients: searchCriteria.selectedIngredients || [],
-        leftoverMode: searchCriteria.leftoverMode || false
+        leftoverMode: searchCriteria.leftoverMode || false,
+        titleThreshold: searchCriteria.titleThreshold || 50
       })
 
       // Create a more reliable key for localStorage using a simple hash
-      const simpleHash = (str) => {
-        let hash = 0
-        for (let i = 0; i < str.length; i++) {
-          const char = str.charCodeAt(i)
-          hash = ((hash << 5) - hash) + char
-          hash = hash & hash // Convert to 32-bit integer
-        }
-        return Math.abs(hash).toString(36)
-      }
       
       const filterKeyHash = simpleHash(currentFilterKey)
       const shownMealsKey = `shownMeals_${filterKeyHash}`
@@ -503,6 +404,8 @@ export default function Result() {
       console.log(`🔑 Filter key hash: ${filterKeyHash}`)
       console.log(`👀 Already shown meals for this filter: ${shownMeals.length}`)
       console.log(`👀 Shown meal IDs:`, shownMeals)
+      console.log(`📊 Current titleThreshold: ${searchCriteria.titleThreshold || 50}`)
+      console.log(`📊 Current searchPhase: ${searchCriteria.searchPhase || 'primary_search'}`)
 
       // Filter out already shown meals for this filter combination
       const availableMeals = suggestions.filter(meal => !shownMeals.includes(meal.id))
@@ -518,28 +421,45 @@ export default function Result() {
       console.log(`🎯 Current meal being excluded:`, meal ? `${meal.name} (ID: ${meal.id})` : 'None')
 
       if (finalAvailableMeals.length > 0) {
-        // Randomly select from available meals
-        const randomIndex = Math.floor(Math.random() * finalAvailableMeals.length)
-        const newMeal = finalAvailableMeals[randomIndex]
-        console.log(`🎯 Randomly selected meal: ${newMeal.name} (ID: ${newMeal.id}) from index ${randomIndex}`)
-        
-        setMeal(newMeal)
-        localStorage.setItem('currentMeal', JSON.stringify(newMeal))
-        
-        // Add to shown meals for this filter
-        const updatedShownMeals = [...shownMeals, newMeal.id]
-        localStorage.setItem(shownMealsKey, JSON.stringify(updatedShownMeals))
-        
-        // Track "Try Another" button click
-        analytics.trackSuggestionClick('Try Another', searchCriteria)
-        
-        console.log(`🎯 New meal selected: ${newMeal.name}`)
-        console.log(`📊 Total shown meals for this filter: ${updatedShownMeals.length}`)
-        console.log(`📊 Updated shown meal IDs:`, updatedShownMeals)
-        console.log(`📊 Updated shown meal names:`, updatedShownMeals.map(id => {
-          const meal = suggestions.find(m => m.id === id)
-          return meal ? meal.name : `Unknown (ID: ${id})`
-        }))
+        // For progressive search, randomly select from available meals
+        if (searchCriteria.showIngredientMode && searchCriteria.selectedIngredients?.length > 0) {
+          // Randomly select from available meals
+          const randomIndex = Math.floor(Math.random() * finalAvailableMeals.length)
+          const newMeal = finalAvailableMeals[randomIndex]
+          console.log(`🎯 Progressive search result: ${newMeal.name} (ID: ${newMeal.id}) from index ${randomIndex}`)
+          
+          setMeal(newMeal)
+          localStorage.setItem('currentMeal', JSON.stringify(newMeal))
+          
+          // Add to shown meals for this filter
+          const updatedShownMeals = [...shownMeals, newMeal.id]
+          localStorage.setItem(shownMealsKey, JSON.stringify(updatedShownMeals))
+          
+          // Track "Try Another" button click
+          analytics.trackSuggestionClick('Try Another', searchCriteria)
+          
+          console.log(`🎯 Progressive search meal selected: ${newMeal.name}`)
+          console.log(`📊 Total progressive search results: ${suggestions.length}`)
+          console.log(`📊 Remaining progressive search results: ${finalAvailableMeals.length - 1}`)
+        } else {
+          // For non-progressive search, use random selection
+          const randomIndex = Math.floor(Math.random() * finalAvailableMeals.length)
+          const newMeal = finalAvailableMeals[randomIndex]
+          console.log(`🎯 Randomly selected meal: ${newMeal.name} (ID: ${newMeal.id}) from index ${randomIndex}`)
+          
+          setMeal(newMeal)
+          localStorage.setItem('currentMeal', JSON.stringify(newMeal))
+          
+          // Add to shown meals for this filter
+          const updatedShownMeals = [...shownMeals, newMeal.id]
+          localStorage.setItem(shownMealsKey, JSON.stringify(updatedShownMeals))
+          
+          // Track "Try Another" button click
+          analytics.trackSuggestionClick('Try Another', searchCriteria)
+          
+          console.log(`🎯 New meal selected: ${newMeal.name}`)
+          console.log(`📊 Total shown meals for this filter: ${updatedShownMeals.length}`)
+        }
       } else if (availableMeals.length > 0) {
         // If no meals available after excluding current, but we have meals in the original pool,
         // it means only the current meal is available. Reset the shown meals and start fresh.
@@ -567,33 +487,24 @@ export default function Result() {
           console.log('⚠️ Only one meal available total, showing exhaustion modal')
         }
       } else {
-        // All meals for this filter have been shown - reset and start over
-        console.log('🔄 All meals shown for this filter, resetting...')
-        localStorage.removeItem(shownMealsKey)
+        // All meals for this filter have been shown - check if we should show modal for next phase
+        console.log('🔄 All meals shown for this filter')
         
-        // Check if we have any suggestions to work with
-        if (suggestions.length > 0) {
-          // Randomly select from all suggestions
-          const randomIndex = Math.floor(Math.random() * suggestions.length)
-          const newMeal = suggestions[randomIndex]
-          setMeal(newMeal)
-          localStorage.setItem('currentMeal', JSON.stringify(newMeal))
-          
-          // Start fresh tracking
-          localStorage.setItem(shownMealsKey, JSON.stringify([newMeal.id]))
-          
-          // Track "Try Another" button click
-          analytics.trackSuggestionClick('Try Another', searchCriteria)
-          
-          console.log(`🔄 Reset and selected: ${newMeal.name}`)
-          
-          // Show exhaustion notification instead of modal
+        // Check if we're in primary search mode and should show modal for 25% threshold
+        const searchPhase = localStorage.getItem('ingredient_search_phase')
+                  const titleThreshold = JSON.parse(localStorage.getItem('ingredient_search_titleThreshold') || '50')
+        
+        if (searchPhase === 'primary_search' && titleThreshold === 50) {
+          // Show modal asking if user wants to see recipes with 25% threshold
+          setShowProgressiveModal(true)
+          console.log('🔄 Showing modal to continue with 25% threshold')
+        } else if (searchPhase === 'primary_search' && titleThreshold === 25) {
+          // Already used 25% threshold automatically, show exhaustion
           setShowExhaustionModal(true)
+          console.log('🔄 Already used 25% threshold automatically, showing exhaustion')
         } else {
-          // No meals found even after fallback - this shouldn't happen due to our filtering logic
-          console.error('❌ No meals available for selection - this indicates a logic error')
-          setMessage({ type: 'error', text: 'No meals found for your criteria. Please try different ingredients or filters.' })
-          return
+          // Show exhaustion notification
+          setShowExhaustionModal(true)
         }
       }
     } catch (error) {
@@ -653,6 +564,91 @@ export default function Result() {
     setShowFeedbackModal(true)
     setRating(0)
     setFeedbackSubmitted(false)
+  }
+
+  // Continue search with 25% threshold
+  const continueProgressiveSearch = async () => {
+    try {
+      setShowProgressiveModal(false)
+      setGenerating(true)
+      setLoading(true)
+
+      // Get original ingredients
+      const originalIngredients = JSON.parse(localStorage.getItem('ingredient_search_original') || '[]')
+
+      console.log('🔄 Continuing search with 25% threshold...')
+      console.log('📋 Original ingredients:', originalIngredients)
+
+      // Fetch all meals from Supabase
+      const { data: allMeals, error } = await supabase
+        .from('meals')
+        .select('*')
+
+      if (error) {
+        console.error('Error fetching meals:', error)
+        setMessage({ type: 'error', text: 'Failed to fetch meals. Please try again.' })
+        return
+      }
+
+      console.log(`✅ Found ${allMeals.length} meals from Supabase`)
+
+      // Perform search with 25% threshold
+      const searchResult = await performIngredientSearch(allMeals, originalIngredients, 25)
+
+      if (searchResult.suggestions.length > 0) {
+        // Update the main searchCriteria in localStorage to reflect the new threshold
+        const storedSearchCriteria = JSON.parse(localStorage.getItem('searchCriteria') || '{}')
+        const updatedSearchCriteria = {
+          ...storedSearchCriteria,
+          titleThreshold: 25,
+          searchPhase: 'secondary_search'
+        }
+        localStorage.setItem('searchCriteria', JSON.stringify(updatedSearchCriteria))
+        
+        // Update the searchCriteria state as well
+        setSearchCriteria(updatedSearchCriteria)
+        
+        // Select a random meal from new results
+        const randomIndex = Math.floor(Math.random() * searchResult.suggestions.length)
+        const newMeal = searchResult.suggestions[randomIndex]
+        setMeal(newMeal)
+        localStorage.setItem('currentMeal', JSON.stringify(newMeal))
+
+        // Reset shown meals tracking for new threshold
+        const searchCriteriaData = JSON.stringify({
+          mealType: storedSearchCriteria.mealType || 'any',
+          cookingTime: storedSearchCriteria.cookingTime || 'any',
+          showIngredientMode: storedSearchCriteria.showIngredientMode || false,
+          selectedIngredients: originalIngredients,
+          leftoverMode: storedSearchCriteria.leftoverMode || false,
+          titleThreshold: 25
+        })
+        const filterKey = simpleHash(searchCriteriaData)
+        const shownMealsKey = `shownMeals_${filterKey}`
+        localStorage.setItem(shownMealsKey, JSON.stringify([newMeal.id]))
+
+        console.log(`🔄 Search continued with 25% threshold: ${newMeal.name}`)
+        console.log(`📊 New search state: ${JSON.stringify(getSearchState(searchResult))}`)
+        console.log(`📊 Updated searchCriteria:`, updatedSearchCriteria)
+        console.log(`📊 New filter key hash: ${filterKey}`)
+        console.log(`📊 New shownMealsKey: ${shownMealsKey}`)
+
+        // Track search continuation
+        analytics.trackSuggestionClick('Secondary Search Continue', updatedSearchCriteria)
+      } else {
+        // No more recipes found, show exhaustion modal
+        setShowExhaustionModal(true)
+        console.log('⚠️ No more recipes found with 25% threshold')
+      }
+    } catch (error) {
+      console.error('Error continuing search:', error)
+      setMessage({ type: 'error', text: 'Failed to continue search. Please try again.' })
+    } finally {
+      setGenerating(false)
+      setTimeout(() => {
+        setLoading(false)
+      }, 600)
+    }
   }
 
   // Combo mapping function to match meal names with their combinations
@@ -2352,6 +2348,89 @@ export default function Result() {
           </div>
         )}
 
+        {/* Progressive Continuation Modal */}
+        {showProgressiveModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
+            <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl animate-slide-in-up overflow-hidden">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                      <Search className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900">Want More Recipes? 🔍</h3>
+                      <p className="text-gray-600">We can show you recipes with fewer ingredients</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowProgressiveModal(false)}
+                    className="w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white transition-colors duration-200"
+                  >
+                    <span className="text-gray-600 text-xl font-light">×</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                <div className="text-center mb-6">
+                  <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Zap className="w-10 h-10 text-blue-500" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-2">
+                    Want More Recipes? 🚀
+                  </h4>
+                  <p className="text-gray-600 leading-relaxed">
+                                        We can show you recipes with 25% title relevance instead of 50%.
+                    This will show you more recipes that are less strictly matched to your ingredients.
+                  </p>
+                </div>
+
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 mb-6">
+                  <h5 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                    <ChefHat className="w-4 h-4 text-green-500" />
+                    Current Search State:
+                  </h5>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-700">Ingredients:</span>
+                      <span className="text-sm text-green-600 font-semibold">
+                        {JSON.parse(localStorage.getItem('ingredient_search_original') || '[]').join(', ')}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-700">Current Threshold:</span>
+                      <span className="text-sm text-blue-600 font-semibold">
+                        50% title relevance
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={continueProgressiveSearch}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
+                  >
+                    <Search className="w-5 h-5" />
+                    Show More Recipes
+                  </button>
+                  <button
+                    onClick={() => setShowProgressiveModal(false)}
+                    className="flex-1 px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 flex items-center justify-center gap-2"
+                  >
+                    <X className="w-5 h-5" />
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Exhaustion Modal */}
         {showExhaustionModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
@@ -2365,7 +2444,7 @@ export default function Result() {
                     </div>
                     <div>
                       <h3 className="text-2xl font-bold text-gray-900">All Recipes Shown! 🎉</h3>
-                      <p className="text-gray-600">You&apos;ve seen all available recipes for your preference</p>
+                      <p className="text-gray-600">You&apos;ve seen all available recipes for your ingredients</p>
                     </div>
                   </div>
                   <button
