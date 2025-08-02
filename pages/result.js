@@ -1729,6 +1729,13 @@ export default function Result() {
       'Bush meat': '🥩',
       'Ponmo': '🥩',
       
+      // Tubers
+      'Yam': '🍠',
+      'Cocoyam': '🍠',
+      'Sweet potato': '🍠',
+      'Irish potatoes': '🥔',
+      'Plantain': '🍌',
+      
       // Vegetables & Greens
       'Tomatoes': '🍅',
       'Onions': '🧅',
@@ -1744,10 +1751,6 @@ export default function Result() {
       'Cabbage': '🥬',
       'Cauliflower': '🥦',
       'Broccoli': '🥦',
-      'Sweet potato': '🍠',
-      'Irish potatoes': '🥔',
-      'Yam': '🍠',
-      'Plantain': '🍌',
       'Cassava': '🍠',
       'Pumpkin leaves': '🥬',
       'Bitter leaf': '🥬',
@@ -1794,7 +1797,7 @@ export default function Result() {
       'Garlic': '🧄',
       'Ginger': '🫚',
       'Pepper': '🌶️',
-      'Curry powder': '🌶️',
+      'Curry powder': '🧂',
       'Thyme': '🌿',
       'Bay leaves': '🌿',
       'Nutmeg': '🌰',
@@ -1812,16 +1815,14 @@ export default function Result() {
       'Cardamom': '🌰',
       
       // Oils & Fats
-      'Palm oil': '🫒',
-      'Vegetable oil': '🫗',
-      'Olive oil': '🫒',
-      'Coconut oil': '🥥',
-      'Groundnut oil': '🥜',
-      'Sesame oil': '🫒',
+      'Palm oil': '🔴',
+      'Vegetable oil': '🟡',
+      'Olive oil': '🟠',
+      'Coconut oil': '⚪',
+      'Groundnut oil': '🟡',
+      'Sesame oil': '🟤',
       'Margarine': '🧈',
       'Ghee': '🧈',
-      'Red palm oil': '🫒',
-      'Palm kernel oil': '🫒',
       
       // Legumes & Beans
       'Beans': '🫘',
@@ -1841,7 +1842,7 @@ export default function Result() {
       // Baked Goods & Snacks
       'Bread': '🍞',
       'Toast': '🍞',
-      'Buns': '🍞',
+      'Buns': '🥖',
       'Cake': '🍰',
       'Cookies': '🍪',
       'Biscuits': '🍪',
@@ -1858,6 +1859,24 @@ export default function Result() {
       'Periwinkle': '🐌',
       'Ogbono': '🌰',
       'Egusi': '🥜',
+      'Uziza': '🌿',
+      'Utazi': '🌿',
+      'Nchawu': '🌿',
+      'Palm wine': '🍷',
+      'Zobo': '🍷',
+      'Kunu': '🥛',
+      'Tiger nut milk': '🥛',
+      'Locust beans': '🌰',
+      'Abacha': '🥗',
+      'Ugba': '🥗',
+      'Ewedu': '🥬',
+      'Ofada': '🍚',
+      'Ayamase': '🌶️',
+
+
+      'Nchuanwu': '🥘',
+      'Tuwon Masara': '🌾',
+      'Starch': '🌾',
       
       // Default fallback
       'default': '🥬'

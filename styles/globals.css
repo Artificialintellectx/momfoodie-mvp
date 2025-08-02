@@ -103,6 +103,15 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
+/* Hide scrollbar for horizontal scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
 .card::before {
   content: '';
   position: absolute;

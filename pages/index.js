@@ -39,6 +39,8 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(12)
+  const [showCategoryModal, setShowCategoryModal] = useState(false)
+  const [currentCategory, setCurrentCategory] = useState(null)
 
   // Get all ingredients from categories
   const allIngredients = ingredientCategories.flatMap(category => category.ingredients)
@@ -848,56 +850,22 @@ export default function Home() {
                     <div className="flex items-center justify-center gap-4 mb-4">
                   </div>
 
-                    {/* Mode Toggle - Integrated into header */}
-                    <div className="flex justify-center mb-6">
-                      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-1.5 inline-flex shadow-lg border border-gray-100">
-                        <button
-                          onClick={() => {
-                            setLeftoverMode(false)
-                            setSelectedIngredients([])
-                          }}
-                          className={`px-6 py-2.5 rounded-xl font-medium transition-all duration-300 flex items-center gap-2.5 ${
-                            !leftoverMode 
-                              ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md transform scale-105' 
-                              : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                          }`}
-                        >
-                          <Utensils className={`w-4 h-4 ${!leftoverMode ? 'text-white' : 'text-gray-400'}`} />
-                          <span className="hidden sm:inline text-sm">Fresh</span>
-                          <span className="sm:hidden text-sm">Fresh</span>
-                        </button>
-                        
-                        <button
-                          disabled
-                          className="px-6 py-2.5 rounded-xl font-medium text-gray-400 cursor-not-allowed flex items-center gap-2.5 relative"
-                        >
-                          <Recycle className="w-4 h-4" />
-                          <span className="hidden sm:inline text-sm">Leftovers</span>
-                          <span className="sm:hidden text-sm">Leftovers</span>
-                          
-                          {/* Coming Soon Badge */}
-                          <div className="absolute -top-1 -right-1 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
-                            SOON
-                          </div>
-                        </button>
-                      </div>
-                    </div>
+
                   </div>
 
                   {/* Ingredient Selection - Streamlined Design */}
                   <div className="animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
-                    <div className="card p-6 sm:p-8">
-                      {/* Redesigned Search Section Header */}
-                      <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl shadow-lg mb-4">
+                      {/* Compact Search Section Header */}
+                      <div className="text-center mb-4">
+                        <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl shadow-lg mb-3">
                             <Search className="w-5 h-5 text-white" />
                           </div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2">Find Your Ingredients</h3>
-                        <p className="text-gray-500 text-sm max-w-md mx-auto">Search and select ingredients you have available</p>
+                        <h3 className="text-lg font-bold text-gray-800 mb-1">Find Your Ingredients</h3>
+                        <p className="text-gray-500 text-xs">Search and select ingredients you have available</p>
                       </div>
 
-                      {/* Redesigned Search Bar */}
-                      <div className="relative mb-8">
+                      {/* Compact Search Bar */}
+                      <div className="relative mb-4">
                         <div className="relative group">
                           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-green-500 transition-colors duration-200">
                             <Search className="w-5 h-5" />
@@ -919,7 +887,7 @@ export default function Home() {
                               }
                             }
                           }}
-                            className="w-full pl-12 pr-16 py-4 bg-white border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-500/20 focus:border-green-500 transition-all duration-300 text-gray-700 placeholder-gray-400 text-base shadow-sm hover:shadow-md focus:shadow-lg"
+                            className="w-full pl-10 pr-12 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all duration-300 text-gray-700 placeholder-gray-400 text-sm shadow-sm hover:shadow-md focus:shadow-lg"
                         />
                         {searchTerm.trim() && !commonIngredients.includes(searchTerm.trim()) && !selectedIngredients.includes(searchTerm.trim()) && (
                           <button
@@ -928,7 +896,7 @@ export default function Home() {
                               setSelectedIngredients(prev => [...prev, customIngredient])
                               setSearchTerm('')
                             }}
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-green-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-green-600 transition-colors duration-200 font-medium"
+                              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-green-500 text-white px-2 py-1 rounded-lg text-xs hover:bg-green-600 transition-colors duration-200 font-medium"
                           >
                             Add
                           </button>
@@ -958,9 +926,9 @@ export default function Home() {
                         )}
                       </div>
 
-                      {/* Selected Ingredients Display - Mobile Optimized */}
+                      {/* Compact Selected Ingredients Display */}
                       {selectedIngredients.length > 0 && (
-                        <div className="mb-6">
+                        <div className="mb-4">
                           <div className="flex items-center justify-between mb-3">
                             <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                             <CircleCheck className="w-4 h-4 text-green-500" />
@@ -994,150 +962,91 @@ export default function Home() {
                         </div>
                       )}
 
-                      {/* Category Filter */}
-                      <div className="mb-6">
+                      {/* Compact Category Filter */}
+                      <div className="mb-4 animate-slide-in-up" style={{ animationDelay: '0.5s' }}>
                         <h4 className="text-sm font-semibold text-gray-700 mb-3">Filter by Category</h4>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                           <button
                             onClick={() => {
                               setSelectedCategory('all')
                               setCurrentPage(1)
+                              setShowCategoryModal(true)
+                              setCurrentCategory({
+                                id: 'all',
+                                name: 'All Ingredients',
+                                emoji: '🎯',
+                                ingredients: allIngredients
+                              })
                             }}
-                            className={`px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+                            className={`group p-3 rounded-lg text-xs font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 flex flex-col items-center gap-1 ${
                               selectedCategory === 'all'
-                                ? 'bg-blue-500 text-white shadow-md'
-                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                ? 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-lg scale-105 border-2 border-purple-400'
+                                : 'bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 hover:from-gray-100 hover:to-gray-200 hover:shadow-md border-2 border-gray-200 hover:border-purple-300'
                             }`}
+                            style={{ animationDelay: '0.6s' }}
                           >
-                            All Categories
+                            <span className={`text-xl transition-transform duration-200 ${selectedCategory === 'all' ? 'animate-bounce' : 'group-hover:scale-110'}`}>
+                              🎯
+                            </span>
+                            <span className="text-center leading-tight">All</span>
                           </button>
-                          {ingredientCategories.map((category) => (
+                          {/* Native category - positioned between All and Pasta */}
+                          {(() => {
+                            const nativeCategory = ingredientCategories.find(cat => cat.id === 'traditional')
+                            if (nativeCategory) {
+                              return (
+                                <button
+                                  key={nativeCategory.id}
+                                  onClick={() => {
+                                    setSelectedCategory(nativeCategory.id)
+                                    setCurrentPage(1)
+                                    setShowCategoryModal(true)
+                                    setCurrentCategory(nativeCategory)
+                                  }}
+                                  className={`group p-3 rounded-lg text-xs font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 flex flex-col items-center gap-1 ${
+                                    selectedCategory === nativeCategory.id
+                                      ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg scale-105 border-2 border-emerald-400'
+                                      : 'bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 hover:from-gray-100 hover:to-gray-200 hover:shadow-md border-2 border-gray-200 hover:border-emerald-300'
+                                  }`}
+                                  style={{ animationDelay: '0.65s' }}
+                                >
+                                  <span className={`text-xl transition-transform duration-200 ${selectedCategory === nativeCategory.id ? 'animate-bounce' : 'group-hover:scale-110'}`}>
+                                    {nativeCategory.emoji}
+                                  </span>
+                                  <span className="text-center leading-tight">{nativeCategory.name}</span>
+                                </button>
+                              )
+                            }
+                            return null
+                          })()}
+                          
+                          {/* Other categories - excluding Native */}
+                          {ingredientCategories.filter(category => category.id !== 'traditional').map((category, index) => (
                             <button
                               key={category.id}
                               onClick={() => {
                                 setSelectedCategory(category.id)
                                 setCurrentPage(1)
+                                setShowCategoryModal(true)
+                                setCurrentCategory(category)
                               }}
-                              className={`px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 flex items-center gap-1 ${
+                              className={`group p-3 rounded-lg text-xs font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 flex flex-col items-center gap-1 ${
                                 selectedCategory === category.id
-                                  ? 'bg-blue-500 text-white shadow-md'
-                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                  ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg scale-105 border-2 border-emerald-400'
+                                  : 'bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 hover:from-gray-100 hover:to-gray-200 hover:shadow-md border-2 border-gray-200 hover:border-emerald-300'
                               }`}
+                              style={{ animationDelay: `${0.7 + (index * 0.05)}s` }}
                             >
-                              <span>{category.emoji}</span>
-                              <span className="hidden sm:inline">{category.name}</span>
-                              <span className="sm:hidden">{category.name.split(' ')[0]}</span>
+                              <span className={`text-xl transition-transform duration-200 ${selectedCategory === category.id ? 'animate-bounce' : 'group-hover:scale-110'}`}>
+                                {category.emoji}
+                              </span>
+                              <span className="text-center leading-tight">{category.name}</span>
                             </button>
                           ))}
                         </div>
                       </div>
 
-                      {/* Ingredients Grid - Mobile Optimized */}
-                      <div className="space-y-4">
-                        {/* Available Ingredients Section */}
-                        <div>
-                          <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-sm font-semibold text-gray-700">
-                              {selectedCategory === 'all' ? 'All Available Ingredients' : ingredientCategories.find(cat => cat.id === selectedCategory)?.name}
-                            </h4>
-                            <span className="text-xs text-gray-500">{filteredIngredients.length} ingredients</span>
-                          </div>
-                          
-                          {/* Mobile-optimized grid with better spacing */}
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-4">
-                            {currentIngredients.map((ingredient, index) => (
-                              <button
-                                key={`${ingredient}-${index}`}
-                                onClick={() => handleIngredientToggle(ingredient)}
-                                className={`group relative p-5 sm:p-3 rounded-xl border-2 transition-all duration-200 hover:shadow-md active:scale-95 ${
-                                  selectedIngredients.includes(ingredient)
-                                    ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300 shadow-md transform scale-105'
-                                    : 'bg-white border-gray-200 hover:border-green-200 hover:bg-green-50/50'
-                                }`}
-                              >
-                                {/* Selection indicator */}
-                                {selectedIngredients.includes(ingredient) && (
-                                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-md">
-                                    <CheckCircle className="w-3 h-3 text-white" />
-                                </div>
-                                )}
-                                
-                                <div className="flex flex-col items-center gap-2 sm:gap-1.5">
-                                  <span className="text-2xl sm:text-xl">{getIngredientIcon(ingredient)}</span>
-                                  <span className="text-xs sm:text-xs font-medium text-gray-700 text-center leading-tight line-clamp-2">{ingredient}</span>
-                                </div>
-                                
-                                {/* Hover effect */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-green-400/10 to-emerald-400/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                              </button>
-                            ))}
-                          </div>
-                          
-                          {/* No results message */}
-                          {filteredIngredients.length === 0 && searchTerm.trim() && (
-                            <div className="text-center py-8">
-                              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Search className="w-8 h-8 text-gray-400" />
-                        </div>
-                              <p className="text-gray-500 text-sm">No ingredients found for &quot;{searchTerm}&quot;</p>
-                              <p className="text-gray-400 text-xs mt-1">Try a different search term or add it as a custom ingredient</p>
-                      </div>
-                          )}
 
-                          {/* Pagination Controls - Mobile Optimized */}
-                          {totalPages > 1 && (
-                            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-6">
-                          <button
-                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                disabled={currentPage === 1}
-                                className="px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 text-gray-600 hover:bg-gray-200 min-w-[60px] sm:min-w-[80px]"
-                              >
-                                Previous
-                              </button>
-                              
-                              <div className="flex items-center gap-1">
-                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                  const pageNum = i + 1
-                                  return (
-                                    <button
-                                      key={pageNum}
-                                      onClick={() => setCurrentPage(pageNum)}
-                                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 ${
-                                        currentPage === pageNum
-                                          ? 'bg-blue-500 text-white'
-                                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                      }`}
-                                    >
-                                      {pageNum}
-                                    </button>
-                                  )
-                                })}
-                                {totalPages > 5 && (
-                                  <span className="text-gray-500 text-xs sm:text-sm">...</span>
-                                )}
-                              </div>
-                              
-                              <button
-                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                disabled={currentPage === totalPages}
-                                className="px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 text-gray-600 hover:bg-gray-200 min-w-[60px] sm:min-w-[80px]"
-                              >
-                                Next
-                          </button>
-                        </div>
-                      )}
-
-                          {/* Page Info */}
-                          {totalPages > 1 && (
-                            <div className="text-center mt-2">
-                              <span className="text-xs text-gray-500">
-                                Page {currentPage} of {totalPages} • Showing {startIndex + 1}-{Math.min(endIndex, filteredIngredients.length)} of {filteredIngredients.length} ingredients
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
                   </div>
 
                   {/* Enhanced Quick Stats - Mobile Optimized */}
@@ -1160,48 +1069,62 @@ export default function Home() {
 
         </div>
 
-                {/* Floating Smart Recipes Button - Moved outside main container */}
+                {/* Floating Smart Recipes Button - Enhanced for Maximum Visibility */}
         {selectedIngredients.length > 0 && (
           <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[9999] animate-slide-in-up" style={{ marginBottom: 'env(safe-area-inset-bottom)' }}>
+            {/* Pulsing background ring for attention */}
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-red-500 rounded-2xl animate-ping opacity-75 blur-sm scale-110"></div>
+            
             <button
               onClick={getSuggestion}
               disabled={loading || leftoverMode}
-              className={`relative px-6 py-3 flex items-center justify-center gap-2 group transition-all duration-300 transform hover:scale-105 active:scale-95 font-bold text-base rounded-xl shadow-xl border-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none max-w-xs ${
+              className={`relative px-8 py-4 flex items-center justify-center gap-3 group transition-all duration-500 transform hover:scale-110 active:scale-95 font-extrabold text-lg rounded-2xl shadow-2xl border-4 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none max-w-sm ${
                 leftoverMode
                   ? 'bg-gradient-to-r from-gray-400 to-gray-500 border-gray-300/20 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-green-500/25'
+                  : 'bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 hover:from-orange-600 hover:via-red-600 hover:to-pink-600 text-white border-orange-300/50 shadow-orange-500/50 animate-pulse'
               }`}
             >
-                      {/* Subtle background glow */}
-                      <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-300 blur-xl ${
-                        leftoverMode ? 'bg-gradient-to-r from-gray-400 to-gray-500' : 'bg-gradient-to-r from-green-400 to-emerald-400'
-                      }`}></div>
-                      
-                                  {loading ? (
-              <>
-                <div className="loading-spinner w-4 h-4 border-2 border-white/30 border-t-white"></div>
-                <span className="text-sm whitespace-nowrap font-semibold text-white">
-                  {leftoverMode ? 'Transforming...' : 'Finding Recipes...'}
-                </span>
-              </>
-            ) : (
-              <>
-                {leftoverMode ? (
-                  <Recycle className="w-5 h-5 text-gray-300" />
-                ) : (
-                  <CircleCheck className="w-4 h-4 text-white" />
-                )}
-                <span className="text-sm whitespace-nowrap font-semibold text-white">
-                  {leftoverMode ? 'Coming Soon' : `Suggest Recipe (${selectedIngredients.length})`}
-                </span>
-                {!leftoverMode && (
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300 text-white" />
-                )}
-              </>
-            )}
-                    </button>
+              {/* Animated background shimmer */}
+              <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-30 transition-opacity duration-500 blur-xl ${
+                leftoverMode ? 'bg-gradient-to-r from-gray-400 to-gray-500' : 'bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400'
+              }`}></div>
+              
+              {/* Floating particles for extra attention */}
+              <div className="absolute -top-2 -left-2 w-2 h-2 bg-yellow-300 rounded-full animate-bounce"></div>
+              <div className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-orange-300 rounded-full animate-bounce" style={{ animationDelay: '0.5s' }}></div>
+              <div className="absolute -bottom-1 -left-1 w-1 h-1 bg-red-300 rounded-full animate-bounce" style={{ animationDelay: '1s' }}></div>
+              
+              {loading ? (
+                <>
+                  <div className="loading-spinner w-5 h-5 border-3 border-white/40 border-t-white"></div>
+                  <span className="text-base whitespace-nowrap font-bold text-white">
+                    {leftoverMode ? 'Transforming...' : 'Finding Recipes...'}
+                  </span>
+                </>
+              ) : (
+                <>
+                  {leftoverMode ? (
+                    <Recycle className="w-6 h-6 text-gray-300" />
+                  ) : (
+                    <div className="relative">
+                      <Sparkles className="w-6 h-6 text-white animate-bounce" />
+                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-300 rounded-full animate-ping"></div>
                     </div>
-          )}
+                  )}
+                  <span className="text-base whitespace-nowrap font-bold text-white">
+                    {leftoverMode ? 'Coming Soon' : `🍳 Suggest Recipe (${selectedIngredients.length})`}
+                  </span>
+                  {!leftoverMode && (
+                    <div className="relative">
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300 text-white" />
+                      <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-white rounded-full animate-ping"></div>
+                    </div>
+                  )}
+                </>
+              )}
+            </button>
+          </div>
+        )}
 
         {/* Saved Meals Section */}
         {savedMeals.length > 0 && (
@@ -1259,6 +1182,105 @@ export default function Home() {
           <p className="text-gray-500 text-sm mt-4">Beta version - Your feedback helps us improve!</p>
         </div>
       </div>
+
+      {/* Category Ingredients Modal */}
+      {showCategoryModal && currentCategory && (
+        <div 
+          className="fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-60 flex items-center justify-center z-50 animate-fade-in"
+          onClick={() => setShowCategoryModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl p-6 max-w-6xl w-full max-h-[85vh] overflow-hidden animate-scale-in shadow-2xl mx-6 flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between mb-6 flex-shrink-0">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
+                  <span className="text-2xl">{currentCategory.emoji}</span>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-800">{currentCategory.name}</h3>
+                  <p className="text-sm text-gray-600">{currentCategory.ingredients.length} ingredients available</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCategoryModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            {/* Ingredients Grid */}
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-4 flex-1 overflow-y-auto pb-4 pt-2 px-2">
+              {currentCategory.ingredients.map((ingredient, index) => (
+                <button
+                  key={`${ingredient}-${index}`}
+                  onClick={() => {
+                    if (selectedIngredients.includes(ingredient)) {
+                      setSelectedIngredients(prev => prev.filter(item => item !== ingredient))
+                    } else {
+                      setSelectedIngredients(prev => [...prev, ingredient])
+                    }
+                  }}
+                  className={`group relative p-4 pt-6 px-2 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 flex flex-col items-center gap-3 ${
+                    selectedIngredients.includes(ingredient)
+                      ? 'bg-gradient-to-br from-green-100 to-emerald-100 border-2 border-green-300 shadow-lg scale-105'
+                      : 'bg-gray-50 border-2 border-gray-200 hover:border-blue-300 hover:shadow-md'
+                  }`}
+                  style={{ animationDelay: `${index * 0.05}s` }}
+                >
+                  {/* Selection indicator */}
+                  {selectedIngredients.includes(ingredient) && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-md animate-scale-in z-10">
+                      <CheckCircle className="w-3 h-3 text-white" />
+                    </div>
+                  )}
+                  
+                  <span className={`text-2xl transition-transform duration-200 ${selectedIngredients.includes(ingredient) ? 'animate-bounce' : 'group-hover:scale-110'}`}>
+                    {getIngredientIcon(ingredient)}
+                  </span>
+                  <span className={`text-sm font-medium text-center leading-tight ${
+                    selectedIngredients.includes(ingredient) ? 'text-green-700' : 'text-gray-700'
+                  }`}>
+                    {ingredient}
+                  </span>
+                  
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                </button>
+              ))}
+            </div>
+            
+            {/* Footer */}
+            <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-200 flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-gray-600">
+                  {selectedIngredients.filter(ing => currentCategory.ingredients.includes(ing)).length} of {currentCategory.ingredients.length} selected
+                </span>
+                {selectedIngredients.filter(ing => currentCategory.ingredients.includes(ing)).length > 0 && (
+                  <button
+                    onClick={() => {
+                      const categoryIngredients = selectedIngredients.filter(ing => currentCategory.ingredients.includes(ing))
+                      setSelectedIngredients(prev => prev.filter(ing => !currentCategory.ingredients.includes(ing)))
+                    }}
+                    className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors"
+                  >
+                    Clear Category
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => setShowCategoryModal(false)}
+                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-xl font-medium transition-all duration-200 transform hover:scale-105 shadow-lg"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Validation Modal */}
       {showValidationModal && (
