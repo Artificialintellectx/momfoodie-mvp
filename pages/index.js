@@ -615,16 +615,6 @@ export default function Home() {
         <div className="flex justify-center mb-4 sm:mb-6 animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
           <div className="toggle-container w-full max-w-sm sm:max-w-md">
             <button
-              onClick={() => setShowIngredientMode(false)}
-              className={`toggle-button px-4 sm:px-6 py-2.5 sm:py-3 w-1/2 ${
-                !showIngredientMode ? 'active' : 'inactive'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 inline mr-1.5 sm:mr-2" />
-              <span className="hidden sm:inline text-sm">Quick Suggestion</span>
-              <span className="sm:hidden text-xs">Quick</span>
-            </button>
-            <button
               onClick={() => setShowIngredientMode(true)}
               className={`toggle-button px-4 sm:px-6 py-2.5 sm:py-3 w-1/2 ${
                 showIngredientMode ? 'active' : 'inactive'
@@ -633,6 +623,16 @@ export default function Home() {
               <CircleCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 inline mr-1.5 sm:mr-2" />
               <span className="hidden sm:inline text-sm">Smart Ingredients</span>
               <span className="sm:hidden text-xs">Smart</span>
+            </button>
+            <button
+              onClick={() => setShowIngredientMode(false)}
+              className={`toggle-button px-4 sm:px-6 py-2.5 sm:py-3 w-1/2 ${
+                !showIngredientMode ? 'active' : 'inactive'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 inline mr-1.5 sm:mr-2" />
+              <span className="hidden sm:inline text-sm">Quick Suggestion</span>
+              <span className="sm:hidden text-xs">Quick</span>
             </button>
           </div>
         </div>
