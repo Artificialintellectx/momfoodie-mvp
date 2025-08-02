@@ -857,9 +857,6 @@ export default function Home() {
                   <div className="animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
                       {/* Compact Search Section Header */}
                       <div className="text-center mb-4">
-                        <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl shadow-lg mb-3">
-                            <Search className="w-5 h-5 text-white" />
-                          </div>
                         <h3 className="text-lg font-bold text-gray-800 mb-1">Find Your Ingredients</h3>
                         <p className="text-gray-500 text-xs">Search and select ingredients you have available</p>
                       </div>
